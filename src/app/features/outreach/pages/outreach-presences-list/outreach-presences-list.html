@@ -1,0 +1,21 @@
+<a [routerLink]="['/sorties', uuid(), 'gestion']" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Gestion
+</a>
+
+<header class="list-head">
+  <span class="eyebrow">Présences</span>
+  <h1>{{ outreach()?.name || 'Sortie' }}</h1>
+  @if (outreach()) {
+    <p class="list-head__sub">
+      <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+    </p>
+  }
+</header>
+
+<app-outreach-presences
+  [presences]="presences()"
+  [loading]="loading()"
+  [error]="error()"
+  [expanded]="true"
+  (retry)="load()" />

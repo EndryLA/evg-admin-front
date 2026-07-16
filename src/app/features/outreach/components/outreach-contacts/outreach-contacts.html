@@ -1,0 +1,106 @@
+<section class="contacts">
+  <h2 class="contacts__title">
+    Contacts
+    @if (!loading() && !error()) {
+      <span class="contacts__count">{{ contacts().length }}</span>
+    }
+  </h2>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="state">Chargement des contacts…</div>
+    } @else if (error(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="retry.emit()">Réessayer</button>
+      </div>
+    } @else if (contacts().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucun contact</div>
+        <div class="state__hint">Aucune personne n'a encore été enregistrée pour cette sortie.</div>
+      </div>
+    } @else {
+      @if (selectable()) {
+        <div class="toolbar">
+          <span class="toolbar__count">
+            @if (selectedCount() > 0) {
+              {{ selectedCount() }} sélectionné{{ selectedCount() > 1 ? 's' : '' }}
+            } @else {
+              Aucune sélection
+            }
+          </span>
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="selectedCount() === 0 || exporting()"
+            (click)="exportSelected()"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            {{ exporting() ? 'Export…' : 'Exporter Excel' }}
+          </button>
+        </div>
+      }
+      <table>
+        <thead>
+          <tr>
+            @if (selectable()) {
+              <th class="cell-select">
+                <input
+                  type="checkbox"
+                  aria-label="Tout sélectionner"
+                  [checked]="allSelected()"
+                  [indeterminate]="someSelected()"
+                  (change)="toggleAll()"
+                />
+              </th>
+            }
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Type</th>
+            <th>État civil</th>
+            <th>Ville</th>
+            <th>Évangélisé par</th>
+            <th>Téléphone</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of visible(); track c.uuid) {
+            <tr [class.row--selected]="selectable() && isSelected(c.uuid)">
+              @if (selectable()) {
+                <td class="cell-select">
+                  <input
+                    type="checkbox"
+                    [attr.aria-label]="'Sélectionner ' + name(c)"
+                    [checked]="isSelected(c.uuid)"
+                    (change)="toggleRow(c.uuid)"
+                  />
+                </td>
+              }
+              <td class="cell-muted">{{ c.lastname || '—' }}</td>
+              <td class="cell-muted">{{ c.firstname || '—' }}</td>
+              <td><span class="pill pill--{{ typeTone(c.type) }}">{{ typeLabel(c.type) }}</span></td>
+              <td class="cell-muted">{{ civilStateLabel(c) }}</td>
+              <td class="cell-muted">{{ c.cityName || '—' }}</td>
+              <td class="cell-muted">{{ c.evangelizedBy || '—' }}</td>
+              <td class="cell-muted">{{ c.phoneNumber || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (hasMore()) {
+        @if (seeAllLink(); as link) {
+          <a [routerLink]="link" class="see-all">Voir tout ({{ contacts().length }})</a>
+        } @else {
+          <button type="button" class="see-all" (click)="toggle()">
+            @if (showAll()) {
+              Voir moins
+            } @else {
+              Voir tout ({{ contacts().length }})
+            }
+          </button>
+        }
+      }
+    }
+  </div>
+</section>

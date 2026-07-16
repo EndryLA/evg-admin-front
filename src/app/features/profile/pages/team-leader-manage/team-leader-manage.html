@@ -1,0 +1,79 @@
+<a routerLink="/profils" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Profils
+</a>
+
+<header class="head">
+  <span class="eyebrow">Organisation</span>
+  <h1>Chefs d'équipe</h1>
+  <p class="head__sub">{{ leaders().length }} chef(s) d'équipe · promouvez ou retirez un membre.</p>
+</header>
+
+@if (loading()) {
+  <div class="state">Chargement…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else {
+  <section class="block">
+    <h2 class="block__title">Chefs d'équipe actuels</h2>
+    @if (leaders().length === 0) {
+      <div class="card empty">Aucun chef d'équipe pour l'instant.</div>
+    } @else {
+      <div class="leader-grid">
+        @for (l of leaders(); track l.uuid) {
+          <div class="leader-card">
+            <span class="leader-badge pill pill--{{ leaderTone(l.firstname) }}">{{ l.firstname }}</span>
+            <div class="leader-meta">
+              <div class="leader-name">{{ fullName(l) }}</div>
+              <div class="leader-count">{{ memberCount(l.uuid) }} membre(s)</div>
+            </div>
+            <button
+              type="button"
+              class="btn btn--danger leader-action"
+              [disabled]="busyUuid() === l.uuid"
+              (click)="demote(l)">
+              Retirer
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="block">
+    <h2 class="block__title">Promouvoir un membre</h2>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input
+        type="search"
+        [value]="query()"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Rechercher un membre…"
+        aria-label="Rechercher un membre" />
+    </div>
+
+    <div class="card">
+      @if (candidates().length === 0) {
+        <div class="empty">Aucun membre à promouvoir.</div>
+      } @else {
+        <ul class="roster">
+          @for (p of candidates(); track p.uuid) {
+            <li class="roster__row">
+              <span class="roster__name">{{ fullName(p) }}</span>
+              <button
+                type="button"
+                class="btn roster__action"
+                [disabled]="busyUuid() === p.uuid"
+                (click)="promote(p)">
+                Promouvoir
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </section>
+}

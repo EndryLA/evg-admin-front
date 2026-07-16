@@ -1,0 +1,189 @@
+<a routerLink="/sorties" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Sorties
+</a>
+
+@if (loading()) {
+  <div class="state">Chargement de la sortie…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (outreach(); as o) {
+  <header class="manage-head">
+    <div class="manage-head__main">
+      <span class="eyebrow">Gestion de la sortie</span>
+      <h1>{{ o.name }}</h1>
+      <p class="manage-head__sub">
+        <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+      </p>
+    </div>
+  </header>
+
+  <div class="manage-body">
+    <div class="qr-cards">
+    <section class="card manage-card">
+      <h2 class="manage-card__title">Formulaire de contact</h2>
+      <p class="manage-card__hint">
+        Les ouvriers scannent ce code (ou ouvrent le lien) pour enregistrer les personnes
+        rencontrées lors de cette sortie.
+      </p>
+
+      <div class="qr">
+        @if (qrDataUrl(); as src) {
+          <button type="button" class="qr__btn" (click)="openQr(src, publicFormUrl())" aria-label="Afficher le QR code en plein écran">
+            <img class="qr__img" [src]="src" alt="QR code du formulaire de contact" width="220" height="220" />
+            <span class="qr__expand">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+              Plein écran
+            </span>
+          </button>
+        } @else {
+          <div class="qr__fallback">QR indisponible</div>
+        }
+      </div>
+
+      <div class="link-row">
+        <code class="link-row__url">{{ publicFormUrl() }}</code>
+      </div>
+      <div class="link-row__actions">
+        <button type="button" class="btn" (click)="copyLink(publicFormUrl(), 'contact')">
+          @if (copied() === 'contact') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            Copié
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copier le lien
+          }
+        </button>
+        <a class="btn" [href]="publicFormPath()" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          Ouvrir
+        </a>
+      </div>
+    </section>
+
+    <section class="card manage-card">
+      <h2 class="manage-card__title">Formulaire de présence</h2>
+      <p class="manage-card__hint">
+        Les participants scannent ce code (ou ouvrent le lien) pour marquer leur présence
+        à cette sortie.
+      </p>
+
+      <div class="qr">
+        @if (presenceQrDataUrl(); as src) {
+          <button type="button" class="qr__btn" (click)="openQr(src, publicPresenceUrl())" aria-label="Afficher le QR code en plein écran">
+            <img class="qr__img" [src]="src" alt="QR code du formulaire de présence" width="220" height="220" />
+            <span class="qr__expand">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+              Plein écran
+            </span>
+          </button>
+        } @else {
+          <div class="qr__fallback">QR indisponible</div>
+        }
+      </div>
+
+      <div class="link-row">
+        <code class="link-row__url">{{ publicPresenceUrl() }}</code>
+      </div>
+      <div class="link-row__actions">
+        <button type="button" class="btn" (click)="copyLink(publicPresenceUrl(), 'presence')">
+          @if (copied() === 'presence') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            Copié
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copier le lien
+          }
+        </button>
+        <a class="btn" [href]="publicPresencePath()" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          Ouvrir
+        </a>
+      </div>
+    </section>
+    </div>
+
+    <div class="manage-actions">
+    @switch (o.status) {
+      @case ('SCHEDULED') {
+        <button type="button" class="btn btn--primary btn--block action-btn" (click)="openStart()" [disabled]="saving()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Démarrer la sortie
+        </button>
+      }
+      @case ('IN_PROGRESS') {
+        <button type="button" class="btn btn--primary btn--block action-btn" (click)="openClose()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Clôturer la sortie
+        </button>
+      }
+      @case ('FINISHED') {
+        <div class="closed-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          Sortie clôturée
+        </div>
+      }
+      @case ('CANCELLED') {
+        <div class="closed-note closed-note--muted">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          Sortie annulée
+        </div>
+      }
+    }
+
+    @if (saveError() && !closeOpen() && !startOpen()) {
+      <p class="alert alert--error" role="alert">{{ saveError() }}</p>
+    }
+
+    <a class="btn stats-link" [routerLink]="['/sorties', uuid(), 'statistiques']">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="12" y="6" width="3" height="11"/><rect x="17" y="13" width="3" height="4"/></svg>
+      Voir les statistiques
+    </a>
+    </div>
+  </div>
+
+  <app-outreach-contacts
+    [contacts]="contacts()"
+    [loading]="contactsLoading()"
+    [error]="contactsError()"
+    [seeAllLink]="['/sorties', uuid(), 'contacts']"
+    (retry)="load()" />
+
+  <app-outreach-presences
+    [presences]="presences()"
+    [loading]="presencesLoading()"
+    [error]="presencesError()"
+    [seeAllLink]="['/sorties', uuid(), 'presences']"
+    (retry)="load()" />
+
+  @if (startOpen()) {
+    <app-outreach-start-dialog
+      [name]="o.name"
+      [busy]="saving()"
+      [error]="saveError()"
+      (confirm)="start()"
+      (cancel)="cancelStart()" />
+  }
+
+  @if (closeOpen()) {
+    <app-outreach-close-dialog
+      [participants]="o.totalParticipants"
+      [busy]="saving()"
+      [error]="saveError()"
+      (confirm)="confirmClose($event)"
+      (cancel)="cancelClose()" />
+  }
+
+  @if (qrOpen()) {
+    <div class="qr-fs" (click)="closeQr()">
+      <button type="button" class="qr-fs__close" (click)="closeQr()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <img class="qr-fs__img" [src]="qrFsSrc()" alt="QR code" (click)="$event.stopPropagation()" />
+      <code class="qr-fs__url">{{ qrFsUrl() }}</code>
+    </div>
+  }
+}

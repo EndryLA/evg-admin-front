@@ -1,0 +1,113 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div
+    class="modal cs-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Rechercher une commune"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Référentiel</span>
+      <h2 class="modal__title">Rechercher une commune</h2>
+    </header>
+
+    @if (selected(); as s) {
+      <!-- Registration step for a commune not yet in the database. -->
+      <div class="cs-body">
+        <button type="button" class="cs-back" (click)="cancelSelect()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Retour aux résultats
+        </button>
+
+        <div class="cs-register">
+          <div class="cs-register__name">{{ s.label }}</div>
+          @if (s.inseeCode != null) {
+            <div class="cs-register__insee">INSEE {{ s.inseeCode }}</div>
+          }
+        </div>
+
+        <label class="field cs-field">
+          <span class="field__label">Secteur <span class="cs-optional">(optionnel)</span></span>
+          <input
+            class="field__control"
+            type="number"
+            min="1"
+            [value]="sector()"
+            (input)="sector.set($any($event.target).value)"
+            placeholder="Ex. 3"
+            autocomplete="off"
+            aria-label="Secteur à affecter" />
+        </label>
+
+        @if (registerError(); as err) {
+          <p class="alert alert--error cs-alert">{{ err }}</p>
+        }
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancelSelect()" [disabled]="registering()">
+          Annuler
+        </button>
+        <button type="button" class="btn btn--primary" (click)="submitRegister()" [disabled]="registering()">
+          {{ registering() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </footer>
+    } @else {
+      <!-- Search + results step. -->
+      <div class="cs-body">
+        <label class="field">
+          <span class="field__label">Nom ou code postal</span>
+          <input
+            class="field__control"
+            type="search"
+            [value]="query()"
+            (input)="onInput($any($event.target).value)"
+            placeholder="Ex. Lyon, 69003…"
+            autocomplete="off"
+            aria-label="Rechercher une commune dans le référentiel" />
+        </label>
+
+        <div class="cs-results" role="listbox" aria-label="Résultats">
+          @if (searching()) {
+            <div class="cs-state">Recherche…</div>
+          } @else if (query().trim().length < 2) {
+            <div class="cs-state">Saisissez au moins 2 caractères.</div>
+          } @else if (results().length === 0 && searched()) {
+            <div class="cs-state">Aucune commune trouvée.</div>
+          } @else {
+            @for (r of results(); track r.inseeCode) {
+              @if (canRegister(r)) {
+                <button type="button" class="cs-row cs-row--action" role="option" (click)="select(r)">
+                  <div class="cs-row__label">
+                    <div class="cs-row__name">{{ r.label }}</div>
+                    @if (r.inseeCode != null) {
+                      <div class="cs-row__insee">INSEE {{ r.inseeCode }}</div>
+                    }
+                  </div>
+                  <span class="cs-row__cta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Enregistrer
+                  </span>
+                </button>
+              } @else {
+                <div class="cs-row" role="option">
+                  <div class="cs-row__label">
+                    <div class="cs-row__name">{{ r.label }}</div>
+                    @if (r.inseeCode != null) {
+                      <div class="cs-row__insee">INSEE {{ r.inseeCode }}</div>
+                    }
+                  </div>
+                  <span class="pill pill--green">Enregistrée</span>
+                </div>
+              }
+            }
+          }
+        </div>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="close.emit()">Fermer</button>
+      </footer>
+    }
+  </div>
+</div>

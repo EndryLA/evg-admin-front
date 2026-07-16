@@ -1,0 +1,9 @@
+/* Inventory-specific column widths. Generic table-shell styles live in the
+   global `.data-list` block (src/styles.scss). */
+.col-name { width: 38%; }
+.col-qty { width: 14%; }
+.col-location { width: 26%; }
+.col-resp { width: 22%; }
+.col-chevron { width: 44px; }
+
+.new-btn svg { width: 16px; height: 16px; }

@@ -1,0 +1,57 @@
+<section class="presences">
+  <h2 class="presences__title">
+    Présences
+    @if (!loading() && !error()) {
+      <span class="presences__count">{{ presences().length }}</span>
+    }
+  </h2>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="state">Chargement des présences…</div>
+    } @else if (error(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="retry.emit()">Réessayer</button>
+      </div>
+    } @else if (presences().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucune présence</div>
+        <div class="state__hint">Personne n'a encore marqué sa présence à cette sortie.</div>
+      </div>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Personne</th>
+            <th>Type</th>
+            <th>Invité par</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of visible(); track p.uuid) {
+            <tr>
+              <td class="cell-main">{{ name(p) }}</td>
+              <td><span class="pill pill--{{ typeTone(p.type) }}">{{ typeLabel(p.type) }}</span></td>
+              <td class="cell-muted">{{ p.invitedBy || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (hasMore()) {
+        @if (seeAllLink(); as link) {
+          <a [routerLink]="link" class="see-all">Voir tout ({{ presences().length }})</a>
+        } @else {
+          <button type="button" class="see-all" (click)="toggle()">
+            @if (showAll()) {
+              Voir moins
+            } @else {
+              Voir tout ({{ presences().length }})
+            }
+          </button>
+        }
+      }
+    }
+  </div>
+</section>

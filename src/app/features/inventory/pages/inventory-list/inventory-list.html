@@ -1,0 +1,122 @@
+<header class="topbar">
+  <div>
+    <h1>Inventaire</h1>
+    <p class="topbar__sub">{{ total() }} articles · matériel du département et leurs responsables.</p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input
+      type="search"
+      [value]="query()"
+      (input)="onSearch($any($event.target).value)"
+      placeholder="Rechercher un article, un emplacement…"
+      aria-label="Rechercher un article" />
+  </div>
+
+  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nouvel article
+  </button>
+</div>
+
+<div class="table-region">
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-name sortable" (click)="sortBy('name')">Article <span class="ind">{{ sortIndicator('name') }}</span></th>
+          <th class="col-qty center sortable" (click)="sortBy('quantity')">Quantité <span class="ind">{{ sortIndicator('quantity') }}</span></th>
+          <th class="col-location sortable" (click)="sortBy('location')">Emplacement <span class="ind">{{ sortIndicator('location') }}</span></th>
+          <th class="col-resp">Responsable</th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.uuid) {
+          <tr (click)="view(r)">
+            <td class="cell-head">
+              <div class="cell-main">{{ r.name }}</div>
+            </td>
+            <td class="center" data-label="Quantité">{{ r.quantity }}</td>
+            <td class="cell-contact" data-label="Emplacement">{{ r.stockLocation || '—' }}</td>
+            <td class="cell-contact" data-label="Responsable">{{ refName(r.managedBy) }}</td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement de l’inventaire…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucun article</div>
+        <div class="state__hint">Ajustez votre recherche ou ajoutez un article.</div>
+      </div>
+    }
+  </div>
+
+  @if (!loading() && !loadError() && resultCount() > 0) {
+    <nav class="pagination" aria-label="Pagination">
+      <div class="pagination__range">{{ rangeLabel() }}</div>
+      <div class="pagination__pages">
+        <button type="button" class="pg" (click)="prev()" [disabled]="page() === 1" aria-label="Page précédente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        @for (item of pageItems(); track $index) {
+          @if (item === 'gap') {
+            <span class="pg-gap">…</span>
+          } @else {
+            <button type="button" class="pg" [class.pg--active]="item === page()" (click)="goTo(item)">{{ item }}</button>
+          }
+        }
+        <button type="button" class="pg" (click)="next()" [disabled]="page() === totalPages()" aria-label="Page suivante">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </nav>
+  }
+</div>
+
+<!-- Mobile-only floating action button — creates a new item. -->
+<button type="button" class="fab" (click)="openCreate()" aria-label="Nouvel article">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+@if (selected(); as it) {
+  <app-inventory-detail
+    [item]="it"
+    (close)="closeDetail()"
+    (edit)="openEdit(it)"
+    (remove)="askDelete(it)" />
+}
+
+@if (formOpen()) {
+  <app-inventory-form
+    [item]="formItem()"
+    [profiles]="profiles()"
+    [busy]="saving()"
+    (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}
+
+@if (confirmTarget(); as target) {
+  <app-confirm-dialog
+    title="Supprimer cet article ?"
+    [busy]="deleting()"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()">
+    L’article <strong>{{ target.name }}</strong> sera définitivement supprimé de
+    l’inventaire. Cette action est irréversible.
+  </app-confirm-dialog>
+}

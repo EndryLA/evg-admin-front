@@ -1,0 +1,14 @@
+/* Présences — dashboard-only shell. Generic topbar styles live in the global
+   `.data-list` block (src/styles.scss). */
+
+/* Dashboard view fills the remaining height and scrolls on its own. */
+app-attendance-stats {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 32px 40px;
+}
+
+@media (max-width: 720px) {
+  app-attendance-stats { padding: 4px 16px 32px; }
+}

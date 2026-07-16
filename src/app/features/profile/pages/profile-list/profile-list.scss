@@ -1,0 +1,15 @@
+/* Profile-specific column widths & cells. Generic table-shell styles live in
+   the global `.data-list` block (src/styles.scss). */
+.col-first { width: 13%; }
+.col-last { width: 13%; }
+.col-contact { width: 23%; }
+.col-type { width: 10%; }
+.col-leader { width: 14%; }
+.col-dept { width: 9%; }
+.col-joined { width: 12%; }
+.col-chevron { width: 44px; }
+
+.new-btn svg { width: 16px; height: 16px; }
+
+.dept-yes { font-size: 13px; font-weight: 600; color: var(--accent-soft-text); }
+.dept-no { font-size: 13px; font-weight: 500; color: var(--text-faint); }

@@ -1,0 +1,61 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">{{ isEdit() ? 'Modifier l’article' : 'Nouvel article' }}</span>
+      <h2 class="modal__title">{{ title() }}</h2>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        <label class="field field--span">
+          <span class="field__label">Article</span>
+          <input class="field__control" formControlName="name" autocomplete="off"
+            [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <span class="field__error">Le nom de l’article est requis.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Quantité</span>
+          <input class="field__control" type="number" min="0" formControlName="quantity"
+            [attr.aria-invalid]="form.controls.quantity.touched && form.controls.quantity.invalid" />
+          @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
+            <span class="field__error">Indiquez une quantité valide (0 ou plus).</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Emplacement</span>
+          <input class="field__control" formControlName="stockLocation" autocomplete="off"
+            placeholder="Ex. Local B, étagère 2" />
+        </label>
+
+        <label class="field field--span">
+          <span class="field__label">Responsable</span>
+          <select class="field__control" formControlName="managedByUuid">
+            <option value="">Aucun</option>
+            @for (p of profiles(); track p.uuid) {
+              <option [value]="p.uuid">{{ p.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">
+          {{ busy() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer') }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

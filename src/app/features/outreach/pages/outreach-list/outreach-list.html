@@ -1,0 +1,211 @@
+<header class="topbar">
+  <div>
+    <h1>Sorties</h1>
+    <p class="topbar__sub">{{ totalElements() }} sorties d'évangélisation · {{ rows().length }} chargées.</p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input
+      type="search"
+      [value]="query()"
+      (input)="onSearch($any($event.target).value)"
+      placeholder="Rechercher une sortie, un lieu…"
+      aria-label="Rechercher une sortie" />
+  </div>
+
+  <!-- Mobile-only trigger for the bottom filter drawer. -->
+  <button type="button" class="filter-toggle" (click)="openFilters()" aria-label="Filtres">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+    Filtres
+    @if (activeFilterCount() > 0) {
+      <span class="filter-toggle__badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+
+  <!-- Filter controls: inline on desktop, a bottom drawer on mobile. -->
+  <div class="filter-controls" [class.filter-controls--open]="filterDrawerOpen()">
+    <div class="drawer-head">
+      <h2 class="drawer-head__title">Filtres</h2>
+      <button type="button" class="drawer-close" (click)="closeFilters()" aria-label="Fermer les filtres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="tabs" role="tablist" aria-label="Filtrer par statut">
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'ALL'" class="tab" [class.tab--active]="tab() === 'ALL'" (click)="setTab('ALL')">Toutes</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'SCHEDULED'" class="tab" [class.tab--active]="tab() === 'SCHEDULED'" (click)="setTab('SCHEDULED')">Planifiées</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'IN_PROGRESS'" class="tab" [class.tab--active]="tab() === 'IN_PROGRESS'" (click)="setTab('IN_PROGRESS')">En cours</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'FINISHED'" class="tab" [class.tab--active]="tab() === 'FINISHED'" (click)="setTab('FINISHED')">Terminées</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'CANCELLED'" class="tab" [class.tab--active]="tab() === 'CANCELLED'" (click)="setTab('CANCELLED')">Annulées</button>
+      </div>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Secteur</span>
+        <select
+          class="filter-select"
+          [value]="sector()"
+          (change)="setSector($any($event.target).value)"
+          aria-label="Filtrer par secteur">
+          <option value="ALL">Tous les secteurs</option>
+          @for (s of sectors; track s) {
+            <option [value]="s">Secteur {{ s }}</option>
+          }
+          <option value="UNASSIGNED">Non renseigné</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Responsable</span>
+        <select
+          class="filter-select"
+          [value]="managedBy()"
+          (change)="setManagedBy($any($event.target).value)"
+          aria-label="Filtrer par responsable">
+          <option value="ALL">Tous</option>
+          @for (m of managers(); track m.uuid) {
+            <option [value]="m.uuid">{{ m.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Du</span>
+        <input
+          type="date"
+          class="filter-input"
+          [value]="minDate()"
+          [max]="maxDate() || null"
+          (change)="setMinDate($any($event.target).value)"
+          aria-label="Date minimale" />
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Au</span>
+        <input
+          type="date"
+          class="filter-input"
+          [value]="maxDate()"
+          [min]="minDate() || null"
+          (change)="setMaxDate($any($event.target).value)"
+          aria-label="Date maximale" />
+      </label>
+
+      @if (hasActiveFilters()) {
+        <button type="button" class="btn filter-reset" (click)="resetFilters()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+          Réinitialiser
+        </button>
+      }
+    </div>
+
+    <div class="drawer-foot">
+      <button type="button" class="btn btn--primary drawer-apply" (click)="closeFilters()">
+        Voir les résultats ({{ totalElements() }})
+      </button>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nouvelle sortie
+  </button>
+</div>
+
+<!-- Backdrop behind the mobile filter drawer. -->
+@if (filterDrawerOpen()) {
+  <button type="button" class="drawer-backdrop" (click)="closeFilters()" aria-label="Fermer les filtres" tabindex="-1"></button>
+}
+
+<!-- Mobile-only floating action button — creates a new outreach. -->
+<button type="button" class="fab" (click)="openCreate()" aria-label="Nouvelle sortie">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div class="table-region" #scrollRoot>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-name sortable" (click)="sortBy('name')">Sortie <span class="ind">{{ sortIndicator('name') }}</span></th>
+          <th class="col-time sortable" (click)="sortBy('start')">Début <span class="ind">{{ sortIndicator('start') }}</span></th>
+          <th class="col-time">Fin</th>
+          <th class="col-status sortable" (click)="sortBy('status')">Statut <span class="ind">{{ sortIndicator('status') }}</span></th>
+          <th class="col-manager">Responsable</th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (o of rows(); track o.uuid) {
+          <tr (click)="openManage(o)">
+            <td class="cell-head">
+              <div class="cell-main">{{ o.name }}</div>
+              <div class="cell-sub">{{ o.location }}</div>
+            </td>
+            <td class="cell-contact cell-plain">{{ fmt(o.startTime) }}</td>
+            <td class="cell-contact hide-sm" data-label="Fin">{{ fmt(o.endTime) }}</td>
+            <td class="cell-plain">
+              <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+            </td>
+            <td class="cell-contact" data-label="Responsable">{{ o.managedBy?.name || '—' }}</td>
+            <td class="actions">
+              <button
+                type="button"
+                class="kebab"
+                (click)="toggleMenu(o, $event)"
+                [attr.aria-expanded]="menuOutreach()?.uuid === o.uuid"
+                aria-haspopup="menu"
+                aria-label="Actions">
+                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement des sorties…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucune sortie trouvée</div>
+        <div class="state__hint">Ajustez votre recherche ou vos filtres.</div>
+      </div>
+    }
+  </div>
+
+  <!-- Infinite-scroll sentinel: pulls the next page when it enters view. -->
+  <div class="scroll-sentinel" #sentinel aria-hidden="true">
+    @if (loadingMore()) {
+      <span class="scroll-sentinel__spinner">Chargement…</span>
+    } @else if (!loading() && !hasMore() && !loadError() && rows().length > 0) {
+      <span class="scroll-sentinel__end">Fin de la liste</span>
+    }
+  </div>
+</div>
+
+@if (menuOutreach(); as o) {
+  <button type="button" class="menu-backdrop" (click)="closeMenu()" aria-label="Fermer le menu" tabindex="-1"></button>
+  <div class="row-menu" role="menu" [style.top.px]="menuPos().top" [style.left.px]="menuPos().left">
+    <button type="button" class="row-menu__item" role="menuitem" (click)="openDetails(o)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
+      Voir les détails
+    </button>
+  </div>
+}
+
+@if (formOpen()) {
+  <app-outreach-form
+    [managers]="managers()"
+    [busy]="saving()"
+    (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}

@@ -1,0 +1,48 @@
+<div class="city-ac">
+  <input
+    #input
+    [id]="inputId()"
+    class="field__control city-ac__input"
+    type="text"
+    role="combobox"
+    autocomplete="off"
+    aria-autocomplete="list"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="inputId() + '-listbox'"
+    [attr.aria-activedescendant]="active() >= 0 ? optionId(active()) : null"
+    [attr.aria-invalid]="ariaInvalid() ? true : null"
+    [placeholder]="placeholder()"
+    [value]="query()"
+    [disabled]="disabled()"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)" />
+
+  @if (open()) {
+    <ul
+      class="city-ac__list"
+      role="listbox"
+      [id]="inputId() + '-listbox'"
+      aria-label="Communes proposées">
+      @if (searching() && results().length === 0) {
+        <li class="city-ac__state" role="presentation">Recherche…</li>
+      } @else if (results().length === 0) {
+        <li class="city-ac__state" role="presentation">Aucune commune trouvée.</li>
+      } @else {
+        @for (r of results(); track r.inseeCode; let i = $index) {
+          <li
+            class="city-ac__option"
+            [class.city-ac__option--active]="i === active()"
+            role="option"
+            [id]="optionId(i)"
+            [attr.aria-selected]="i === active()"
+            (mousedown)="$event.preventDefault(); pick(r)"
+            (mouseenter)="active.set(i)">
+            <span class="city-ac__label">{{ r.label }}</span>
+          </li>
+        }
+      }
+    </ul>
+  }
+</div>

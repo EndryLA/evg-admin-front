@@ -1,0 +1,35 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Démarrer la sortie"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Début de la sortie</span>
+      <h2 class="modal__title">Démarrer la sortie</h2>
+    </header>
+
+    <div class="grid">
+      @if (error(); as message) {
+        <p class="alert alert--error field--span" role="alert">{{ message }}</p>
+      }
+
+      <p class="modal__lead field--span">
+        Confirmez le démarrage de la sortie
+        @if (name(); as n) { « {{ n }} » }.
+        Elle passera au statut « En cours ».
+      </p>
+    </div>
+
+    <footer class="modal__foot">
+      <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+        Annuler
+      </button>
+      <button type="button" class="btn btn--primary" (click)="confirm.emit()" [disabled]="busy()">
+        {{ busy() ? 'Démarrage…' : 'Démarrer la sortie' }}
+      </button>
+    </footer>
+  </div>
+</div>

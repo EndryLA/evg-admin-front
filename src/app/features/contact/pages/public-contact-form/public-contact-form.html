@@ -1,0 +1,104 @@
+<main class="public-shell">
+  <section class="public-card" role="region" aria-label="Nouveau contact">
+    <div class="public-brand">
+      <img ngSrc="assets/logo.svg" width="220" height="65" priority alt="Département Évangélisation" />
+    </div>
+
+    @if (submitted()) {
+      <div class="public-done">
+        <div class="public-done__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <h1>Contact enregistré</h1>
+        <p>Les informations de la personne ont bien été enregistrées.</p>
+        <button type="button" class="btn btn--primary btn--block" (click)="again()">
+          Enregistrer un autre contact
+        </button>
+      </div>
+    } @else {
+      <header class="public-head">
+        <h1>Nouveau contact</h1>
+        <p class="public-sub">
+          @if (outreachName()) {
+            Renseignez les informations de la personne rencontrée lors de « {{ outreachName() }} ».
+          } @else {
+            Renseignez les informations de la personne rencontrée.
+          }
+        </p>
+      </header>
+
+      <form class="public-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        @if (error(); as message) {
+          <p class="alert alert--error" role="alert">{{ message }}</p>
+        }
+
+        <div class="grid">
+          <div class="field">
+            <label class="field__label" for="firstname">Prénom</label>
+            <input id="firstname" class="field__control" formControlName="firstname" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="lastname">Nom</label>
+            <input id="lastname" class="field__control" formControlName="lastname" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="type">Type</label>
+            <select id="type" class="field__control" formControlName="type">
+              <option value="CONTACT">Contact</option>
+              <option value="CONVERSION">Conversion</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="civilState">État civil</label>
+            <select id="civilState" class="field__control" formControlName="civilState"
+              [attr.aria-invalid]="form.controls.civilState.touched && form.controls.civilState.invalid">
+              <option value="" disabled>— Choisir —</option>
+              @for (option of civilStates; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            @if (form.controls.civilState.touched && form.controls.civilState.invalid) {
+              <span class="field__error">L'état civil est requis.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="city">Ville</label>
+            <app-city-autocomplete inputId="city" formControlName="city"
+              [ariaInvalid]="form.controls.city.touched && form.controls.city.invalid" />
+            @if (form.controls.city.touched && form.controls.city.invalid) {
+              <span class="field__error">Choisissez une ville dans la liste.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="phoneNumber">Téléphone</label>
+            <input id="phoneNumber" type="tel" class="field__control" formControlName="phoneNumber" autocomplete="off" />
+          </div>
+
+          <div class="field field--span">
+            <label class="field__label" for="evangelizedBy">Évangélisé(e) par</label>
+            <input id="evangelizedBy" class="field__control" formControlName="evangelizedBy"
+              placeholder="Nom de l'évangélisateur"
+              [attr.aria-invalid]="form.controls.evangelizedBy.touched && form.controls.evangelizedBy.invalid" />
+            @if (form.controls.evangelizedBy.touched && form.controls.evangelizedBy.invalid) {
+              <span class="field__error">Ce champ est requis.</span>
+            }
+          </div>
+
+          <div class="field field--span">
+            <label class="field__label" for="observations">Observations</label>
+            <textarea id="observations" class="field__control" rows="3" formControlName="observations"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+          {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </form>
+    }
+  </section>
+</main>

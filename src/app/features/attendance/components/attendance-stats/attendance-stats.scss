@@ -1,0 +1,215 @@
+/* Présences dashboard. Tokens are global (styles.scss); mirrors the
+   per-outreach stats page tile/panel/leaderboard language. */
+:host {
+  display: block;
+}
+
+/* ---- Date range ---- */
+.range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.range__presets {
+  display: inline-flex;
+  background: var(--bg-inset);
+  border-radius: 9px;
+  padding: 3px;
+}
+.range__preset {
+  border: none;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.range__preset--active { background: var(--accent); color: var(--text-on-accent); }
+
+.range__custom { display: flex; gap: 10px; }
+.range__field { display: flex; flex-direction: column; gap: 4px; }
+.range__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.range__input {
+  padding: 8px 10px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--bg-input);
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+.range__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---- Headline tiles ---- */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.tile__value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
+.tile__value--accent { color: var(--accent-soft-text); }
+.tile__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---- Panels ---- */
+.panel {
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.panel__title { margin: 0; font-size: 16px; }
+.panel__empty { margin: 0; font-size: 13.5px; color: var(--text-muted); }
+
+.chart-panel { margin-bottom: 16px; }
+.panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ---- Trend chart ---- */
+.metric-switch {
+  display: inline-flex;
+  background: var(--bg-inset);
+  border-radius: 9px;
+  padding: 3px;
+}
+.metric-switch__btn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.metric-switch__btn--active { background: var(--accent); color: var(--text-on-accent); }
+
+/* Chart.js draws into the canvas; the wrapper fixes its height so the
+   responsive/no-aspect-ratio chart has a box to fill. */
+.chart {
+  position: relative;
+  height: 240px;
+}
+.chart canvas { display: block; }
+
+/* ---- Leaderboards ---- */
+.leaderboard { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.leader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-faint);
+}
+.leader:last-child { border-bottom: none; }
+
+/* Rank shown as a red avatar-style disc; top 3 get a solid fill, the rest a soft tint. */
+.leader__rank {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.leader__rank--top {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.leader__body { flex: 1; min-width: 0; }
+.leader__name { display: block; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.leader__sub { display: block; margin-top: 3px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
+
+/* The presence rate — the metric that matters most on these rankings. */
+.leader__pct {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-soft-text);
+}
+
+/* Presence count as a soft red badge. */
+.leader__count {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- States ---- */
+.state {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
+.state__hint { margin-top: 6px; }
+.state--error { color: var(--accent-soft-text); }
+.state__retry {
+  display: block;
+  margin: 14px auto 0;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 720px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .tile { padding: 14px; }
+  .tile__value { font-size: 24px; }
+  .panel { padding: 18px; }
+  .range { justify-content: flex-start; }
+}

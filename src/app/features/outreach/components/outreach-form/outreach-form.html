@@ -1,0 +1,82 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">{{ isEdit() ? 'Modifier la sortie' : 'Nouvelle sortie' }}</span>
+      <h2 class="modal__title">{{ title() }}</h2>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        <label class="field field--span">
+          <span class="field__label">Nom de la sortie</span>
+          <input class="field__control" formControlName="name" autocomplete="off"
+            [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <span class="field__error">Le nom est requis.</span>
+          }
+        </label>
+
+        <label class="field field--span">
+          <span class="field__label">Lieu</span>
+          <input class="field__control" formControlName="location" autocomplete="off"
+            [attr.aria-invalid]="form.controls.location.touched && form.controls.location.invalid" />
+          @if (form.controls.location.touched && form.controls.location.invalid) {
+            <span class="field__error">Le lieu est requis.</span>
+          }
+        </label>
+
+        <label class="field field--span">
+          <span class="field__label">Date</span>
+          <input class="field__control" type="date" formControlName="date"
+            [attr.aria-invalid]="form.controls.date.touched && form.controls.date.invalid" />
+          @if (form.controls.date.touched && form.controls.date.invalid) {
+            <span class="field__error">La date est requise.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Début</span>
+          <input class="field__control" type="time" formControlName="startTime"
+            [attr.aria-invalid]="form.controls.startTime.touched && form.controls.startTime.invalid" />
+          @if (form.controls.startTime.touched && form.controls.startTime.invalid) {
+            <span class="field__error">L'heure de début est requise.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Fin</span>
+          <input class="field__control" type="time" formControlName="endTime"
+            [attr.aria-invalid]="form.controls.endTime.touched && form.controls.endTime.invalid" />
+          @if (form.controls.endTime.touched && form.controls.endTime.invalid) {
+            <span class="field__error">L'heure de fin est requise.</span>
+          }
+        </label>
+
+        <label class="field field--span">
+          <span class="field__label">Responsable</span>
+          <select class="field__control" formControlName="managedByUuid">
+            <option value="">— Aucun —</option>
+            @for (m of managers(); track m.uuid) {
+              <option [value]="m.uuid">{{ m.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">
+          {{ busy() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer') }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

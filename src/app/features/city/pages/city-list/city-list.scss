@@ -1,0 +1,47 @@
+/* City-specific column widths. Generic table-shell styles live in the global
+   `.data-list` block (src/styles.scss). */
+.col-name { width: 34%; }
+.col-postal { width: 16%; }
+.col-department { width: 30%; }
+.col-sector { width: 20%; }
+.col-chevron { width: 44px; }
+
+/* Sector filter select in the filter bar. */
+.sector-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+.sector-filter__select {
+  padding: 8px 10px;
+  font-size: 13.5px;
+}
+
+/* Infinite-scroll sentinel + status line under the table. */
+.scroll-sentinel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8px;
+  padding: 14px 0 4px;
+}
+.scroll-sentinel__spinner,
+.scroll-sentinel__end {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* Actions cluster pinned to the right of the filter bar. */
+.filters__actions { margin-left: auto; display: inline-flex; gap: 10px; }
+
+/* Référentiel lookup button. */
+.ref-btn {
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+.ref-btn:not(:disabled):hover { background: var(--bg-sunken); }
+.ref-btn svg { width: 16px; height: 16px; }

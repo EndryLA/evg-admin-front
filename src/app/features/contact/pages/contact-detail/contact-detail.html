@@ -1,0 +1,89 @@
+<a routerLink="/contacts" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Contacts
+</a>
+
+@if (loading()) {
+  <div class="state">Chargement du contact…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (contact(); as c) {
+  <header class="detail-head">
+    <div class="detail-head__main">
+      <span class="eyebrow">Contact</span>
+      <h1>{{ fullName() }}</h1>
+      <p class="detail-head__sub">
+        <span class="pill pill--{{ typeTone() }}">{{ typeLabel() }}</span>
+        @if (c.cityName) { · {{ c.cityName }} }
+      </p>
+    </div>
+  </header>
+
+  <section class="card">
+    <dl class="summary">
+      <div class="summary__row">
+        <dt>Prénom</dt>
+        <dd>{{ c.firstname || '—' }}</dd>
+      </div>
+      <div class="summary__row">
+        <dt>Nom</dt>
+        <dd>{{ c.lastname || '—' }}</dd>
+      </div>
+      <div class="summary__row">
+        <dt>Type</dt>
+        <dd><span class="pill pill--{{ typeTone() }}">{{ typeLabel() }}</span></dd>
+      </div>
+      <div class="summary__row">
+        <dt>État civil</dt>
+        <dd>{{ civilStateLabel() }}</dd>
+      </div>
+      <div class="summary__row">
+        <dt>Ville</dt>
+        <dd>
+          {{ c.cityName || '—' }}
+          @if (c.city) {
+            @if (c.city.sector !== null) {
+              <span class="sector-note">Secteur {{ c.city.sector }}</span>
+            }
+          } @else if (c.cityName) {
+            <span class="sector-note">hors secteur</span>
+          }
+        </dd>
+      </div>
+      <div class="summary__row">
+        <dt>Téléphone</dt>
+        <dd>{{ c.phoneNumber || '—' }}</dd>
+      </div>
+      <div class="summary__row">
+        <dt>Évangélisé par</dt>
+        <dd>{{ c.evangelizedBy || '—' }}</dd>
+      </div>
+      <div class="summary__row">
+        <dt>Sortie</dt>
+        <dd>
+          @if (c.outreachUuid) {
+            <a class="link" [routerLink]="['/sorties', c.outreachUuid]">{{ outreachName() || 'Voir la sortie' }}</a>
+          } @else {
+            —
+          }
+        </dd>
+      </div>
+      <div class="summary__row summary__row--last">
+        <dt>Identifiant</dt>
+        <dd class="mono">{{ c.uuid }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (c.observations) {
+    <section class="notes">
+      <h2 class="notes__title">Observations</h2>
+      <div class="card">
+        <p class="notes__body">{{ c.observations }}</p>
+      </div>
+    </section>
+  }
+}

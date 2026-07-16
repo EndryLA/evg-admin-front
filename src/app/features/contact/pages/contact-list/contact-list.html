@@ -1,0 +1,216 @@
+<header class="topbar">
+  <div>
+    <h1>Contacts</h1>
+    <p class="topbar__sub">{{ totalElements() }} personnes rencontrées · {{ rows().length }} chargées.</p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input
+      type="search"
+      [value]="filter().search"
+      (input)="setSearch($any($event.target).value)"
+      placeholder="Rechercher un nom, une ville, un téléphone…"
+      aria-label="Rechercher un contact" />
+  </div>
+
+  <!-- Mobile-only trigger for the bottom filter drawer. -->
+  <button type="button" class="filter-toggle" (click)="openFilters()" aria-label="Filtres">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+    Filtres
+    @if (activeFilterCount() > 0) {
+      <span class="filter-toggle__badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+
+  <!-- Filter controls: inline on desktop, a bottom drawer on mobile. -->
+  <div class="filter-controls" [class.filter-controls--open]="filterDrawerOpen()">
+    <div class="drawer-head">
+      <h2 class="drawer-head__title">Filtres</h2>
+      <button type="button" class="drawer-close" (click)="closeFilters()" aria-label="Fermer les filtres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="tabs" role="tablist" aria-label="Filtrer par type">
+        <button type="button" role="tab" [attr.aria-selected]="filter().type === 'ALL'" class="tab" [class.tab--active]="filter().type === 'ALL'" (click)="setType('ALL')">Tous</button>
+        <button type="button" role="tab" [attr.aria-selected]="filter().type === 'CONTACT'" class="tab" [class.tab--active]="filter().type === 'CONTACT'" (click)="setType('CONTACT')">Contacts</button>
+        <button type="button" role="tab" [attr.aria-selected]="filter().type === 'CONVERSION'" class="tab" [class.tab--active]="filter().type === 'CONVERSION'" (click)="setType('CONVERSION')">Conversions</button>
+      </div>
+
+      <label class="filter-field">
+        <span class="filter-field__label">État civil</span>
+        <select
+          class="filter-select"
+          [value]="filter().civilState"
+          (change)="setCivilState($any($event.target).value)"
+          aria-label="Filtrer par état civil">
+          <option value="ALL">Tous</option>
+          @for (opt of civilStateOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Secteur</span>
+        <select
+          class="filter-select"
+          [value]="filter().sector"
+          (change)="setSector($any($event.target).value)"
+          aria-label="Filtrer par secteur">
+          <option value="ALL">Tous les secteurs</option>
+          @for (s of sectors; track s) {
+            <option [value]="s">Secteur {{ s }}</option>
+          }
+          <option value="UNASSIGNED">Non renseigné</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Du</span>
+        <input
+          type="date"
+          class="filter-input"
+          [value]="filter().minDate"
+          [max]="filter().maxDate || null"
+          (change)="setMinDate($any($event.target).value)"
+          aria-label="Date de sortie minimale" />
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Au</span>
+        <input
+          type="date"
+          class="filter-input"
+          [value]="filter().maxDate"
+          [min]="filter().minDate || null"
+          (change)="setMaxDate($any($event.target).value)"
+          aria-label="Date de sortie maximale" />
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Évangélisé par</span>
+        <input
+          type="text"
+          class="filter-input"
+          [value]="filter().evangelizedBy"
+          (change)="setEvangelizedBy($any($event.target).value)"
+          placeholder="Nom…"
+          aria-label="Filtrer par évangéliste" />
+      </label>
+
+      @if (hasActiveFilters()) {
+        <button type="button" class="btn filter-reset" (click)="resetFilters()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+          Réinitialiser
+        </button>
+      }
+    </div>
+
+    <div class="drawer-foot">
+      <button type="button" class="btn btn--primary drawer-apply" (click)="closeFilters()">
+        Voir les résultats ({{ totalElements() }})
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop behind the mobile filter drawer. -->
+@if (filterDrawerOpen()) {
+  <button type="button" class="drawer-backdrop" (click)="closeFilters()" aria-label="Fermer les filtres" tabindex="-1"></button>
+}
+
+<div class="table-region" #scrollRoot>
+  <div class="table-card">
+    @if (!loading() && !loadError() && rows().length > 0) {
+      <div class="toolbar">
+        <span class="toolbar__count">
+          @if (selectedCount() > 0) {
+            {{ selectedCount() }} sélectionné{{ selectedCount() > 1 ? 's' : '' }}
+          } @else {
+            Aucune sélection
+          }
+        </span>
+        <button
+          type="button"
+          class="btn btn--primary"
+          [disabled]="selectedCount() === 0 || exporting()"
+          (click)="exportSelected()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          {{ exporting() ? 'Export…' : 'Exporter Excel' }}
+        </button>
+      </div>
+    }
+
+    <table>
+      <thead>
+        <tr>
+          <th class="cell-select">
+            <input
+              type="checkbox"
+              aria-label="Tout sélectionner"
+              [checked]="allSelected()"
+              [indeterminate]="someSelected()"
+              (change)="toggleAll()" />
+          </th>
+          <th class="col-name">Personne</th>
+          <th class="col-type">Type</th>
+          <th class="col-civil">État civil</th>
+          <th class="col-city">Ville</th>
+          <th class="col-by">Évangélisé par</th>
+          <th class="col-phone">Téléphone</th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of rows(); track c.uuid) {
+          <tr (click)="view(c)" [class.row--selected]="isSelected(c.uuid)">
+            <td class="cell-select" (click)="$event.stopPropagation()">
+              <input
+                type="checkbox"
+                [attr.aria-label]="'Sélectionner ' + contactName(c)"
+                [checked]="isSelected(c.uuid)"
+                (change)="toggleRow(c.uuid)" />
+            </td>
+            <td class="cell-main cell-head">{{ contactName(c) }}</td>
+            <td data-label="Type"><span class="pill pill--{{ typeTone(c.type) }}">{{ typeLabel(c.type) }}</span></td>
+            <td class="cell-contact" data-label="État civil">{{ civilStateLabel(c) }}</td>
+            <td class="cell-contact" data-label="Ville">{{ c.cityName || '—' }}</td>
+            <td class="cell-contact" data-label="Évangélisé par">{{ c.evangelizedBy || '—' }}</td>
+            <td class="cell-contact" data-label="Téléphone">{{ c.phoneNumber || '—' }}</td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement des contacts…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucun contact</div>
+        <div class="state__hint">Les personnes rencontrées apparaîtront ici.</div>
+      </div>
+    }
+  </div>
+
+  <!-- Infinite-scroll sentinel: pulls the next page when it enters view. -->
+  <div class="scroll-sentinel" #sentinel aria-hidden="true">
+    @if (loadingMore()) {
+      <span class="scroll-sentinel__spinner">Chargement…</span>
+    } @else if (!loading() && !hasMore() && !loadError() && rows().length > 0) {
+      <span class="scroll-sentinel__end">Fin de la liste</span>
+    }
+  </div>
+</div>

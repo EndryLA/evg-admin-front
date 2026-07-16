@@ -1,0 +1,39 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Affecter un secteur à ' + city().officialName"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Affecter un secteur</span>
+      <h2 class="modal__title">{{ city().officialName }}</h2>
+      @if (subtitle()) {
+        <p class="modal__sub">{{ subtitle() }}</p>
+      }
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        <label class="field field--span">
+          <span class="field__label">Secteur</span>
+          <input class="field__control" type="number" min="1" formControlName="sector" autocomplete="off"
+            [attr.aria-invalid]="form.controls.sector.touched && form.controls.sector.invalid" />
+          @if (form.controls.sector.touched && form.controls.sector.invalid) {
+            <span class="field__error">Indiquez un numéro de secteur valide.</span>
+          }
+        </label>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">
+          {{ busy() ? 'Affectation…' : 'Affecter' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

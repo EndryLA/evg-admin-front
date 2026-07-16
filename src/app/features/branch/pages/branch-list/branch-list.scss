@@ -1,0 +1,8 @@
+/* Branch-specific column widths. Generic table-shell styles live in the global
+   `.data-list` block (src/styles.scss). */
+.col-name { width: 46%; }
+.col-resp { width: 34%; }
+.col-members { width: 14%; }
+.col-chevron { width: 44px; }
+
+.new-btn svg { width: 16px; height: 16px; }

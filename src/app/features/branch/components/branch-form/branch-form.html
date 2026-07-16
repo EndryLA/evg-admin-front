@@ -1,0 +1,55 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">{{ isEdit() ? 'Modifier la branche' : 'Nouvelle branche' }}</span>
+      <h2 class="modal__title">{{ title() }}</h2>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        <label class="field">
+          <span class="field__label">Nom</span>
+          <input class="field__control" formControlName="name" autocomplete="off"
+            [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <span class="field__error">Le nom est requis.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Responsable</span>
+          <select class="field__control" formControlName="responsibleUuid">
+            <option value="">Aucun</option>
+            @for (p of profiles(); track p.uuid) {
+              <option [value]="p.uuid">{{ p.label }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field field--span">
+          <span class="field__label">Description</span>
+          <textarea class="field__control" formControlName="description" rows="3"
+            [attr.aria-invalid]="form.controls.description.touched && form.controls.description.invalid"></textarea>
+          @if (form.controls.description.touched && form.controls.description.invalid) {
+            <span class="field__error">La description est requise.</span>
+          }
+        </label>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">
+          {{ busy() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer') }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

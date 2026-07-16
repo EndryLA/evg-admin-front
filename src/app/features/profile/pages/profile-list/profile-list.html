@@ -1,0 +1,197 @@
+<header class="topbar">
+  <div>
+    <h1>Profils</h1>
+    <p class="topbar__sub">{{ total() }} membres · ouvriers et aides de l'équipe.</p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input
+      type="search"
+      [value]="query()"
+      (input)="onSearch($any($event.target).value)"
+      placeholder="Rechercher un nom, e-mail, téléphone…"
+      aria-label="Rechercher un profil" />
+  </div>
+
+  <!-- Mobile-only trigger for the bottom filter drawer. -->
+  <button type="button" class="filter-toggle" (click)="openFilters()" aria-label="Filtres">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+    Filtres
+    @if (activeFilterCount() > 0) {
+      <span class="filter-toggle__badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+
+  <!-- Filter controls: inline on desktop, a bottom drawer on mobile. -->
+  <div class="filter-controls" [class.filter-controls--open]="filterDrawerOpen()">
+    <div class="drawer-head">
+      <h2 class="drawer-head__title">Filtres</h2>
+      <button type="button" class="drawer-close" (click)="closeFilters()" aria-label="Fermer les filtres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="tabs" role="tablist" aria-label="Filtrer par type">
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'ALL'" class="tab" [class.tab--active]="tab() === 'ALL'" (click)="setTab('ALL')">Tous</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'OUVRIER'" class="tab" [class.tab--active]="tab() === 'OUVRIER'" (click)="setTab('OUVRIER')">Ouvriers</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'AIDE'" class="tab" [class.tab--active]="tab() === 'AIDE'" (click)="setTab('AIDE')">Aides</button>
+      </div>
+
+      <button type="button" class="chip" [class.chip--active]="deptOnly()" [attr.aria-pressed]="deptOnly()" (click)="toggleDept()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        1<sup>er</sup> département
+      </button>
+    </div>
+
+    <div class="drawer-foot">
+      <button type="button" class="btn btn--primary drawer-apply" (click)="closeFilters()">
+        Voir les résultats ({{ resultCount() }})
+      </button>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nouveau profil
+  </button>
+</div>
+
+<!-- Backdrop behind the mobile filter drawer. -->
+@if (filterDrawerOpen()) {
+  <button type="button" class="drawer-backdrop" (click)="closeFilters()" aria-label="Fermer les filtres" tabindex="-1"></button>
+}
+
+<!-- Mobile-only floating action button — creates a new profile. -->
+<button type="button" class="fab" (click)="openCreate()" aria-label="Nouveau profil">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div class="table-region">
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-first sortable" (click)="sortBy('name')">Prénom <span class="ind">{{ sortIndicator('name') }}</span></th>
+          <th class="col-last">Nom</th>
+          <th class="col-contact">Contact</th>
+          <th class="col-type sortable" (click)="sortBy('type')">Type <span class="ind">{{ sortIndicator('type') }}</span></th>
+          <th class="col-leader">Chef d'équipe</th>
+          <th class="col-dept center">1<sup>er</sup> dépt</th>
+          <th class="col-joined sortable" (click)="sortBy('joined')">Adhésion <span class="ind">{{ sortIndicator('joined') }}</span></th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.uuid) {
+          <tr (click)="view(r)">
+            <td class="cell-head">
+              <div class="cell-main">{{ r.firstname }}</div>
+              <div class="cell-sub">{{ age(r.birthDate) || '—' }}</div>
+            </td>
+            <td class="cell-contact" data-label="Nom">{{ r.lastname }}</td>
+            <td data-label="Contact">
+              <div class="cell-stack">
+                <div class="cell-contact">{{ r.phoneNumber || '—' }}</div>
+                <div class="cell-sub">{{ r.email || '—' }}</div>
+              </div>
+            </td>
+            <td data-label="Type">
+              @if (r.membershipType === 'OUVRIER') {
+                <span class="pill pill--red">Ouvrier</span>
+              } @else if (r.membershipType === 'AIDE') {
+                <span class="pill pill--grey">Aide</span>
+              } @else {
+                <span class="cell-sub">—</span>
+              }
+            </td>
+            <td data-label="Chef d'équipe">
+              @if (r.leaderFirstname; as leader) {
+                <span class="pill pill--{{ leaderTone(leader) }}">{{ leader }}</span>
+              } @else {
+                <span class="cell-sub">—</span>
+              }
+            </td>
+            <td class="center" data-label="1ᵉʳ dépt">
+              @if (r.firstDepartment) {
+                <span class="dept-yes">Oui</span>
+              } @else {
+                <span class="dept-no">Non</span>
+              }
+            </td>
+            <td class="cell-contact" data-label="Adhésion">{{ r.joinedAt ?? '—' }}</td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement des profils…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucun profil trouvé</div>
+        <div class="state__hint">Ajustez votre recherche ou vos filtres.</div>
+      </div>
+    }
+  </div>
+
+  @if (!loading() && !loadError() && resultCount() > 0) {
+    <nav class="pagination" aria-label="Pagination">
+      <div class="pagination__range">{{ rangeLabel() }}</div>
+      <div class="pagination__pages">
+        <button type="button" class="pg" (click)="prev()" [disabled]="page() === 1" aria-label="Page précédente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        @for (item of pageItems(); track $index) {
+          @if (item === 'gap') {
+            <span class="pg-gap">…</span>
+          } @else {
+            <button type="button" class="pg" [class.pg--active]="item === page()" (click)="goTo(item)">{{ item }}</button>
+          }
+        }
+        <button type="button" class="pg" (click)="next()" [disabled]="page() === totalPages()" aria-label="Page suivante">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </nav>
+  }
+</div>
+
+@if (selected(); as p) {
+  <app-profile-detail
+    [profile]="p"
+    (close)="closeDetail()"
+    (edit)="openEdit(p)"
+    (remove)="askDelete(p)" />
+}
+
+@if (formOpen()) {
+  <app-profile-form
+    [profile]="formProfile()"
+    [leaders]="leaders()"
+    [busy]="saving()"
+    (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}
+
+@if (confirmTarget(); as target) {
+  <app-confirm-dialog
+    title="Supprimer ce profil ?"
+    [busy]="deleting()"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()">
+    Le profil de <strong>{{ fullName(target) }}</strong> sera définitivement
+    supprimé. Cette action est irréversible.
+  </app-confirm-dialog>
+}

@@ -1,0 +1,119 @@
+<div class="shell" [class.shell--open]="sidebarOpen()" [class.shell--collapsed]="collapsed()">
+  <header class="topbar">
+    <button
+      type="button"
+      class="topbar__toggle"
+      (click)="toggleSidebar()"
+      [attr.aria-expanded]="sidebarOpen()"
+      aria-controls="app-sidebar"
+      aria-label="Ouvrir la navigation"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+    <div class="topbar__logo">
+      <img src="assets/logo.svg" alt="Département Évangélisation" />
+    </div>
+  </header>
+
+  @if (sidebarOpen()) {
+    <button type="button" class="scrim" (click)="closeSidebar()" aria-label="Fermer la navigation" tabindex="-1"></button>
+  }
+
+  <aside id="app-sidebar" class="sidebar">
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-row">
+        <div class="sidebar__logo">
+          <img src="assets/logo-white.svg" alt="Département Évangélisation" />
+        </div>
+        <button
+          type="button"
+          class="sidebar__collapse"
+          (click)="toggleCollapsed()"
+          [attr.aria-pressed]="collapsed()"
+          [attr.aria-label]="collapsed() ? 'Déplier la navigation' : 'Réduire la navigation'"
+          [attr.title]="collapsed() ? 'Déplier' : 'Réduire'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+        </button>
+        <button
+          type="button"
+          class="sidebar__close"
+          (click)="closeSidebar()"
+          aria-label="Fermer la navigation"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="sidebar__caption">Espace de gestion</div>
+    </div>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <p class="nav__section">Membres</p>
+      <a routerLink="/profils" routerLinkActive="nav__item--active" class="nav__item" title="Effectif">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav__label">Effectif</span>
+      </a>
+
+      <p class="nav__section">Terrain</p>
+      <a routerLink="/sorties" routerLinkActive="nav__item--active" class="nav__item" title="Sorties">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.4"/></svg>
+        <span class="nav__label">Sorties</span>
+      </a>
+      <a routerLink="/contacts" routerLinkActive="nav__item--active" class="nav__item" title="Contacts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="nav__label">Contacts</span>
+      </a>
+      <a routerLink="/presences" routerLinkActive="nav__item--active" class="nav__item" title="Présences">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span class="nav__label">Présences</span>
+      </a>
+
+      <p class="nav__section">Organisation</p>
+      <a routerLink="/branches" routerLinkActive="nav__item--active" class="nav__item" title="Branches">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 9h.01M14 9h.01M10 13h.01M14 13h.01"/></svg>
+        <span class="nav__label">Branches</span>
+      </a>
+      <a routerLink="/villes" routerLinkActive="nav__item--active" class="nav__item" title="Annuaire des villes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.4"/></svg>
+        <span class="nav__label">Annuaire des villes</span>
+      </a>
+      <a routerLink="/inventaire" routerLinkActive="nav__item--active" class="nav__item" title="Inventaire">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12l8.73-5.04M12 22.08V12"/></svg>
+        <span class="nav__label">Inventaire</span>
+      </a>
+      <a routerLink="/responsables" routerLinkActive="nav__item--active" class="nav__item" title="Chefs d'équipe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.9H22l-5.8 4.3 2.2 7L12 16.9 5.6 20.2l2.2-7L2 8.9h7.6z"/></svg>
+        <span class="nav__label">Chefs d'équipe</span>
+      </a>
+    </nav>
+
+    <div class="user">
+      <div class="user__avatar" aria-hidden="true">{{ initials() }}</div>
+      <div class="user__meta">
+        <div class="user__name">{{ displayName() }}</div>
+        <div class="user__role">{{ roleLabel() }}</div>
+      </div>
+      <button
+        type="button"
+        class="user__action"
+        (click)="toggleTheme()"
+        [attr.aria-pressed]="isDark()"
+        [attr.aria-label]="isDark() ? 'Passer au thème clair' : 'Passer au thème sombre'"
+        [attr.title]="isDark() ? 'Thème clair' : 'Thème sombre'"
+      >
+        @if (isDark()) {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        }
+      </button>
+      <button type="button" class="user__action" (click)="logout()" aria-label="Se déconnecter" title="Se déconnecter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <router-outlet />
+  </main>
+</div>

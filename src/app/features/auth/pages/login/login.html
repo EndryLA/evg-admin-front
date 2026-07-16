@@ -1,0 +1,48 @@
+<app-auth-card
+  title="Connexion"
+  subtitle="Accédez à l'espace de gestion de l'évangélisation.">
+
+  <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (error(); as message) {
+      <p class="alert alert--error" role="alert">{{ message }}</p>
+    }
+
+    <div class="field">
+      <label class="field__label" for="email">Adresse e-mail</label>
+      <input
+        id="email"
+        type="email"
+        class="field__control"
+        formControlName="email"
+        autocomplete="username"
+        placeholder="prenom.nom@exemple.org"
+        [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid" />
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <span class="field__error">Saisissez une adresse e-mail valide.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="password">Mot de passe</label>
+      <input
+        id="password"
+        type="password"
+        class="field__control"
+        formControlName="password"
+        autocomplete="current-password"
+        placeholder="••••••••"
+        [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid" />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <span class="field__error">Le mot de passe est requis.</span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+      {{ submitting() ? 'Connexion…' : 'Se connecter' }}
+    </button>
+  </form>
+
+  <nav class="auth-links">
+    <a routerLink="/mot-de-passe-oublie">Mot de passe oublié ?</a>
+  </nav>
+</app-auth-card>

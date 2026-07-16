@@ -1,0 +1,338 @@
+/* Outreach manage page. Field/button tokens are global (styles.scss). */
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  padding: 22px 32px 48px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.back svg { width: 16px; height: 16px; }
+.back:hover { color: var(--text-primary); }
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.manage-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 18px 0 22px;
+}
+.manage-head h1 { margin: 8px 0 0; font-size: 26px; }
+.manage-head__sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+/* ---- "Voir les statistiques" link (below the lifecycle action) ---- */
+.stats-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  font-size: 15px;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+  text-decoration: none;
+}
+.stats-link svg { width: 18px; height: 18px; }
+.stats-link:hover { background: var(--bg-sunken); }
+
+.manage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.qr-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.manage-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.manage-actions .alert { margin: 0; }
+
+.action-btn { padding: 14px; font-size: 15px; }
+.action-btn svg { width: 18px; height: 18px; }
+
+.closed-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--success-border);
+  border-radius: 9px;
+  background: var(--alert-success-bg);
+  color: var(--alert-success-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.closed-note svg { width: 18px; height: 18px; }
+.closed-note--muted {
+  border-color: var(--border);
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+}
+
+.card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.manage-card { padding: 22px; }
+.manage-card__title { margin: 0 0 18px; font-size: 18px; }
+.manage-card__hint { margin: 0 0 18px; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+
+/* ---- QR + link ---- */
+.qr {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 18px;
+}
+.qr__btn {
+  position: relative;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 12px;
+  line-height: 0;
+}
+/* QR surfaces stay white in both themes — a light quiet zone keeps them scannable. */
+.qr__img {
+  display: block;
+  width: 220px;
+  height: 220px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: #ffffff;
+}
+.qr__expand {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(24, 24, 27, 0.82);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  pointer-events: none;
+}
+.qr__expand svg { width: 13px; height: 13px; }
+.qr__btn:hover .qr__expand,
+.qr__btn:focus-visible .qr__expand {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ---- QR fullscreen overlay (always dark backdrop) ---- */
+.qr-fs {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  background: rgba(9, 9, 11, 0.94);
+  animation: evgFade 0.16s ease;
+}
+.qr-fs__img {
+  width: min(80vmin, 520px);
+  height: min(80vmin, 520px);
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+}
+.qr-fs__url {
+  max-width: 90vw;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.qr-fs__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-fs__close svg { width: 20px; height: 20px; }
+.qr-fs__close:hover { background: rgba(255, 255, 255, 0.2); }
+.qr__fallback {
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-input);
+  border-radius: 12px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.link-row { margin-bottom: 12px; }
+.link-row__url {
+  display: block;
+  padding: 10px 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.link-row__actions { display: flex; gap: 10px; }
+.link-row__actions .btn {
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+  text-decoration: none;
+}
+.link-row__actions .btn:hover { background: var(--bg-sunken); }
+
+/* ---- Contacts ---- */
+.contacts { margin-top: 30px; }
+.contacts__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.contacts__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.contacts .card { overflow: hidden; }
+.contacts table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.contacts thead tr { border-bottom: 1px solid var(--border-subtle); }
+.contacts th {
+  padding: 12px 20px;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.contacts tbody tr { border-bottom: 1px solid var(--border-faint); }
+.contacts tbody tr:last-child { border-bottom: none; }
+.contacts td { padding: 14px 20px; vertical-align: middle; }
+.contacts .cell-main { font-weight: 600; color: var(--text-primary); }
+.contacts .cell-muted { color: var(--text-secondary); white-space: nowrap; }
+
+/* ---- States ---- */
+.state {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
+.state__hint { margin-top: 6px; }
+.state--error { color: var(--accent-soft-text); }
+.state__retry {
+  display: block;
+  margin: 14px auto 0;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+
+/* ---- Desktop: two QR cards side by side, actions in a row ---- */
+@media (min-width: 721px) {
+  .qr-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .manage-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .manage-actions .action-btn,
+  .manage-actions .closed-note,
+  .manage-actions .stats-link {
+    flex: 1 1 0;
+    margin: 0;
+  }
+  /* Error banner keeps its own full-width line above the action row. */
+  .manage-actions .alert {
+    order: -1;
+    flex-basis: 100%;
+  }
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 720px) {
+  :host { padding: 18px 16px 40px; }
+
+  .manage-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .manage-head h1 { font-size: 22px; }
+
+  .manage-card { padding: 18px; }
+
+  /* Wide contacts table scrolls rather than squishing. */
+  .contacts .card { overflow-x: auto; }
+  .contacts table { min-width: 560px; }
+  .contacts th, .contacts td { padding: 12px 16px; }
+}

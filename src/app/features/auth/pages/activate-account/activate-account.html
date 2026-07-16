@@ -1,0 +1,86 @@
+<app-auth-card
+  [title]="hasToken() ? 'Activer mon compte' : 'Activation du compte'"
+  [subtitle]="hasToken()
+    ? 'Définissez votre mot de passe pour finaliser votre accès.'
+    : 'Indiquez votre e-mail : nous vous enverrons un lien d\'activation.'">
+
+  @if (done()) {
+    <p class="alert alert--success" role="status">
+      @if (hasToken()) {
+        Votre compte est activé. Vous pouvez maintenant vous connecter.
+      } @else {
+        Si votre compte est en attente d'activation, un lien vient de vous être
+        envoyé. Pensez à vérifier vos courriers indésirables.
+      }
+    </p>
+  } @else if (hasToken()) {
+    <form class="auth-form" [formGroup]="confirmForm" (ngSubmit)="confirm()" novalidate>
+      @if (error(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
+
+      <div class="field">
+        <label class="field__label" for="password">Mot de passe</label>
+        <input
+          id="password"
+          type="password"
+          class="field__control"
+          formControlName="password"
+          autocomplete="new-password"
+          placeholder="••••••••"
+          [attr.aria-invalid]="confirmForm.controls.password.touched && confirmForm.controls.password.invalid" />
+        @if (confirmForm.controls.password.touched && confirmForm.controls.password.invalid) {
+          <span class="field__error">Le mot de passe doit contenir au moins 8 caractères.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="confirm">Confirmer le mot de passe</label>
+        <input
+          id="confirm"
+          type="password"
+          class="field__control"
+          formControlName="confirm"
+          autocomplete="new-password"
+          placeholder="••••••••"
+          [attr.aria-invalid]="confirmForm.controls.confirm.touched && (confirmForm.controls.confirm.invalid || confirmForm.hasError('mismatch'))" />
+        @if (confirmForm.controls.confirm.touched && confirmForm.hasError('mismatch')) {
+          <span class="field__error">Les mots de passe ne correspondent pas.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+        {{ submitting() ? 'Activation…' : 'Activer mon compte' }}
+      </button>
+    </form>
+  } @else {
+    <form class="auth-form" [formGroup]="requestForm" (ngSubmit)="requestLink()" novalidate>
+      @if (error(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
+
+      <div class="field">
+        <label class="field__label" for="email">Adresse e-mail</label>
+        <input
+          id="email"
+          type="email"
+          class="field__control"
+          formControlName="email"
+          autocomplete="username"
+          placeholder="prenom.nom@exemple.org"
+          [attr.aria-invalid]="requestForm.controls.email.touched && requestForm.controls.email.invalid" />
+        @if (requestForm.controls.email.touched && requestForm.controls.email.invalid) {
+          <span class="field__error">Saisissez une adresse e-mail valide.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+        {{ submitting() ? 'Envoi…' : 'Envoyer le lien' }}
+      </button>
+    </form>
+  }
+
+  <nav class="auth-links">
+    <a routerLink="/connexion">Retour à la connexion</a>
+  </nav>
+</app-auth-card>

@@ -1,0 +1,150 @@
+<header class="topbar">
+  <div>
+    <h1>Annuaire des villes</h1>
+    <p class="topbar__sub">{{ totalElements() }} communes · {{ resultCount() }} affichées.</p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input
+      type="search"
+      [value]="query()"
+      (input)="onSearch($any($event.target).value)"
+      placeholder="Rechercher une ville, un code postal…"
+      aria-label="Rechercher une ville" />
+  </div>
+
+  <!-- Mobile-only trigger for the bottom filter drawer. -->
+  <button type="button" class="filter-toggle" (click)="openFilters()" aria-label="Filtres">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+    Filtres
+    @if (activeFilterCount() > 0) {
+      <span class="filter-toggle__badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+
+  <!-- Filter controls: inline on desktop, a bottom drawer on mobile. -->
+  <div class="filter-controls" [class.filter-controls--open]="filterDrawerOpen()">
+    <div class="drawer-head">
+      <h2 class="drawer-head__title">Filtres</h2>
+      <button type="button" class="drawer-close" (click)="closeFilters()" aria-label="Fermer les filtres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="tabs" role="tablist" aria-label="Filtrer par affectation">
+        <button type="button" role="tab" [attr.aria-selected]="assignment() === 'ALL'" class="tab" [class.tab--active]="assignment() === 'ALL'" (click)="setAssignment('ALL')">Toutes</button>
+        <button type="button" role="tab" [attr.aria-selected]="assignment() === 'ASSIGNED'" class="tab" [class.tab--active]="assignment() === 'ASSIGNED'" (click)="setAssignment('ASSIGNED')">Affectées</button>
+        <button type="button" role="tab" [attr.aria-selected]="assignment() === 'UNASSIGNED'" class="tab" [class.tab--active]="assignment() === 'UNASSIGNED'" (click)="setAssignment('UNASSIGNED')">Non affectées</button>
+      </div>
+
+      <label class="sector-filter">
+        <span class="sector-filter__label">Secteur</span>
+        <select
+          class="field__control sector-filter__select"
+          [value]="sector() === null ? '' : sector()"
+          (change)="onSectorChange($any($event.target).value)"
+          aria-label="Filtrer par secteur">
+          <option value="">Tous</option>
+          @for (s of sectorOptions(); track s) {
+            <option [value]="s">Secteur {{ s }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="drawer-foot">
+      <button type="button" class="btn btn--primary drawer-apply" (click)="closeFilters()">
+        Voir les résultats ({{ totalElements() }})
+      </button>
+    </div>
+  </div>
+
+  <div class="filters__actions">
+    <button type="button" class="btn ref-btn" (click)="openSearch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Référentiel
+    </button>
+  </div>
+</div>
+
+<!-- Backdrop behind the mobile filter drawer. -->
+@if (filterDrawerOpen()) {
+  <button type="button" class="drawer-backdrop" (click)="closeFilters()" aria-label="Fermer les filtres" tabindex="-1"></button>
+}
+
+<div class="table-region" #scrollRoot>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-name sortable" (click)="sortBy('name')">Ville <span class="ind">{{ sortIndicator('name') }}</span></th>
+          <th class="col-postal sortable" (click)="sortBy('postal')">Code postal <span class="ind">{{ sortIndicator('postal') }}</span></th>
+          <th class="col-department sortable" (click)="sortBy('department')">Département <span class="ind">{{ sortIndicator('department') }}</span></th>
+          <th class="col-sector sortable" (click)="sortBy('sector')">Secteur <span class="ind">{{ sortIndicator('sector') }}</span></th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.uuid) {
+          <tr (click)="openAssign(r)">
+            <td class="cell-head">
+              <div class="cell-main">{{ r.officialName }}</div>
+              <div class="cell-sub">@if (r.inseeCode != null) { INSEE {{ r.inseeCode }} } @else { — }</div>
+            </td>
+            <td class="cell-contact" data-label="Code postal">{{ r.postalCode || '—' }}</td>
+            <td class="cell-contact" data-label="Département">{{ departmentLabel(r) }}</td>
+            <td data-label="Secteur">
+              @if (r.sector != null) {
+                <span class="pill pill--{{ sectorTone(r.sector) }}">Secteur {{ r.sector }}</span>
+              } @else {
+                <span class="pill pill--grey">Non affectée</span>
+              }
+            </td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement des villes…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucune ville trouvée</div>
+        <div class="state__hint">Ajustez votre recherche ou vos filtres.</div>
+      </div>
+    }
+  </div>
+
+  <!-- Infinite-scroll sentinel: pulls the next page when it enters view. -->
+  <div class="scroll-sentinel" #sentinel aria-hidden="true">
+    @if (loadingMore()) {
+      <span class="scroll-sentinel__spinner">Chargement…</span>
+    } @else if (!loading() && !hasMore() && !loadError() && cities().length > 0) {
+      <span class="scroll-sentinel__end">Fin de la liste</span>
+    }
+  </div>
+</div>
+
+@if (assignTarget(); as target) {
+  <app-city-sector-form
+    [city]="target"
+    [busy]="assigning()"
+    (save)="onAssign($event)"
+    (cancel)="cancelAssign()" />
+}
+
+@if (searchOpen()) {
+  <app-city-search (close)="closeSearch()" (registered)="onRegistered()" />
+}

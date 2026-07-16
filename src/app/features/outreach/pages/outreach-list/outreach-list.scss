@@ -1,0 +1,80 @@
+/* Outreach-specific column widths. Generic table-shell styles live in the
+   global `.data-list` block (src/styles.scss). */
+.col-name { width: 26%; }
+.col-time { width: 18%; }
+.col-status { width: 14%; }
+.col-manager { width: 16%; }
+.col-chevron { width: 52px; }
+
+.new-btn svg { width: 16px; height: 16px; }
+
+/* Infinite-scroll sentinel. */
+.scroll-sentinel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8px;
+  padding: 14px 0 4px;
+}
+.scroll-sentinel__spinner,
+.scroll-sentinel__end {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* ---- Row actions (kebab menu) ---- */
+.actions { text-align: right; }
+
+.kebab {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.kebab svg { width: 18px; height: 18px; }
+.kebab:hover { background: var(--bg-inset); color: var(--text-tertiary); }
+
+.row-menu {
+  position: fixed;
+  z-index: 30;
+  transform: translateX(-100%);
+  min-width: 180px;
+  padding: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-menu);
+  animation: evgPop 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.row-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.row-menu__item svg { width: 16px; height: 16px; color: var(--text-faint); }
+.row-menu__item:hover { background: var(--bg-sunken); color: var(--text-primary); }
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  border: none;
+  background: transparent;
+  cursor: default;
+}

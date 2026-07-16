@@ -1,0 +1,47 @@
+/* Contact-specific column widths. Generic table-shell styles live in the
+   global `.data-list` block (src/styles.scss). */
+.cell-select { width: 44px; }
+.col-name { width: 19%; }
+.col-type { width: 11%; }
+.col-civil { width: 15%; }
+.col-city { width: 15%; }
+.col-by { width: 17%; }
+.col-phone { width: 13%; }
+.col-chevron { width: 44px; }
+
+/* Row selection. */
+.cell-select { padding-right: 0; text-align: center; }
+.cell-select input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  vertical-align: middle;
+}
+tbody tr.row--selected { background: var(--row-hover); }
+
+/* Selection / export toolbar above the table. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-sunken);
+}
+.toolbar__count { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
+
+/* Infinite-scroll sentinel. */
+.scroll-sentinel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8px;
+  padding: 14px 0 4px;
+}
+.scroll-sentinel__spinner,
+.scroll-sentinel__end {
+  font-size: 13px;
+  color: var(--text-faint);
+}

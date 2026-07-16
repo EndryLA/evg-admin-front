@@ -1,0 +1,88 @@
+<a [routerLink]="['/sorties', uuid(), 'gestion']" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Gestion
+</a>
+
+@if (loading()) {
+  <div class="state">Chargement des statistiques…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (outreach(); as o) {
+  <header class="stats-head">
+    <span class="eyebrow">Statistiques</span>
+    <h1>{{ o.name }}</h1>
+    <p class="stats-head__sub">
+      <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+    </p>
+  </header>
+
+  <section class="tiles">
+    <div class="tile">
+      <span class="tile__value">{{ contactCount() }}</span>
+      <span class="tile__label">Contacts</span>
+    </div>
+    <div class="tile">
+      <span class="tile__value tile__value--accent">{{ conversionCount() }}</span>
+      <span class="tile__label">Conversions</span>
+    </div>
+    <div class="tile">
+      <span class="tile__value">{{ conversionRate() }}%</span>
+      <span class="tile__label">Taux de conversion</span>
+    </div>
+    <div class="tile">
+      <span class="tile__value">{{ o.totalParticipants ?? '—' }}</span>
+      <span class="tile__label">Participants</span>
+    </div>
+    <div class="tile">
+      <span class="tile__value">{{ workerCount() }}</span>
+      <span class="tile__label">Ouvriers actifs</span>
+    </div>
+  </section>
+
+  @if (contactCount() === 0) {
+    <div class="state">
+      <div class="state__title">Aucune donnée</div>
+      <div class="state__hint">Aucun contact n'a encore été enregistré pour cette sortie.</div>
+    </div>
+  } @else {
+    <div class="panels">
+      <section class="panel">
+        <h2 class="panel__title">Répartition par état civil</h2>
+        <ul class="breakdown">
+          @for (slice of civilBreakdown(); track slice.label) {
+            <li class="breakdown__row">
+              <div class="breakdown__head">
+                <span class="breakdown__label">{{ slice.label }}</span>
+                <span class="breakdown__count">{{ slice.count }} · {{ slice.percent }}%</span>
+              </div>
+              <div class="breakdown__bar">
+                <span class="breakdown__fill" [style.width.%]="slice.percent"></span>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel__title">Ouvriers</h2>
+        <ul class="leaderboard">
+          @for (w of workers(); track w.name; let i = $index) {
+            <li class="leader">
+              <span class="leader__rank">{{ i + 1 }}</span>
+              <span class="leader__name">{{ w.name }}</span>
+              <span class="leader__stats">
+                <span class="leader__count">{{ w.count }} contact{{ w.count > 1 ? 's' : '' }}</span>
+                @if (w.conversions > 0) {
+                  <span class="leader__conv">{{ w.conversions }} conv.</span>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+  }
+}
