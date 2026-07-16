@@ -35,12 +35,14 @@
         <div class="grid">
           <div class="field">
             <label class="field__label" for="firstname">Prénom</label>
-            <input id="firstname" class="field__control" formControlName="firstname" autocomplete="off" />
+            <input id="firstname" class="field__control" formControlName="firstname" autocomplete="off"
+              (blur)="capitalize('firstname')" />
           </div>
 
           <div class="field">
             <label class="field__label" for="lastname">Nom</label>
-            <input id="lastname" class="field__control" formControlName="lastname" autocomplete="off" />
+            <input id="lastname" class="field__control" formControlName="lastname" autocomplete="off"
+              (blur)="capitalize('lastname')" />
           </div>
 
           <div class="field">
@@ -76,7 +78,8 @@
 
           <div class="field">
             <label class="field__label" for="phoneNumber">Téléphone</label>
-            <input id="phoneNumber" type="tel" class="field__control" formControlName="phoneNumber" autocomplete="off" />
+            <input id="phoneNumber" type="tel" class="field__control" formControlName="phoneNumber" autocomplete="off"
+              inputmode="tel" maxlength="14" placeholder="06 12 34 56 78" (input)="formatPhone()" />
           </div>
 
           <div class="field field--span">

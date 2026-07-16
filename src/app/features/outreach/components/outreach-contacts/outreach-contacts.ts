@@ -1,6 +1,9 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
+import { displayPhoneFr } from '../../../../shared/util/text.util';
+
 import { exportRowsToXlsx, type XlsxColumn } from '../../../../shared/util/xlsx.util';
 import {
   CIVIL_STATE_LABELS,
@@ -25,7 +28,7 @@ const PREVIEW_COUNT = 5;
  */
 @Component({
   selector: 'app-outreach-contacts',
-  imports: [RouterLink],
+  imports: [RouterLink, PhoneFrPipe],
   templateUrl: './outreach-contacts.html',
   styleUrl: './outreach-contacts.scss',
 })
@@ -109,7 +112,7 @@ export class OutreachContacts {
       { header: 'État civil', value: (c) => this.civilStateLabel(c) },
       { header: 'Ville', value: (c) => c.cityName || '' },
       { header: 'Évangélisé par', value: (c) => c.evangelizedBy || '' },
-      { header: 'Téléphone', value: (c) => c.phoneNumber || '' },
+      { header: 'Téléphone', value: (c) => (c.phoneNumber ? displayPhoneFr(c.phoneNumber) : '') },
       { header: 'Observations', value: (c) => c.observations || '', width: 70 },
     ];
     this.exporting.set(true);

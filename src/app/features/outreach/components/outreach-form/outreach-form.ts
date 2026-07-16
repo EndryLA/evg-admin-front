@@ -7,10 +7,14 @@ function pad(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-/** ISO datetime → `YYYY-MM-DD` for a native date input. */
+/** `YYYY-MM-DD` (as the backend sends it) or an ISO datetime → `YYYY-MM-DD`
+ *  for a native date input. */
 function toDateInput(value: string | null): string {
   if (!value) {
     return '';
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return value.trim();
   }
   const d = new Date(value);
   return Number.isNaN(d.getTime())
@@ -66,7 +70,7 @@ export class OutreachForm implements OnInit {
       this.form.setValue({
         name: o.name,
         location: o.location,
-        date: toDateInput(o.startTime),
+        date: toDateInput(o.date),
         startTime: toTimeInput(o.startTime),
         endTime: toTimeInput(o.endTime),
         managedByUuid: o.managedBy?.uuid ?? '',

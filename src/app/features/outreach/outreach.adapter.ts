@@ -32,10 +32,10 @@ export interface RawOutreach {
   location?: string;
   city?: RawCity | null;
   cityLabel?: string | null;
+  date?: string | null;
   startTime?: string | null;
   endTime?: string | null;
   status?: string | null;
-  totalParticipants?: number | null;
   managedBy?: RawManager | null;
 }
 
@@ -143,10 +143,10 @@ export function toOutreach(raw: RawOutreach): Outreach {
     location: raw.location ?? '',
     city,
     cityName: city?.officialName ?? raw.cityLabel ?? '',
+    date: raw.date ?? null,
     startTime: raw.startTime ?? null,
     endTime: raw.endTime ?? null,
     status: toStatus(raw.status),
-    totalParticipants: raw.totalParticipants ?? null,
     managedBy:
       manager && manager.uuid
         ? {

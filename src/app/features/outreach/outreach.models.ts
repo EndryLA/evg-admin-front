@@ -94,22 +94,21 @@ export interface Outreach {
   /** Display name for the linked city: commune's official name, else the
    * free-text label, else empty. Derived in the adapter. */
   cityName: string;
-  /** ISO datetime. */
+  /** Calendar day, `YYYY-MM-DD`. */
+  date: string | null;
+  /** Wall-clock time, `HH:mm:ss` — carries no date, see {@link date}. */
   startTime: string | null;
-  /** ISO datetime. */
+  /** Wall-clock time, `HH:mm:ss` — carries no date, see {@link date}. */
   endTime: string | null;
   /** Read-only, computed by the backend from the schedule. */
   status: OutreachStatus;
-  /** Read-only, computed by the backend from contact entries. */
-  totalParticipants: number | null;
   managedBy: OutreachManager | null;
 }
 
 /**
  * Editable fields when creating or updating an outreach (`OutreachRequest`).
  * The backend splits the schedule into a calendar `date` plus wall-clock
- * `startTime`/`endTime`; `status` and `totalParticipants` are no longer sent —
- * they are derived server-side.
+ * `startTime`/`endTime`; `status` is not sent — it is derived server-side.
  */
 export interface OutreachInput {
   name: string;

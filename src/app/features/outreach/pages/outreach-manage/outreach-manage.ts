@@ -1,7 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { forkJoin, type Observable } from 'rxjs';
 import { toDataURL } from 'qrcode';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
@@ -20,9 +19,9 @@ import {
 
 /**
  * Manage page for one outreach (`/sorties/:uuid/gestion`) — the operational
- * controls: lifecycle status, participant count, and a QR code linking to the
- * public contact form. Status and participants persist through dedicated PATCH
- * endpoints, independent of the outreach's core fields (edited on Details).
+ * controls: lifecycle status, and QR codes linking to the public contact and
+ * presence forms. Status persists through a dedicated PATCH endpoint,
+ * independent of the outreach's core fields (edited on Details).
  */
 @Component({
   selector: 'app-outreach-manage',
@@ -174,28 +173,20 @@ export class OutreachManage implements OnInit {
     this.closeOpen.set(false);
   }
 
-  /** Record the final participant count and mark the sortie as finished. */
-  protected confirmClose(participants: number): void {
+  /** Mark the sortie as finished. */
+  protected confirmClose(): void {
     const current = this.outreach();
     if (!current || this.saving()) {
       return;
     }
 
-    const calls: Observable<Outreach>[] = [
-      this.service.setParticipants(this.uuid(), participants),
-    ];
-    if (current.status !== 'FINISHED') {
-      calls.push(this.service.setStatus(this.uuid(), 'FINISHED'));
-    }
-
     this.saving.set(true);
     this.saveError.set(null);
-    forkJoin(calls).subscribe({
-      next: () => {
+    this.service.setStatus(this.uuid(), 'FINISHED').subscribe({
+      next: (o) => {
         this.saving.set(false);
         this.closeOpen.set(false);
-        // Re-fetch for a consistent snapshot after the parallel patches.
-        this.service.getOne(this.uuid()).subscribe((o) => this.outreach.set(o));
+        this.outreach.set(o);
       },
       error: (err) => {
         this.saving.set(false);

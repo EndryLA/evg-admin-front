@@ -82,7 +82,7 @@
               <td class="cell-muted">{{ civilStateLabel(c) }}</td>
               <td class="cell-muted">{{ c.cityName || '—' }}</td>
               <td class="cell-muted">{{ c.evangelizedBy || '—' }}</td>
-              <td class="cell-muted">{{ c.phoneNumber || '—' }}</td>
+              <td class="cell-muted">{{ c.phoneNumber | phoneFr }}</td>
             </tr>
           }
         </tbody>

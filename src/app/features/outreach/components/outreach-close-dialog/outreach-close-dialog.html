@@ -11,34 +11,23 @@
       <h2 class="modal__title">Clôturer la sortie</h2>
     </header>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="grid">
-        @if (error(); as message) {
-          <p class="alert alert--error field--span" role="alert">{{ message }}</p>
-        }
+    <div class="grid">
+      @if (error(); as message) {
+        <p class="alert alert--error field--span" role="alert">{{ message }}</p>
+      }
 
-        <p class="modal__lead field--span">
-          Indiquez le nombre total de participants. La sortie sera marquée comme terminée.
-        </p>
+      <p class="modal__lead field--span">
+        La sortie sera marquée comme terminée.
+      </p>
+    </div>
 
-        <label class="field field--span">
-          <span class="field__label">Nombre de participants</span>
-          <input class="field__control" type="number" min="0" formControlName="totalParticipants"
-            [attr.aria-invalid]="form.controls.totalParticipants.touched && form.controls.totalParticipants.invalid" />
-          @if (form.controls.totalParticipants.touched && form.controls.totalParticipants.invalid) {
-            <span class="field__error">Indiquez le nombre de participants.</span>
-          }
-        </label>
-      </div>
-
-      <footer class="modal__foot">
-        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
-          Annuler
-        </button>
-        <button type="submit" class="btn btn--primary" [disabled]="busy()">
-          {{ busy() ? 'Clôture…' : 'Clôturer la sortie' }}
-        </button>
-      </footer>
-    </form>
+    <footer class="modal__foot">
+      <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+        Annuler
+      </button>
+      <button type="button" class="btn btn--primary" (click)="confirm.emit()" [disabled]="busy()">
+        {{ busy() ? 'Clôture…' : 'Clôturer la sortie' }}
+      </button>
+    </footer>
   </div>
 </div>

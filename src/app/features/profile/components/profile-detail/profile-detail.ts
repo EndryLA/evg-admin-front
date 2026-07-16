@@ -1,5 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
 
+import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
 import { ageLabel, formatDateFr } from '../../../../shared/util/date.util';
 import { fullName, MEMBERSHIP_LABELS, type Profile } from '../../profile.models';
 
@@ -9,6 +10,7 @@ import { fullName, MEMBERSHIP_LABELS, type Profile } from '../../profile.models'
  */
 @Component({
   selector: 'app-profile-detail',
+  imports: [PhoneFrPipe],
   host: { class: 'slideover', '(keydown.escape)': 'close.emit()' },
   templateUrl: './profile-detail.html',
 })

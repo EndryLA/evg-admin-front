@@ -12,6 +12,8 @@ import {
 import { Router } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
+import { displayPhoneFr } from '../../../../shared/util/text.util';
 import { exportRowsToXlsx, type XlsxColumn } from '../../../../shared/util/xlsx.util';
 import { ContactService } from '../../contact.service';
 import {
@@ -45,6 +47,7 @@ const SEARCH_DEBOUNCE_MS = 300;
  */
 @Component({
   selector: 'app-contact-list',
+  imports: [PhoneFrPipe],
   host: { class: 'data-list' },
   templateUrl: './contact-list.html',
   styleUrl: './contact-list.scss',
@@ -298,7 +301,7 @@ export class ContactList implements OnDestroy {
       { header: 'Ville', value: (c) => c.cityName || '' },
       { header: 'Secteur', value: (c) => c.city?.sector ?? '' },
       { header: 'Évangélisé par', value: (c) => c.evangelizedBy || '' },
-      { header: 'Téléphone', value: (c) => c.phoneNumber || '' },
+      { header: 'Téléphone', value: (c) => (c.phoneNumber ? displayPhoneFr(c.phoneNumber) : '') },
       { header: 'Observations', value: (c) => c.observations || '', width: 70 },
     ];
     this.exporting.set(true);

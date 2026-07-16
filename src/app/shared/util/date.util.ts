@@ -48,26 +48,6 @@ export function formatTimeFr(value?: string | null): string {
   return `${hh}:${min}`;
 }
 
-/** `03/09/1998 · 14:30`, or `—`. For datetime values like outreach times.
- *  Falls back to `14:30` when the value carries a time but no date. */
-export function formatDateTimeFr(value?: string | null): string {
-  if (!value) {
-    return PLACEHOLDER;
-  }
-  if (TIME_ONLY.test(value.trim())) {
-    return formatTimeFr(value);
-  }
-  const date = parseDate(value);
-  if (!date) {
-    return PLACEHOLDER;
-  }
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  return `${dd}/${mm}/${date.getFullYear()} · ${hh}:${min}`;
-}
-
 /** Four-digit year, or `—`. */
 export function yearOf(value?: string | null): string {
   if (!value) {

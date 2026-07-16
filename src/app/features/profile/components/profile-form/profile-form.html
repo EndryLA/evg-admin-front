@@ -16,6 +16,7 @@
         <label class="field">
           <span class="field__label">Prénom</span>
           <input class="field__control" formControlName="firstname" autocomplete="off"
+            (blur)="capitalize('firstname')"
             [attr.aria-invalid]="form.controls.firstname.touched && form.controls.firstname.invalid" />
           @if (form.controls.firstname.touched && form.controls.firstname.invalid) {
             <span class="field__error">Le prénom est requis.</span>
@@ -25,6 +26,7 @@
         <label class="field">
           <span class="field__label">Nom</span>
           <input class="field__control" formControlName="lastname" autocomplete="off"
+            (blur)="capitalize('lastname')"
             [attr.aria-invalid]="form.controls.lastname.touched && form.controls.lastname.invalid" />
           @if (form.controls.lastname.touched && form.controls.lastname.invalid) {
             <span class="field__error">Le nom est requis.</span>
@@ -33,7 +35,8 @@
 
         <label class="field">
           <span class="field__label">Téléphone</span>
-          <input class="field__control" formControlName="phoneNumber" autocomplete="off" inputmode="tel" />
+          <input class="field__control" formControlName="phoneNumber" autocomplete="off" inputmode="tel"
+            maxlength="14" placeholder="06 12 34 56 78" (input)="formatPhone()" />
         </label>
 
         <label class="field">
@@ -73,10 +76,10 @@
           </select>
         </label>
 
-        <div class="field field--checkbox">
+        <div class="field field--checkbox field--span">
           <label class="checkbox">
             <input type="checkbox" formControlName="firstDepartment" />
-            <span>Fait partie du 1<sup>er</sup> département</span>
+            <span>Le département évangélisation est son premier département</span>
           </label>
         </div>
       </div>

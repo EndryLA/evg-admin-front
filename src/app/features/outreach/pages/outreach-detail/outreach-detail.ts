@@ -2,8 +2,9 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
-import { formatDateFr, formatDateTimeFr } from '../../../../shared/util/date.util';
+import { formatDateFr, formatTimeFr } from '../../../../shared/util/date.util';
 import { OutreachForm } from '../../components/outreach-form/outreach-form';
 import { OutreachPresences } from '../../components/outreach-presences/outreach-presences';
 import { OutreachService } from '../../outreach.service';
@@ -28,7 +29,7 @@ import {
  */
 @Component({
   selector: 'app-outreach-detail',
-  imports: [RouterLink, OutreachForm, OutreachPresences, ConfirmDialog],
+  imports: [RouterLink, OutreachForm, OutreachPresences, ConfirmDialog, PhoneFrPipe],
   host: { class: 'detail-page' },
   templateUrl: './outreach-detail.html',
   styleUrl: './outreach-detail.scss',
@@ -59,7 +60,7 @@ export class OutreachDetail implements OnInit {
   protected readonly deleting = signal(false);
 
   protected readonly fmtDate = formatDateFr;
-  protected readonly fmtDateTime = formatDateTimeFr;
+  protected readonly fmtTime = formatTimeFr;
 
   protected readonly publicPresencePath = computed(() => `/sortie/${this.uuid()}/presence`);
 

@@ -128,13 +128,6 @@ export class OutreachService {
       .pipe(map(toOutreach));
   }
 
-  /** Manage-page operation: set the recorded participant count. */
-  setParticipants(uuid: string, totalParticipants: number): Observable<Outreach> {
-    return this.http
-      .patch<RawOutreach>(`${BASE}/${uuid}/participants`, { totalParticipants })
-      .pipe(map(toOutreach));
-  }
-
   remove(uuid: string): Observable<void> {
     return this.http.delete(`${BASE}/${uuid}`).pipe(map(() => undefined));
   }

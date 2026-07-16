@@ -170,10 +170,9 @@
 
   @if (closeOpen()) {
     <app-outreach-close-dialog
-      [participants]="o.totalParticipants"
       [busy]="saving()"
       [error]="saveError()"
-      (confirm)="confirmClose($event)"
+      (confirm)="confirmClose()"
       (cancel)="cancelClose()" />
   }
 

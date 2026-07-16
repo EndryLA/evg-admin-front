@@ -13,6 +13,11 @@ import {
   CityAutocomplete,
   type CityValue,
 } from '../../../../shared/ui/city-autocomplete/city-autocomplete';
+import {
+  formatPhoneFr,
+  toNameCase,
+  unformatPhone,
+} from '../../../../shared/util/text.util';
 import { ContactService } from '../../contact.service';
 import {
   CIVIL_STATE_OPTIONS,
@@ -73,6 +78,21 @@ export class PublicContactForm implements OnInit {
     this.service.outreachName(this.uuid()).subscribe((name) => this.outreachName.set(name));
   }
 
+  /** Group the phone as `XX XX XX XX XX` while it is typed. */
+  protected formatPhone(): void {
+    const control = this.form.controls.phoneNumber;
+    control.setValue(formatPhoneFr(control.value), { emitEvent: false });
+  }
+
+  /**
+   * Capitalize a name field once the user leaves it — doing it per keystroke
+   * would send the caret to the end mid-word.
+   */
+  protected capitalize(field: 'firstname' | 'lastname'): void {
+    const control = this.form.controls[field];
+    control.setValue(toNameCase(control.value.trim()), { emitEvent: false });
+  }
+
   protected submit(): void {
     if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
@@ -91,7 +111,8 @@ export class PublicContactForm implements OnInit {
         cityInseeCode: v.city.inseeCode,
         cityLabel: v.city.inseeCode == null ? v.city.label : null,
         evangelizedBy: v.evangelizedBy,
-        phoneNumber: v.phoneNumber,
+        // Stored bare, matching existing rows and the phone search filter.
+        phoneNumber: unformatPhone(v.phoneNumber),
         observations: v.observations,
       })
       .subscribe({

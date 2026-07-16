@@ -2,6 +2,11 @@ import { Component, computed, inject, input, OnInit, output } from '@angular/cor
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import {
+  formatPhoneFr,
+  toNameCase,
+  unformatPhone,
+} from '../../../../shared/util/text.util';
+import {
   fullName,
   type Profile,
   type ProfileFormResult,
@@ -65,7 +70,7 @@ export class ProfileForm implements OnInit {
       this.form.setValue({
         firstname: p.firstname,
         lastname: p.lastname,
-        phoneNumber: p.phoneNumber ?? '',
+        phoneNumber: formatPhoneFr(p.phoneNumber ?? ''),
         email: p.email ?? '',
         birthDate: toDateInput(p.birthDate),
         joinedAt: p.joinedAt != null ? String(p.joinedAt) : '',
@@ -74,6 +79,21 @@ export class ProfileForm implements OnInit {
         leaderUuid: p.leaderUuid ?? '',
       });
     }
+  }
+
+  /** Group the phone as `XX XX XX XX XX` while it is typed. */
+  protected formatPhone(): void {
+    const control = this.form.controls.phoneNumber;
+    control.setValue(formatPhoneFr(control.value), { emitEvent: false });
+  }
+
+  /**
+   * Capitalize a name field once the user leaves it — doing it per keystroke
+   * would send the caret to the end mid-word.
+   */
+  protected capitalize(field: 'firstname' | 'lastname'): void {
+    const control = this.form.controls[field];
+    control.setValue(toNameCase(control.value.trim()), { emitEvent: false });
   }
 
   protected submit(): void {
@@ -86,7 +106,8 @@ export class ProfileForm implements OnInit {
       input: {
         firstname: v.firstname,
         lastname: v.lastname,
-        phoneNumber: v.phoneNumber || null,
+        // Stored bare, matching existing rows and the phone search filter.
+        phoneNumber: unformatPhone(v.phoneNumber) || null,
         email: v.email || null,
         birthDate: v.birthDate || null,
         joinedAt: v.joinedAt ? Number(v.joinedAt) : null,

@@ -57,15 +57,15 @@
       </div>
       <div class="summary__row">
         <dt>Date</dt>
-        <dd>{{ fmtDate(o.startTime) }}</dd>
+        <dd>{{ fmtDate(o.date) }}</dd>
       </div>
       <div class="summary__row">
         <dt>Début</dt>
-        <dd>{{ fmtDateTime(o.startTime) }}</dd>
+        <dd>{{ fmtTime(o.startTime) }}</dd>
       </div>
       <div class="summary__row">
         <dt>Fin</dt>
-        <dd>{{ fmtDateTime(o.endTime) }}</dd>
+        <dd>{{ fmtTime(o.endTime) }}</dd>
       </div>
       <div class="summary__row">
         <dt>Statut</dt>
@@ -74,10 +74,6 @@
       <div class="summary__row">
         <dt>Responsable</dt>
         <dd>{{ o.managedBy?.name || '—' }}</dd>
-      </div>
-      <div class="summary__row">
-        <dt>Participants</dt>
-        <dd>{{ o.totalParticipants ?? '—' }}</dd>
       </div>
       <div class="summary__row summary__row--last">
         <dt>Identifiant</dt>
@@ -127,7 +123,7 @@
                 <td class="cell-muted">{{ civilStateLabel(c) }}</td>
                 <td class="cell-muted">{{ c.cityName || '—' }}</td>
                 <td class="cell-muted">{{ c.evangelizedBy || '—' }}</td>
-                <td class="cell-muted">{{ c.phoneNumber || '—' }}</td>
+                <td class="cell-muted">{{ c.phoneNumber | phoneFr }}</td>
               </tr>
             }
           </tbody>

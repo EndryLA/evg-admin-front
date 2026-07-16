@@ -31,6 +31,30 @@ tbody tr.row--selected { background: var(--row-hover); }
   background: var(--bg-sunken);
 }
 .toolbar__count { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
+/* Mobile-only: the select-all lives in the table header, which the card layout
+   hides (see the `.data-list` mobile block in src/styles.scss). */
+.toolbar__all { display: none; }
+
+@media (max-width: 720px) {
+  .toolbar { flex-wrap: wrap; }
+  .toolbar__all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    cursor: pointer;
+  }
+  .toolbar__all input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  /* Export drops to its own full-width line below the selection controls. */
+  .toolbar .btn { flex-basis: 100%; justify-content: center; }
+}
 
 /* Infinite-scroll sentinel. */
 .scroll-sentinel {

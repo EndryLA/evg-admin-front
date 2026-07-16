@@ -144,7 +144,7 @@
             <td class="cell-contact hide-sm" data-label="Nom">{{ r.lastname }}</td>
             <td class="hide-sm" data-label="Contact">
               <div class="cell-stack">
-                <div class="cell-contact">{{ r.phoneNumber || '—' }}</div>
+                <div class="cell-contact">{{ r.phoneNumber | phoneFr }}</div>
                 <div class="cell-sub">{{ r.email || '—' }}</div>
               </div>
             </td>
@@ -159,7 +159,7 @@
             </td>
             <td data-label="Chef d'équipe">
               @if (r.leaderFirstname; as leader) {
-                <span class="pill pill--{{ leaderTone(leader) }}">{{ leader }}</span>
+                <span class="pill pill--dark">{{ leader }}</span>
               } @else {
                 <span class="cell-sub">—</span>
               }

@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { ProfileDetail } from '../../components/profile-detail/profile-detail';
 import { ProfileForm } from '../../components/profile-form/profile-form';
@@ -18,7 +19,6 @@ import { ProfileService } from '../../profile.service';
 import {
   EMPTY_PROFILE_FILTER,
   fullName,
-  leaderTone,
   MEMBERSHIP_LABELS,
   type MembershipType,
   type Profile,
@@ -54,7 +54,7 @@ const SORT_FIELDS: Record<SortKey, string> = {
  */
 @Component({
   selector: 'app-profile-list',
-  imports: [ProfileDetail, ProfileForm, ConfirmDialog],
+  imports: [ProfileDetail, ProfileForm, ConfirmDialog, PhoneFrPipe],
   host: { class: 'data-list' },
   templateUrl: './profile-list.html',
   styleUrl: './profile-list.scss',
@@ -127,7 +127,6 @@ export class ProfileList implements OnDestroy {
 
   protected readonly fullName = fullName;
   protected readonly age = ageLabel;
-  protected readonly leaderTone = leaderTone;
   protected membershipLabel(type: MembershipType | null): string {
     return type ? MEMBERSHIP_LABELS[type] : '—';
   }

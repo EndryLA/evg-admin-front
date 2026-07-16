@@ -131,6 +131,7 @@
       <thead>
         <tr>
           <th class="col-name sortable" (click)="sortBy('name')">Sortie <span class="ind">{{ sortIndicator('name') }}</span></th>
+          <th class="col-time">Date</th>
           <th class="col-time sortable" (click)="sortBy('start')">Début <span class="ind">{{ sortIndicator('start') }}</span></th>
           <th class="col-time">Fin</th>
           <th class="col-status sortable" (click)="sortBy('status')">Statut <span class="ind">{{ sortIndicator('status') }}</span></th>
@@ -145,8 +146,9 @@
               <div class="cell-main">{{ o.name }}</div>
               <div class="cell-sub">{{ o.location }}</div>
             </td>
-            <td class="cell-contact cell-plain">{{ fmt(o.startTime) }}</td>
-            <td class="cell-contact hide-sm" data-label="Fin">{{ fmt(o.endTime) }}</td>
+            <td class="cell-contact cell-plain" data-label="Date">{{ fmtDate(o.date) }}</td>
+            <td class="cell-contact cell-plain" data-label="Début">{{ fmtTime(o.startTime) }}</td>
+            <td class="cell-contact hide-sm" data-label="Fin">{{ fmtTime(o.endTime) }}</td>
             <td class="cell-plain">
               <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
             </td>

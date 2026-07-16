@@ -2,6 +2,7 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
 import { ContactService } from '../../contact.service';
 import {
   CIVIL_STATE_LABELS,
@@ -13,7 +14,7 @@ import {
 /** Full-page, read-only detail for one contact (`/contacts/:uuid`). */
 @Component({
   selector: 'app-contact-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, PhoneFrPipe],
   host: { class: 'detail-page' },
   templateUrl: './contact-detail.html',
   styleUrl: './contact-detail.scss',

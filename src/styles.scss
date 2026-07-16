@@ -56,6 +56,9 @@
   --pill-blue-text: #1d4ed8;
   --pill-violet-bg: #f5f3ff;
   --pill-violet-text: #6d28d9;
+  /* Solid neutral, for badges that identify rather than signal status. */
+  --pill-dark-bg: #3f3f46;
+  --pill-dark-text: #fafafa;
 
   /* ---- Alerts ---- */
   --alert-error-bg: #fef2f2;
@@ -141,6 +144,9 @@
   --pill-blue-text: #93c5fd;
   --pill-violet-bg: rgba(139, 92, 246, 0.2);
   --pill-violet-text: #c4b5fd;
+  /* Lifted off the near-black card so the pill still reads as a chip. */
+  --pill-dark-bg: #3f3f46;
+  --pill-dark-text: #f4f4f5;
 
   --alert-error-bg: rgba(220, 38, 38, 0.16);
   --alert-error-text: #fca5a5;
@@ -279,6 +285,7 @@ input, select, button, textarea { font-family: inherit; }
 .pill--amber { background: var(--pill-amber-bg); color: var(--pill-amber-text); }
 .pill--blue { background: var(--pill-blue-bg); color: var(--pill-blue-text); }
 .pill--violet { background: var(--pill-violet-bg); color: var(--pill-violet-text); }
+.pill--dark { background: var(--pill-dark-bg); color: var(--pill-dark-text); }
 
 /* ---- Shared data-list page shell (design.md §3 table shell) ---- */
 .data-list {
@@ -714,12 +721,11 @@ input, select, button, textarea { font-family: inherit; }
   gap: 16px;
 }
 .modal-form .field--span { grid-column: 1 / -1; }
-.modal-form .field--checkbox { display: flex; align-items: flex-end; }
+.modal-form .field--checkbox { display: flex; }
 .modal-form .checkbox {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 0;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
@@ -894,6 +900,44 @@ input, select, button, textarea { font-family: inherit; }
     right: 12px;
     padding: 0;
     width: auto;
+  }
+
+  /* Selectable rows run checkbox / name / chevron along one header line, all
+     centred on each other, instead of stacking the box above the name. The
+     divider cell-head normally carries moves to the row below: left on the
+     header line, its padding would drag the centring off the text. */
+  .data-list tbody tr:has(td.cell-select) {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    column-gap: 10px;
+    align-items: center;
+    padding-right: 16px;
+  }
+  .data-list tbody tr:has(td.cell-select) > td { grid-column: 1 / -1; }
+  .data-list tbody tr:has(td.cell-select) > td.cell-select {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    padding: 0;
+    line-height: 0;
+  }
+  .data-list tbody tr:has(td.cell-select) > td.cell-head {
+    grid-column: 2;
+    grid-row: 1;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+  .data-list tbody tr:has(td.cell-select) > td.chevron {
+    position: static;
+    grid-column: 3;
+    grid-row: 1;
+    line-height: 0;
+  }
+  .data-list tbody tr:has(td.cell-select) > td.cell-head + td {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-faint);
   }
   .data-list td.chevron { color: var(--chevron); }
 

@@ -12,7 +12,7 @@ import {
 import { Router } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
-import { formatDateTimeFr } from '../../../../shared/util/date.util';
+import { formatDateFr, formatTimeFr } from '../../../../shared/util/date.util';
 import { OutreachForm } from '../../components/outreach-form/outreach-form';
 import { OutreachService } from '../../outreach.service';
 import {
@@ -91,7 +91,8 @@ export class OutreachList implements OnDestroy {
   protected readonly menuOutreach = signal<Outreach | null>(null);
   protected readonly menuPos = signal<{ top: number; left: number }>({ top: 0, left: 0 });
 
-  protected readonly fmt = formatDateTimeFr;
+  protected readonly fmtDate = formatDateFr;
+  protected readonly fmtTime = formatTimeFr;
 
   /** True when any filter is narrowing the list (drives the reset button). */
   protected readonly hasActiveFilters = computed(
