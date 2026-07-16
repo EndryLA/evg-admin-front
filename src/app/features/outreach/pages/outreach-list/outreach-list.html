@@ -59,7 +59,7 @@
       </label>
 
       <label class="filter-field">
-        <span class="filter-field__label">Responsable</span>
+        <span class="filter-field__label">Superviseur</span>
         <select
           class="filter-select"
           [value]="managedBy()"
@@ -134,7 +134,7 @@
           <th class="col-time sortable" (click)="sortBy('start')">Début <span class="ind">{{ sortIndicator('start') }}</span></th>
           <th class="col-time">Fin</th>
           <th class="col-status sortable" (click)="sortBy('status')">Statut <span class="ind">{{ sortIndicator('status') }}</span></th>
-          <th class="col-manager">Responsable</th>
+          <th class="col-manager">Superviseur</th>
           <th class="col-chevron"></th>
         </tr>
       </thead>

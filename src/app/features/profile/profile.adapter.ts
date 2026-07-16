@@ -1,4 +1,4 @@
-import type { MembershipType, Profile, ProfileInput } from './profile.models';
+import type { MembershipType, Page, Profile, ProfileInput } from './profile.models';
 
 /** Raw `ProfileResponse` as returned by the backend. */
 export interface RawProfile {
@@ -23,6 +23,8 @@ export interface RawPage<T> {
   totalPages?: number;
   number?: number;
   size?: number;
+  first?: boolean;
+  last?: boolean;
 }
 
 function toMembership(value: string | null | undefined): MembershipType | null {
@@ -53,6 +55,19 @@ export function toProfile(raw: RawProfile): Profile {
     isTeamLeader: raw.isTeamLeader ?? false,
     leaderUuid: raw.leaderUuid ?? null,
     leaderFirstname: raw.leaderFirstname ?? null,
+  };
+}
+
+/** Map a raw Spring page of profiles to the clean {@link Page} model. */
+export function toProfilePage(raw: RawPage<RawProfile>): Page<Profile> {
+  return {
+    items: (raw.content ?? []).map(toProfile),
+    page: raw.number ?? 0,
+    size: raw.size ?? 0,
+    totalElements: raw.totalElements ?? 0,
+    totalPages: raw.totalPages ?? 0,
+    first: raw.first ?? true,
+    last: raw.last ?? true,
   };
 }
 

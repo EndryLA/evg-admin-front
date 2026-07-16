@@ -78,7 +78,7 @@ export class TeamLeaderManage {
   protected load(): void {
     this.loading.set(true);
     this.loadError.set(null);
-    this.service.list().subscribe({
+    this.service.listAll().subscribe({
       next: (data) => {
         this.profiles.set(data);
         this.loading.set(false);

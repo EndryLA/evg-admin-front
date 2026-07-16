@@ -25,6 +25,9 @@ const HEADER_FILL = 'FF18181B'; // zinc-900 band
 const HEADER_TEXT = 'FFFFFFFF';
 const BORDER = 'FFECECEE'; // hairline
 
+/** Grace period before the blob URL is released, so Safari can start the download. */
+const REVOKE_DELAY_MS = 30_000;
+
 /**
  * Build and download a styled `.xlsx` file from `rows`. Column order/headers come
  * from `columns`; each row's cells are read through the column `value` getters.
@@ -36,7 +39,11 @@ export async function exportRowsToXlsx<T>(
   filename: string,
   options: XlsxOptions<T> = {},
 ): Promise<void> {
-  const { Workbook } = await import('exceljs');
+  // ExcelJS is CommonJS: the production build exposes it only as the namespace's
+  // `default`, while the dev server synthesizes named exports. Accept either, or
+  // `Workbook` is undefined in prod builds only.
+  const ns = await import('exceljs');
+  const { Workbook } = ns.default ?? ns;
   const workbook = new Workbook();
   const sheet = workbook.addWorksheet(options.sheetName ?? 'Feuille1', {
     views: [{ state: 'frozen', ySplit: 1 }],
@@ -111,6 +118,12 @@ export async function exportRowsToXlsx<T>(
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`;
+  // Safari only honours `download` on an anchor that is in the document, and
+  // cancels the transfer if the object URL is revoked while it is still
+  // starting — so attach before clicking and revoke on a later task.
+  anchor.style.display = 'none';
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
 }

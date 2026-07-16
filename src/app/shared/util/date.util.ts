@@ -26,10 +26,36 @@ export function formatDateFr(value?: string | null): string {
   return `${dd}/${mm}/${date.getFullYear()}`;
 }
 
-/** `03/09/1998 · 14:30`, or `—`. For datetime values like outreach times. */
+/** Match a bare clock-time, `HH:mm` or `HH:mm:ss`, as the backend sends for
+ *  outreach `startTime`/`endTime` (a Java `LocalTime`, with no date part). */
+const TIME_ONLY = /^(\d{2}):(\d{2})(?::\d{2})?$/;
+
+/** `14:30`, or `—`. For bare clock-times carrying no date. */
+export function formatTimeFr(value?: string | null): string {
+  if (!value) {
+    return PLACEHOLDER;
+  }
+  const match = TIME_ONLY.exec(value.trim());
+  if (match) {
+    return `${match[1]}:${match[2]}`;
+  }
+  const date = parseDate(value);
+  if (!date) {
+    return PLACEHOLDER;
+  }
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${hh}:${min}`;
+}
+
+/** `03/09/1998 · 14:30`, or `—`. For datetime values like outreach times.
+ *  Falls back to `14:30` when the value carries a time but no date. */
 export function formatDateTimeFr(value?: string | null): string {
   if (!value) {
     return PLACEHOLDER;
+  }
+  if (TIME_ONLY.test(value.trim())) {
+    return formatTimeFr(value);
   }
   const date = parseDate(value);
   if (!date) {

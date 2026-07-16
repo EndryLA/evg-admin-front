@@ -22,7 +22,9 @@ interface CivilStateSlice {
 /** A single evangelist's tally, for the leaderboard. */
 interface WorkerTally {
   name: string;
-  count: number;
+  /** Everyone they met, both types — what the ranking is on. */
+  total: number;
+  contacts: number;
   conversions: number;
 }
 
@@ -58,13 +60,17 @@ export class OutreachStats implements OnInit {
     return o ? STATUS_TONES[o.status] : 'grey';
   });
 
-  protected readonly contactCount = computed(() => this.contacts().length);
+  /** Every person met, whichever type. */
+  protected readonly entryCount = computed(() => this.contacts().length);
+  protected readonly contactCount = computed(
+    () => this.contacts().filter((c) => c.type === 'CONTACT').length,
+  );
   protected readonly conversionCount = computed(
     () => this.contacts().filter((c) => c.type === 'CONVERSION').length,
   );
-  /** Share of contacts that became conversions, as a whole percentage. */
+  /** Share of people met who became conversions, as a whole percentage. */
   protected readonly conversionRate = computed(() => {
-    const total = this.contactCount();
+    const total = this.entryCount();
     return total ? Math.round((this.conversionCount() / total) * 100) : 0;
   });
   /** Distinct evangelists who recorded at least one contact. */
@@ -72,7 +78,7 @@ export class OutreachStats implements OnInit {
 
   /** Civil-state distribution, largest slice first, empty ones dropped. */
   protected readonly civilBreakdown = computed<CivilStateSlice[]>(() => {
-    const total = this.contactCount();
+    const total = this.entryCount();
     const counts = new Map<CivilState, number>();
     for (const c of this.contacts()) {
       counts.set(c.civilState, (counts.get(c.civilState) ?? 0) + 1);
@@ -95,14 +101,16 @@ export class OutreachStats implements OnInit {
         continue;
       }
       const key = name.toLowerCase();
-      const tally = byName.get(key) ?? { name, count: 0, conversions: 0 };
-      tally.count += 1;
+      const tally = byName.get(key) ?? { name, total: 0, contacts: 0, conversions: 0 };
+      tally.total += 1;
       if (c.type === 'CONVERSION') {
         tally.conversions += 1;
+      } else {
+        tally.contacts += 1;
       }
       byName.set(key, tally);
     }
-    return [...byName.values()].sort((a, b) => b.count - a.count);
+    return [...byName.values()].sort((a, b) => b.total - a.total);
   });
 
   ngOnInit(): void {

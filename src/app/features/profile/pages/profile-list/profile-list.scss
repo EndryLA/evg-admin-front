@@ -13,3 +13,17 @@
 
 .dept-yes { font-size: 13px; font-weight: 600; color: var(--accent-soft-text); }
 .dept-no { font-size: 13px; font-weight: 500; color: var(--text-faint); }
+
+/* Infinite-scroll sentinel. */
+.scroll-sentinel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8px;
+  padding: 14px 0 4px;
+}
+.scroll-sentinel__spinner,
+.scroll-sentinel__end {
+  font-size: 13px;
+  color: var(--text-faint);
+}

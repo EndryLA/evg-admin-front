@@ -18,10 +18,14 @@ function toDateInput(value: string | null): string {
     : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** ISO datetime → `HH:MM` for a native time input. */
+/** Bare `HH:mm[:ss]` or an ISO datetime → `HH:MM` for a native time input. */
 function toTimeInput(value: string | null): string {
   if (!value) {
     return '';
+  }
+  const timeOnly = /^(\d{2}):(\d{2})(?::\d{2})?$/.exec(value.trim());
+  if (timeOnly) {
+    return `${timeOnly[1]}:${timeOnly[2]}`;
   }
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? '' : `${pad(d.getHours())}:${pad(d.getMinutes())}`;

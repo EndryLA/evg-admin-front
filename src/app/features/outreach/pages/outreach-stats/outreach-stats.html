@@ -42,7 +42,7 @@
     </div>
   </section>
 
-  @if (contactCount() === 0) {
+  @if (entryCount() === 0) {
     <div class="state">
       <div class="state__title">Aucune donnée</div>
       <div class="state__hint">Aucun contact n'a encore été enregistré pour cette sortie.</div>
@@ -74,7 +74,7 @@
               <span class="leader__rank">{{ i + 1 }}</span>
               <span class="leader__name">{{ w.name }}</span>
               <span class="leader__stats">
-                <span class="leader__count">{{ w.count }} contact{{ w.count > 1 ? 's' : '' }}</span>
+                <span class="leader__count">{{ w.contacts }} contact{{ w.contacts > 1 ? 's' : '' }}</span>
                 @if (w.conversions > 0) {
                   <span class="leader__conv">{{ w.conversions }} conv.</span>
                 }

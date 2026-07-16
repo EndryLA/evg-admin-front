@@ -1,7 +1,7 @@
 <header class="topbar">
   <div>
     <h1>Effectif</h1>
-    <p class="topbar__sub">{{ total() }} membres</p>
+    <p class="topbar__sub">{{ totalElements() }} membres · {{ rows().length }} chargés.</p>
   </div>
 </header>
 
@@ -10,7 +10,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     <input
       type="search"
-      [value]="query()"
+      [value]="filter().search"
       (input)="onSearch($any($event.target).value)"
       placeholder="Rechercher un nom, e-mail, téléphone…"
       aria-label="Rechercher un profil" />
@@ -36,20 +36,67 @@
 
     <div class="drawer-body">
       <div class="tabs" role="tablist" aria-label="Filtrer par type">
-        <button type="button" role="tab" [attr.aria-selected]="tab() === 'ALL'" class="tab" [class.tab--active]="tab() === 'ALL'" (click)="setTab('ALL')">Tous</button>
-        <button type="button" role="tab" [attr.aria-selected]="tab() === 'OUVRIER'" class="tab" [class.tab--active]="tab() === 'OUVRIER'" (click)="setTab('OUVRIER')">Ouvriers</button>
-        <button type="button" role="tab" [attr.aria-selected]="tab() === 'AIDE'" class="tab" [class.tab--active]="tab() === 'AIDE'" (click)="setTab('AIDE')">Aides</button>
+        <button type="button" role="tab" [attr.aria-selected]="filter().membershipType === 'ALL'" class="tab" [class.tab--active]="filter().membershipType === 'ALL'" (click)="setTab('ALL')">Tous</button>
+        <button type="button" role="tab" [attr.aria-selected]="filter().membershipType === 'OUVRIER'" class="tab" [class.tab--active]="filter().membershipType === 'OUVRIER'" (click)="setTab('OUVRIER')">Ouvriers</button>
+        <button type="button" role="tab" [attr.aria-selected]="filter().membershipType === 'AIDE'" class="tab" [class.tab--active]="filter().membershipType === 'AIDE'" (click)="setTab('AIDE')">Aides</button>
       </div>
 
       <button type="button" class="chip" [class.chip--active]="deptOnly()" [attr.aria-pressed]="deptOnly()" (click)="toggleDept()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
         1<sup>er</sup> département
       </button>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Chef d'équipe</span>
+        <select
+          class="filter-select"
+          [value]="filter().leaderUuid ?? 'ALL'"
+          (change)="setLeader($any($event.target).value)"
+          aria-label="Filtrer par chef d'équipe">
+          <option value="ALL">Tous</option>
+          @for (l of leaders(); track l.uuid) {
+            <option [value]="l.uuid">{{ fullName(l) }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Adhésion depuis</span>
+        <input
+          type="number"
+          class="filter-input"
+          inputmode="numeric"
+          [value]="filter().minJoinedAt ?? ''"
+          [max]="filter().maxJoinedAt ?? null"
+          (change)="setMinJoinedAt($any($event.target).value)"
+          placeholder="2020"
+          aria-label="Année d'adhésion minimale" />
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Adhésion jusqu'à</span>
+        <input
+          type="number"
+          class="filter-input"
+          inputmode="numeric"
+          [value]="filter().maxJoinedAt ?? ''"
+          [min]="filter().minJoinedAt ?? null"
+          (change)="setMaxJoinedAt($any($event.target).value)"
+          placeholder="2026"
+          aria-label="Année d'adhésion maximale" />
+      </label>
+
+      @if (hasActiveFilters()) {
+        <button type="button" class="btn filter-reset" (click)="resetFilters()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+          Réinitialiser
+        </button>
+      }
     </div>
 
     <div class="drawer-foot">
       <button type="button" class="btn btn--primary drawer-apply" (click)="closeFilters()">
-        Voir les résultats ({{ resultCount() }})
+        Voir les résultats ({{ totalElements() }})
       </button>
     </div>
   </div>
@@ -70,7 +117,7 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
-<div class="table-region">
+<div class="table-region" #scrollRoot>
   <div class="table-card">
     <table>
       <thead>
@@ -148,26 +195,14 @@
     }
   </div>
 
-  @if (!loading() && !loadError() && resultCount() > 0) {
-    <nav class="pagination" aria-label="Pagination">
-      <div class="pagination__range">{{ rangeLabel() }}</div>
-      <div class="pagination__pages">
-        <button type="button" class="pg" (click)="prev()" [disabled]="page() === 1" aria-label="Page précédente">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        @for (item of pageItems(); track $index) {
-          @if (item === 'gap') {
-            <span class="pg-gap">…</span>
-          } @else {
-            <button type="button" class="pg" [class.pg--active]="item === page()" (click)="goTo(item)">{{ item }}</button>
-          }
-        }
-        <button type="button" class="pg" (click)="next()" [disabled]="page() === totalPages()" aria-label="Page suivante">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
-      </div>
-    </nav>
-  }
+  <!-- Infinite-scroll sentinel: pulls the next page when it enters view. -->
+  <div class="scroll-sentinel" #sentinel aria-hidden="true">
+    @if (loadingMore()) {
+      <span class="scroll-sentinel__spinner">Chargement…</span>
+    } @else if (!loading() && !hasMore() && !loadError() && rows().length > 0) {
+      <span class="scroll-sentinel__end">Fin de la liste</span>
+    }
+  </div>
 </div>
 
 @if (selected(); as p) {

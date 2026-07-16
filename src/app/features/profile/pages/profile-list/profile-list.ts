@@ -1,4 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  OnDestroy,
+  signal,
+  viewChild,
+} from '@angular/core';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -6,31 +16,41 @@ import { ProfileDetail } from '../../components/profile-detail/profile-detail';
 import { ProfileForm } from '../../components/profile-form/profile-form';
 import { ProfileService } from '../../profile.service';
 import {
+  EMPTY_PROFILE_FILTER,
   fullName,
   leaderTone,
   MEMBERSHIP_LABELS,
   type MembershipType,
   type Profile,
+  type ProfileFilter,
   type ProfileFormResult,
 } from '../../profile.models';
 import { ageLabel } from '../../../../shared/util/date.util';
 
-type Tab = 'ALL' | 'OUVRIER' | 'AIDE';
+/** The type-tab selection: all types, or one {@link MembershipType}. */
+type TypeFilter = ProfileFilter['membershipType'];
 type SortKey = 'name' | 'type' | 'joined';
 type SortDir = 'asc' | 'desc';
-type PageItem = number | 'gap';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
+/** Debounce before the free-text search triggers a server reload. */
+const SEARCH_DEBOUNCE_MS = 300;
 
-/** Strip accents & lowercase for accent-insensitive search. */
-function normalize(value: string): string {
-  return value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-}
+/** Sortable columns mapped to the backing entity field Spring sorts on. */
+const SORT_FIELDS: Record<SortKey, string> = {
+  name: 'lastname',
+  type: 'membershipType',
+  joined: 'joinedAt',
+};
 
 /**
- * Profils — the members table. Loads all profiles once and does search, tab
- * filtering, the 1ᵉʳ-département toggle, sorting and pagination in memory, then
- * orchestrates the detail slide-over, create/edit modal and delete dialog.
+ * Effectif — the members table. Paged server-side and loaded 20 at a time via
+ * infinite scroll (`GET /api/profiles?page&size&sort` + `ProfileFilter`): an
+ * IntersectionObserver on a bottom sentinel pulls the next page as it comes into
+ * view. Search, type, 1ᵉʳ-département, team leader and the joined-year range are
+ * all applied server-side, so any change — sorting included — reloads from the
+ * first page. Also orchestrates the detail slide-over, create/edit modal and
+ * delete dialog.
  */
 @Component({
   selector: 'app-profile-list',
@@ -39,29 +59,65 @@ function normalize(value: string): string {
   templateUrl: './profile-list.html',
   styleUrl: './profile-list.scss',
 })
-export class ProfileList {
+export class ProfileList implements OnDestroy {
   private readonly service = inject(ProfileService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly scrollRoot = viewChild<ElementRef<HTMLElement>>('scrollRoot');
+  private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
 
   // ---- Data ----
-  protected readonly profiles = signal<Profile[]>([]);
-  protected readonly loading = signal(true);
+  protected readonly rows = signal<Profile[]>([]);
+  protected readonly loading = signal(true); // initial page
+  protected readonly loadingMore = signal(false); // subsequent pages
   protected readonly loadError = signal<string | null>(null);
+  protected readonly hasMore = signal(true);
+  protected readonly totalElements = signal(0);
+  private nextPage = 0;
 
-  // ---- Filters / view state ----
-  protected readonly query = signal('');
-  protected readonly tab = signal<Tab>('ALL');
-  protected readonly deptOnly = signal(false);
+  /**
+   * Team leaders — the "Chef d'équipe" options in both the filter and the form.
+   * Fetched separately from the paged list, which only ever holds the rows
+   * matching the current filter.
+   */
+  protected readonly leaders = signal<Profile[]>([]);
+
+  // ---- Filters ----
+  protected readonly filter = signal<ProfileFilter>({ ...EMPTY_PROFILE_FILTER });
   protected readonly sortKey = signal<SortKey>('name');
   protected readonly sortDir = signal<SortDir>('asc');
-  protected readonly page = signal(1);
+
+  /** True when any filter is narrowing the list (drives the reset button). */
+  protected readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return (
+      f.search.trim() !== '' ||
+      f.membershipType !== 'ALL' ||
+      f.firstDepartment !== null ||
+      f.leaderUuid !== null ||
+      f.minJoinedAt !== null ||
+      f.maxJoinedAt !== null
+    );
+  });
+
+  /** Active drawer filters (search excluded — it stays visible). Drives the badge. */
+  protected readonly activeFilterCount = computed(() => {
+    const f = this.filter();
+    return (
+      (f.membershipType !== 'ALL' ? 1 : 0) +
+      (f.firstDepartment !== null ? 1 : 0) +
+      (f.leaderUuid !== null ? 1 : 0) +
+      (f.minJoinedAt !== null ? 1 : 0) +
+      (f.maxJoinedAt !== null ? 1 : 0)
+    );
+  });
+
+  /** The 1ᵉʳ-département chip is a toggle: on = `true`, off = unconstrained. */
+  protected readonly deptOnly = computed(() => this.filter().firstDepartment === true);
 
   // ---- Overlays ----
   /** Mobile-only: the bottom filter drawer. */
   protected readonly filterDrawerOpen = signal(false);
-  /** Active drawer filters (search excluded — it stays visible). Drives the badge. */
-  protected readonly activeFilterCount = computed(
-    () => (this.tab() !== 'ALL' ? 1 : 0) + (this.deptOnly() ? 1 : 0),
-  );
   protected readonly selected = signal<Profile | null>(null);
   protected readonly formOpen = signal(false);
   protected readonly formProfile = signal<Profile | null>(null);
@@ -76,120 +132,137 @@ export class ProfileList {
     return type ? MEMBERSHIP_LABELS[type] : '—';
   }
 
-  /** Team leaders, offered as "Chef d'équipe" options in the form. */
-  protected readonly leaders = computed(() =>
-    this.profiles().filter((p) => p.isTeamLeader),
-  );
+  private searchTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     this.load();
+    this.loadLeaders();
+    afterNextRender(() => this.observe());
   }
 
-  // ---- Derived collections ----
-  protected readonly filtered = computed<Profile[]>(() => {
-    const q = normalize(this.query().trim());
-    const tab = this.tab();
-    const deptOnly = this.deptOnly();
-    return this.profiles().filter((p) => {
-      if (tab !== 'ALL' && p.membershipType !== tab) {
-        return false;
-      }
-      if (deptOnly && !p.firstDepartment) {
-        return false;
-      }
-      if (q) {
-        const haystack = normalize(
-          `${p.firstname} ${p.lastname} ${p.email ?? ''} ${p.phoneNumber ?? ''}`,
-        );
-        if (!haystack.includes(q)) {
-          return false;
-        }
-      }
-      return true;
-    });
-  });
-
-  protected readonly sorted = computed<Profile[]>(() => {
-    const key = this.sortKey();
-    const dir = this.sortDir() === 'asc' ? 1 : -1;
-    return [...this.filtered()].sort((a, b) => {
-      const cmp = this.compare(a, b, key);
-      return cmp * dir;
-    });
-  });
-
-  protected readonly total = computed(() => this.profiles().length);
-  protected readonly resultCount = computed(() => this.filtered().length);
-  protected readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.resultCount() / PAGE_SIZE)),
-  );
-
-  protected readonly rows = computed<Profile[]>(() => {
-    const start = (this.page() - 1) * PAGE_SIZE;
-    return this.sorted().slice(start, start + PAGE_SIZE);
-  });
-
-  protected readonly rangeLabel = computed(() => {
-    const count = this.resultCount();
-    if (count === 0) {
-      return '0 résultat';
-    }
-    const start = (this.page() - 1) * PAGE_SIZE + 1;
-    const end = Math.min(this.page() * PAGE_SIZE, count);
-    return `${start}–${end} sur ${count}`;
-  });
-
-  protected readonly pageItems = computed<PageItem[]>(() => {
-    const total = this.totalPages();
-    const current = this.page();
-    if (total <= 7) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    const items: PageItem[] = [1];
-    const from = Math.max(2, current - 1);
-    const to = Math.min(total - 1, current + 1);
-    if (from > 2) {
-      items.push('gap');
-    }
-    for (let i = from; i <= to; i++) {
-      items.push(i);
-    }
-    if (to < total - 1) {
-      items.push('gap');
-    }
-    items.push(total);
-    return items;
-  });
+  ngOnDestroy(): void {
+    clearTimeout(this.searchTimer);
+  }
 
   // ---- Loading ----
+  /** (Re)start from the first page — used on load and whenever a filter changes. */
   protected load(): void {
-    this.loading.set(true);
+    this.rows.set([]);
+    this.nextPage = 0;
+    this.hasMore.set(true);
     this.loadError.set(null);
-    this.service.list().subscribe({
-      next: (data) => {
-        this.profiles.set(data);
+    this.loading.set(true);
+    this.fetchNext(true);
+  }
+
+  /** Pull the next page — triggered by the bottom sentinel. */
+  protected loadMore(): void {
+    if (this.loading() || this.loadingMore() || !this.hasMore() || this.loadError()) {
+      return;
+    }
+    this.loadingMore.set(true);
+    this.fetchNext(false);
+  }
+
+  private fetchNext(initial: boolean): void {
+    const sort = `${SORT_FIELDS[this.sortKey()]},${this.sortDir()}`;
+    this.service.list(this.nextPage, PAGE_SIZE, this.filter(), sort).subscribe({
+      next: (page) => {
+        this.rows.update((list) => (initial ? page.items : [...list, ...page.items]));
+        this.totalElements.set(page.totalElements);
+        this.hasMore.set(!page.last && page.items.length > 0);
+        this.nextPage += 1;
         this.loading.set(false);
+        this.loadingMore.set(false);
+        this.maybeLoadMore();
       },
       error: (err) => {
         this.loadError.set(messageFromError(err, 'Chargement des profils impossible.'));
         this.loading.set(false);
+        this.loadingMore.set(false);
       },
     });
   }
 
-  // ---- Filter handlers (all reset to page 1) ----
-  protected onSearch(value: string): void {
-    this.query.set(value);
-    this.page.set(1);
+  /** Best-effort: the filter/form leader options degrade to empty on failure. */
+  private loadLeaders(): void {
+    this.service.listAll().subscribe({
+      next: (all) => this.leaders.set(all.filter((p) => p.isTeamLeader)),
+      error: () => this.leaders.set([]),
+    });
   }
-  protected setTab(tab: Tab): void {
-    this.tab.set(tab);
-    this.page.set(1);
+
+  // ---- Infinite scroll ----
+  private observe(): void {
+    const sentinel = this.sentinel()?.nativeElement;
+    if (!sentinel) {
+      return;
+    }
+    const root = this.scrollRoot()?.nativeElement ?? null;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          this.loadMore();
+        }
+      },
+      { root, rootMargin: '300px' },
+    );
+    io.observe(sentinel);
+    this.destroyRef.onDestroy(() => io.disconnect());
+  }
+
+  /** If the sentinel is still visible after a load, fetch the next page. */
+  private maybeLoadMore(): void {
+    const sentinel = this.sentinel()?.nativeElement;
+    const root = this.scrollRoot()?.nativeElement;
+    if (!sentinel || !root || !this.hasMore()) {
+      return;
+    }
+    const sRect = sentinel.getBoundingClientRect();
+    const rRect = root.getBoundingClientRect();
+    if (sRect.top <= rRect.bottom + 300) {
+      queueMicrotask(() => this.loadMore());
+    }
+  }
+
+  // ---- Filter handlers (all reload from the first page) ----
+  /** Patch one filter field and reload. */
+  private applyFilter(patch: Partial<ProfileFilter>): void {
+    this.filter.update((f) => ({ ...f, ...patch }));
+    this.load();
+  }
+
+  /** Free-text search — debounced so typing doesn't fire a request per key. */
+  protected onSearch(value: string): void {
+    this.filter.update((f) => ({ ...f, search: value }));
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.load(), SEARCH_DEBOUNCE_MS);
+  }
+
+  protected setTab(membershipType: TypeFilter): void {
+    this.applyFilter({ membershipType });
   }
   protected toggleDept(): void {
-    this.deptOnly.update((v) => !v);
-    this.page.set(1);
+    this.applyFilter({ firstDepartment: this.deptOnly() ? null : true });
   }
+  protected setLeader(value: string): void {
+    this.applyFilter({ leaderUuid: value === 'ALL' ? null : value });
+  }
+  protected setMinJoinedAt(value: string): void {
+    this.applyFilter({ minJoinedAt: toYear(value) });
+  }
+  protected setMaxJoinedAt(value: string): void {
+    this.applyFilter({ maxJoinedAt: toYear(value) });
+  }
+
+  /** Clear every filter back to its default. */
+  protected resetFilters(): void {
+    clearTimeout(this.searchTimer);
+    this.filter.set({ ...EMPTY_PROFILE_FILTER });
+    this.load();
+  }
+
+  // ---- Sorting (server-side, so it restarts the list) ----
   protected sortBy(key: SortKey): void {
     if (this.sortKey() === key) {
       this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -197,23 +270,13 @@ export class ProfileList {
       this.sortKey.set(key);
       this.sortDir.set('asc');
     }
+    this.load();
   }
   protected sortIndicator(key: SortKey): string {
     if (this.sortKey() !== key) {
       return '';
     }
     return this.sortDir() === 'asc' ? '↑' : '↓';
-  }
-
-  // ---- Pagination ----
-  protected goTo(page: number): void {
-    this.page.set(Math.min(Math.max(1, page), this.totalPages()));
-  }
-  protected prev(): void {
-    this.goTo(this.page() - 1);
-  }
-  protected next(): void {
-    this.goTo(this.page() + 1);
   }
 
   // ---- Detail ----
@@ -276,6 +339,7 @@ export class ProfileList {
     this.saving.set(false);
     this.closeForm();
     this.load();
+    this.loadLeaders();
   }
 
   // ---- Delete ----
@@ -297,22 +361,15 @@ export class ProfileList {
         this.deleting.set(false);
         this.confirmTarget.set(null);
         this.load();
+        this.loadLeaders();
       },
       error: () => this.deleting.set(false),
     });
   }
+}
 
-  private compare(a: Profile, b: Profile, key: SortKey): number {
-    switch (key) {
-      case 'name':
-        return `${a.lastname} ${a.firstname}`.localeCompare(
-          `${b.lastname} ${b.firstname}`,
-          'fr',
-        );
-      case 'type':
-        return (a.membershipType ?? '').localeCompare(b.membershipType ?? '');
-      case 'joined':
-        return (a.joinedAt ?? 0) - (b.joinedAt ?? 0);
-    }
-  }
+/** Parse a year input to a number, or `null` when empty / not a year. */
+function toYear(value: string): number | null {
+  const year = Number(value.trim());
+  return value.trim() !== '' && Number.isInteger(year) ? year : null;
 }

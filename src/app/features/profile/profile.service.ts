@@ -4,28 +4,74 @@ import { map, type Observable } from 'rxjs';
 
 import {
   toProfile,
+  toProfilePage,
   toRawProfileRequest,
   type RawPage,
   type RawProfile,
 } from './profile.adapter';
-import type { Profile, ProfileInput } from './profile.models';
+import {
+  EMPTY_PROFILE_FILTER,
+  type Page,
+  type Profile,
+  type ProfileFilter,
+  type ProfileInput,
+} from './profile.models';
 
 const BASE = '/api/profiles';
 
+/** Upper bound for {@link ProfileService.listAll} — the department is small. */
+const ALL_SIZE = 2000;
+
 /**
- * Gateway to `/api/profiles`. The backend paginates but offers no search
- * endpoint, so {@link list} pulls the full set and the UI filters/sorts in
- * memory (department membership is small enough for this to be cheap).
+ * Gateway to `/api/profiles`. The list is paged and filtered server-side
+ * (`GET /api/profiles?page&size&sort` + `ProfileFilter` fields); {@link listAll}
+ * stays for the few places that need the whole set at once (team leaders).
  */
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   private readonly http = inject(HttpClient);
 
+  /**
+   * One server-side page of profiles (zero-based `page`), narrowed by the given
+   * {@link ProfileFilter} and ordered by `sort` (a Spring `field,dir` string).
+   * Only constrained fields are sent; `'ALL'`/`null`/empty values are omitted.
+   */
+  list(
+    page: number,
+    size: number,
+    filter: ProfileFilter = EMPTY_PROFILE_FILTER,
+    sort = 'lastname,asc',
+  ): Observable<Page<Profile>> {
+    let params = new HttpParams().set('page', page).set('size', size).set('sort', sort);
+
+    const search = filter.search.trim();
+    if (search) {
+      params = params.set('search', search);
+    }
+    if (filter.membershipType !== 'ALL') {
+      params = params.set('membershipType', filter.membershipType);
+    }
+    if (filter.firstDepartment !== null) {
+      params = params.set('firstDepartment', filter.firstDepartment);
+    }
+    if (filter.leaderUuid) {
+      params = params.set('leaderUuid', filter.leaderUuid);
+    }
+    if (filter.minJoinedAt !== null) {
+      params = params.set('minJoinedAt', filter.minJoinedAt);
+    }
+    if (filter.maxJoinedAt !== null) {
+      params = params.set('maxJoinedAt', filter.maxJoinedAt);
+    }
+
+    return this.http.get<RawPage<RawProfile>>(BASE, { params }).pipe(map(toProfilePage));
+  }
+
   /** Fetch every profile, sorted by last name. */
-  list(): Observable<Profile[]> {
+  listAll(): Observable<Profile[]> {
     const params = new HttpParams()
       .set('page', '0')
-      .set('size', '2000')
+      .set('size', ALL_SIZE)
       .set('sort', 'lastname,asc');
     return this.http
       .get<RawPage<RawProfile>>(BASE, { params })
