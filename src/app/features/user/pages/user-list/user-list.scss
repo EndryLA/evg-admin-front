@@ -1,0 +1,9 @@
+/* User-specific column widths. Generic table-shell styles live in the
+   global `.data-list` block (src/styles.scss). */
+.col-member { width: 26%; }
+.col-email { width: 32%; }
+.col-role { width: 22%; }
+.col-status { width: 20%; }
+.col-chevron { width: 44px; }
+
+.new-btn svg { width: 16px; height: 16px; }

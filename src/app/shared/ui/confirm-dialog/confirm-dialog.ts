@@ -4,6 +4,10 @@ import { Component, input, output } from '@angular/core';
  * Centered destructive-action confirmation dialog (design.md §3 "Delete
  * confirm"). Mount it with `@if` in the parent; it emits {@link confirm} /
  * {@link cancel}. Message copy is projected as content.
+ *
+ * Defaults to delete wording and a trash icon. For other irreversible-feeling
+ * actions, override {@link confirmLabel} / {@link busyLabel} and project a
+ * different icon with `<svg dialogIcon>`.
  */
 @Component({
   selector: 'app-confirm-dialog',
@@ -17,7 +21,9 @@ import { Component, input, output } from '@angular/core';
         [attr.aria-label]="title()"
         (click)="$event.stopPropagation()">
         <div class="cd-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          <ng-content select="[dialogIcon]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          </ng-content>
         </div>
         <h3 class="cd-title">{{ title() }}</h3>
         <p class="cd-message"><ng-content /></p>
@@ -26,7 +32,7 @@ import { Component, input, output } from '@angular/core';
             {{ cancelLabel() }}
           </button>
           <button type="button" class="btn btn--primary cd-confirm" (click)="confirm.emit()" [disabled]="busy()" autofocus>
-            {{ busy() ? 'Suppression…' : confirmLabel() }}
+            {{ busy() ? busyLabel() : confirmLabel() }}
           </button>
         </div>
       </div>
@@ -38,6 +44,8 @@ export class ConfirmDialog {
   readonly title = input.required<string>();
   readonly confirmLabel = input('Supprimer');
   readonly cancelLabel = input('Annuler');
+  /** Confirm-button copy while the action is in flight. */
+  readonly busyLabel = input('Suppression…');
   readonly busy = input(false);
 
   readonly confirm = output<void>();

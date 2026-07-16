@@ -1,7 +1,7 @@
 <header class="topbar">
   <div>
-    <h1>Profils</h1>
-    <p class="topbar__sub">{{ total() }} membres · ouvriers et aides de l'équipe.</p>
+    <h1>Effectif</h1>
+    <p class="topbar__sub">{{ total() }} membres</p>
   </div>
 </header>
 
@@ -89,17 +89,19 @@
         @for (r of rows(); track r.uuid) {
           <tr (click)="view(r)">
             <td class="cell-head">
-              <div class="cell-main">{{ r.firstname }}</div>
+              <!-- The compact card folds the surname in; the wide table keeps
+                   it in its own column. -->
+              <div class="cell-main">{{ r.firstname }}<span class="show-sm"> {{ r.lastname }}</span></div>
               <div class="cell-sub">{{ age(r.birthDate) || '—' }}</div>
             </td>
-            <td class="cell-contact" data-label="Nom">{{ r.lastname }}</td>
-            <td data-label="Contact">
+            <td class="cell-contact hide-sm" data-label="Nom">{{ r.lastname }}</td>
+            <td class="hide-sm" data-label="Contact">
               <div class="cell-stack">
                 <div class="cell-contact">{{ r.phoneNumber || '—' }}</div>
                 <div class="cell-sub">{{ r.email || '—' }}</div>
               </div>
             </td>
-            <td data-label="Type">
+            <td class="cell-corner" data-label="Type">
               @if (r.membershipType === 'OUVRIER') {
                 <span class="pill pill--red">Ouvrier</span>
               } @else if (r.membershipType === 'AIDE') {
@@ -115,14 +117,14 @@
                 <span class="cell-sub">—</span>
               }
             </td>
-            <td class="center" data-label="1ᵉʳ dépt">
+            <td class="center hide-sm" data-label="1ᵉʳ dépt">
               @if (r.firstDepartment) {
                 <span class="dept-yes">Oui</span>
               } @else {
                 <span class="dept-no">Non</span>
               }
             </td>
-            <td class="cell-contact" data-label="Adhésion">{{ r.joinedAt ?? '—' }}</td>
+            <td class="cell-contact hide-sm" data-label="Adhésion">{{ r.joinedAt ?? '—' }}</td>
             <td class="chevron">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </td>

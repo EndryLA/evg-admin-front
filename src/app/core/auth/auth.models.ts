@@ -13,6 +13,22 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   TEAM_LEADER: "Chef d'équipe",
 };
 
+/** Roles from broadest to narrowest scope. */
+export const ROLE_PRECEDENCE: readonly UserRole[] = [
+  'SUPER_ADMIN',
+  'DEPARTMENT_RESPONSIBLE',
+  'ADMIN',
+  'TEAM_LEADER',
+];
+
+/**
+ * The broadest role held, for display where a single role is expected.
+ * Returns `null` when the list is empty.
+ */
+export function primaryRole(roles: readonly UserRole[]): UserRole | null {
+  return ROLE_PRECEDENCE.find((role) => roles.includes(role)) ?? null;
+}
+
 /** Credentials submitted on the login form. */
 export interface Credentials {
   email: string;
@@ -34,7 +50,12 @@ export interface AuthenticatedUser {
   /** Best-effort subject/uuid claim. */
   uuid: string | null;
   email: string | null;
-  role: UserRole | null;
+  /**
+   * Every role the token grants, unprefixed — the JWT carries them as an array
+   * of `ROLE_`-prefixed strings (e.g. `["ROLE_SUPER_ADMIN"]`). Empty when the
+   * claim is missing or holds nothing recognisable.
+   */
+  roles: UserRole[];
   profileUuid: string | null;
 }
 

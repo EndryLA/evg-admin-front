@@ -6,7 +6,6 @@ import { map, tap, type Observable } from 'rxjs';
 import {
   toAuthSession,
   userFromToken,
-  type RawLinkResponse,
   type RawLoginResponse,
   type RawMessageResponse,
 } from './auth.adapter';
@@ -16,6 +15,7 @@ import type {
   AuthSession,
   Credentials,
   ResetPassword,
+  UserRole,
 } from './auth.models';
 import { isJwtExpired } from './jwt.util';
 import { TokenStorage } from './token-storage';
@@ -47,6 +47,22 @@ export class AuthService {
     return !!s && !isJwtExpired(s.accessToken);
   });
 
+  /** Every role the current token grants; empty when signed out. */
+  readonly roles = computed<readonly UserRole[]>(() => this.currentUser()?.roles ?? []);
+
+  /**
+   * Whether the signed-in user holds `role`. Client-side only — a convenience
+   * for routing and UI; the backend still enforces access.
+   */
+  hasRole(role: UserRole): boolean {
+    return this.roles().includes(role);
+  }
+
+  /** Whether the signed-in user holds at least one of `roles`. */
+  hasAnyRole(roles: readonly UserRole[]): boolean {
+    return roles.some((role) => this.roles().includes(role));
+  }
+
   /** Raw access token for the HTTP interceptor. */
   accessToken(): string | null {
     return this.session()?.accessToken ?? null;
@@ -61,11 +77,11 @@ export class AuthService {
       );
   }
 
-  /** Requests a password-reset link. Returns the link URL from the backend. */
+  /** Asks the backend to e-mail a password-reset link. Returns its message. */
   forgotPassword(email: string): Observable<string> {
     return this.http
-      .post<RawLinkResponse>(`/api/auth/password/forgot`, { email })
-      .pipe(map((r) => r.url ?? ''));
+      .post<RawMessageResponse>(`/api/auth/password/forgot`, { email })
+      .pipe(map((r) => r.message ?? ''));
   }
 
   resetPassword(payload: ResetPassword): Observable<string> {
@@ -74,11 +90,11 @@ export class AuthService {
       .pipe(map((r) => r.message ?? ''));
   }
 
-  /** Requests an account-activation link. Returns the link URL from the backend. */
+  /** Asks the backend to e-mail an activation link. Returns its message. */
   requestActivation(email: string): Observable<string> {
     return this.http
-      .post<RawLinkResponse>(`/api/auth/activation/request`, { email })
-      .pipe(map((r) => r.url ?? ''));
+      .post<RawMessageResponse>(`/api/auth/activation/request`, { email })
+      .pipe(map((r) => r.message ?? ''));
   }
 
   confirmActivation(payload: ActivationConfirmation): Observable<string> {

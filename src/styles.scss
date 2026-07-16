@@ -473,6 +473,9 @@ input, select, button, textarea { font-family: inherit; }
   text-overflow: ellipsis;
 }
 .data-list .cell-contact { color: var(--text-secondary); white-space: nowrap; }
+/* Inline text that belongs only to the compact card — e.g. a surname folded
+   into the title, which already has its own column on the wide table. */
+.data-list .show-sm { display: none; }
 .data-list .cell-sub {
   font-size: 12.5px;
   color: var(--text-faint);
@@ -633,6 +636,22 @@ input, select, button, textarea { font-family: inherit; }
   font-weight: 400;
   color: var(--text-faint);
 }
+/* Inline result of a panel action (confirmation / failure). Horizontal inset
+   comes from `.panel__body`, so it aligns with the field rows above. */
+.slideover .panel__flash {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--pill-green-bg);
+  color: var(--pill-green-text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.slideover .panel__flash--error {
+  background: var(--pill-red-bg);
+  color: var(--pill-red-text);
+}
 .slideover .panel__foot {
   display: flex;
   gap: 10px;
@@ -641,6 +660,15 @@ input, select, button, textarea { font-family: inherit; }
 }
 .slideover .panel__foot .btn svg { width: 15px; height: 15px; }
 .slideover .panel__edit { flex: 1; }
+/* Footer action that should fill the remaining width, whatever its tone. */
+.slideover .panel__grow { flex: 1; }
+/* Neutral secondary footer action (white, hairline border). */
+.slideover .panel__secondary {
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+.slideover .panel__secondary:not(:disabled):hover { background: var(--bg-sunken); }
 .slideover .panel__delete {
   background: var(--bg-card);
   color: var(--accent);
@@ -702,6 +730,24 @@ input, select, button, textarea { font-family: inherit; }
   height: 18px;
   accent-color: var(--accent);
   cursor: pointer;
+}
+/* Explanatory copy and server-side failures live inside `.grid` as full-width
+   rows, so they inherit its padding and gap rather than setting their own. */
+.modal-form .modal__note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+.modal-form .modal__error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--pill-red-bg);
+  color: var(--pill-red-text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 .modal-form .modal__foot {
   padding: 16px 26px;
@@ -850,6 +896,28 @@ input, select, button, textarea { font-family: inherit; }
     width: auto;
   }
   .data-list td.chevron { color: var(--chevron); }
+
+  /* Surname (or similar) folded into the card's title to form one full name. */
+  .data-list .show-sm { display: inline; }
+
+  /* A cell marked `cell-corner` takes the card's top-right for its value — a
+     status pill reads better there than the chevron, and the whole card is
+     tappable anyway, so the chevron stands down when a corner cell is present.
+     The label is dropped too: the pill speaks for itself. */
+  .data-list td.cell-corner {
+    display: block;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: auto;
+    padding: 0;
+    text-align: right;
+  }
+  .data-list td.cell-corner::before { content: none; }
+  .data-list tbody tr:has(td.cell-corner) { padding-right: 16px; }
+  .data-list tbody tr:has(td.cell-corner) td.chevron { display: none; }
+  /* Keep the title clear of the corner pill. */
+  .data-list tbody tr:has(td.cell-corner) td.cell-head { padding-right: 84px; }
 }
 
 /* ---- Mobile filter drawer + floating action button ----

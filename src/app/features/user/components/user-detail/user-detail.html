@@ -1,0 +1,67 @@
+<div class="scrim" (click)="close.emit()"></div>
+
+<aside class="panel" role="dialog" aria-modal="true" [attr.aria-label]="user().email">
+  <header class="panel__head">
+    <div class="panel__head-row">
+      <span class="eyebrow">Utilisateur</span>
+      <button type="button" class="icon-btn" (click)="close.emit()" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <h2 class="panel__title">{{ member() }}</h2>
+    <p class="panel__subtitle">{{ user().email }}</p>
+  </header>
+
+  <div class="panel__body">
+    <dl class="fields">
+      <div class="field-row">
+        <dt>Adresse e-mail</dt>
+        <dd>{{ user().email }}</dd>
+      </div>
+      <div class="field-row">
+        <dt>Rôle</dt>
+        <dd><span class="pill pill--{{ roleTone() }}">{{ roleLabel() }}</span></dd>
+      </div>
+      <div class="field-row">
+        <dt>Accès</dt>
+        <dd><span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span></dd>
+      </div>
+      <div class="field-row">
+        <dt>Membre</dt>
+        <dd>{{ member() }}</dd>
+      </div>
+      <div class="field-row field-row--last">
+        <dt>Identifiant</dt>
+        <dd class="mono">{{ user().uuid }}</dd>
+      </div>
+    </dl>
+
+    @if (resent()) {
+      <p class="panel__flash" role="status">
+        Lien d’activation renvoyé à {{ user().email }}.
+      </p>
+    }
+    @if (error(); as err) {
+      <p class="panel__flash panel__flash--error" role="alert">{{ err }}</p>
+    }
+  </div>
+
+  <footer class="panel__foot">
+    @if (user().enabled) {
+      <button type="button" class="btn panel__delete panel__grow" (click)="toggleStatus.emit()" [disabled]="statusBusy()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
+        {{ statusBusy() ? 'Désactivation…' : 'Désactiver l’accès' }}
+      </button>
+    } @else {
+      <button type="button" class="btn btn--primary panel__grow" (click)="toggleStatus.emit()" [disabled]="statusBusy()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        {{ statusBusy() ? 'Activation…' : 'Activer l’accès' }}
+      </button>
+      <button type="button" class="btn panel__secondary" (click)="resend.emit()" [disabled]="resendBusy()"
+        title="Renvoyer le lien d’activation" aria-label="Renvoyer le lien d’activation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 6l8 6 8-6"/></svg>
+        {{ resendBusy() ? 'Envoi…' : 'Renvoyer le lien' }}
+      </button>
+    }
+  </footer>
+</aside>

@@ -1,0 +1,144 @@
+<header class="topbar">
+  <div>
+    <h1>Utilisateurs</h1>
+    <p class="topbar__sub">
+      {{ total() }} accès · comptes de l’espace de gestion et leurs rôles.
+      @if (inactiveCount() > 0) {
+        {{ inactiveCount() }} sans accès.
+      }
+    </p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input
+      type="search"
+      [value]="query()"
+      (input)="onSearch($any($event.target).value)"
+      placeholder="Rechercher un e-mail, un membre, un rôle…"
+      aria-label="Rechercher un utilisateur" />
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Filtrer par accès">
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'ALL'" class="tab" [class.tab--active]="tab() === 'ALL'" (click)="setTab('ALL')">Tous</button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'ACTIVE'" class="tab" [class.tab--active]="tab() === 'ACTIVE'" (click)="setTab('ACTIVE')">Actifs</button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'INACTIVE'" class="tab" [class.tab--active]="tab() === 'INACTIVE'" (click)="setTab('INACTIVE')">Inactifs</button>
+  </div>
+
+  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nouvel utilisateur
+  </button>
+</div>
+
+<div class="table-region">
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-member sortable" (click)="sortBy('member')">Membre <span class="ind">{{ sortIndicator('member') }}</span></th>
+          <th class="col-email sortable" (click)="sortBy('email')">Adresse e-mail <span class="ind">{{ sortIndicator('email') }}</span></th>
+          <th class="col-role sortable" (click)="sortBy('role')">Rôle <span class="ind">{{ sortIndicator('role') }}</span></th>
+          <th class="col-status sortable" (click)="sortBy('status')">Accès <span class="ind">{{ sortIndicator('status') }}</span></th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of rows(); track u.uuid) {
+          <tr (click)="view(u)">
+            <td class="cell-head">
+              <div class="cell-main">{{ refName(u.profile) }}</div>
+            </td>
+            <td class="cell-contact" data-label="Adresse e-mail">{{ u.email }}</td>
+            <td data-label="Rôle">
+              <span class="pill pill--{{ roleTone(u.role) }}">{{ roleLabel(u.role) }}</span>
+            </td>
+            <td data-label="Accès">
+              <span class="pill pill--{{ statusTone(u.enabled) }}">{{ statusLabel(u.enabled) }}</span>
+            </td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement des utilisateurs…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucun utilisateur</div>
+        <div class="state__hint">Ajustez votre recherche ou créez un accès.</div>
+      </div>
+    }
+  </div>
+
+  @if (!loading() && !loadError() && resultCount() > 0) {
+    <nav class="pagination" aria-label="Pagination">
+      <div class="pagination__range">{{ rangeLabel() }}</div>
+      <div class="pagination__pages">
+        <button type="button" class="pg" (click)="prev()" [disabled]="page() === 1" aria-label="Page précédente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        @for (item of pageItems(); track $index) {
+          @if (item === 'gap') {
+            <span class="pg-gap">…</span>
+          } @else {
+            <button type="button" class="pg" [class.pg--active]="item === page()" (click)="goTo(item)">{{ item }}</button>
+          }
+        }
+        <button type="button" class="pg" (click)="next()" [disabled]="page() === totalPages()" aria-label="Page suivante">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </nav>
+  }
+</div>
+
+<!-- Mobile-only floating action button — creates a new account. -->
+<button type="button" class="fab" (click)="openCreate()" aria-label="Nouvel utilisateur">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+@if (selected(); as u) {
+  <app-user-detail
+    [user]="u"
+    [statusBusy]="statusBusy()"
+    [resendBusy]="resending()"
+    [resent]="resent()"
+    [error]="actionError()"
+    (close)="closeDetail()"
+    (resend)="resendActivation()"
+    (toggleStatus)="onToggleStatus()" />
+}
+
+@if (disableTarget(); as target) {
+  <app-confirm-dialog
+    title="Désactiver cet accès ?"
+    confirmLabel="Désactiver"
+    busyLabel="Désactivation…"
+    [busy]="statusBusy()"
+    (confirm)="confirmDisable()"
+    (cancel)="cancelDisable()">
+    <svg dialogIcon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
+    <strong>{{ refName(target.profile) }}</strong> ne pourra plus se connecter à l’espace de
+    gestion. Vous pourrez réactiver cet accès à tout moment.
+  </app-confirm-dialog>
+}
+
+@if (formOpen()) {
+  <app-user-form
+    [profiles]="profiles()"
+    [busy]="saving()"
+    [error]="saveError()"
+    (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}

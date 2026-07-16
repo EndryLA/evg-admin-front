@@ -73,18 +73,28 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 9h.01M14 9h.01M10 13h.01M14 13h.01"/></svg>
         <span class="nav__label">Branches</span>
       </a>
-      <a routerLink="/villes" routerLinkActive="nav__item--active" class="nav__item" title="Annuaire des villes">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.4"/></svg>
-        <span class="nav__label">Annuaire des villes</span>
-      </a>
+      @if (canSeeCities()) {
+        <a routerLink="/villes" routerLinkActive="nav__item--active" class="nav__item" title="Annuaire des villes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.4"/></svg>
+          <span class="nav__label">Annuaire des villes</span>
+        </a>
+      }
       <a routerLink="/inventaire" routerLinkActive="nav__item--active" class="nav__item" title="Inventaire">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12l8.73-5.04M12 22.08V12"/></svg>
         <span class="nav__label">Inventaire</span>
       </a>
-      <a routerLink="/responsables" routerLinkActive="nav__item--active" class="nav__item" title="Chefs d'équipe">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.9H22l-5.8 4.3 2.2 7L12 16.9 5.6 20.2l2.2-7L2 8.9h7.6z"/></svg>
-        <span class="nav__label">Chefs d'équipe</span>
-      </a>
+      @if (canSeeTeamLeaders()) {
+        <a routerLink="/responsables" routerLinkActive="nav__item--active" class="nav__item" title="Chefs d'équipe">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.9H22l-5.8 4.3 2.2 7L12 16.9 5.6 20.2l2.2-7L2 8.9h7.6z"/></svg>
+          <span class="nav__label">Chefs d'équipe</span>
+        </a>
+      }
+      @if (canSeeUsers()) {
+        <a routerLink="/utilisateurs" routerLinkActive="nav__item--active" class="nav__item" title="Utilisateurs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+          <span class="nav__label">Utilisateurs</span>
+        </a>
+      }
     </nav>
 
     <div class="user">

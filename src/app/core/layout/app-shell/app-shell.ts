@@ -9,7 +9,8 @@ import {
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ROLE_LABELS } from '../../auth/auth.models';
+import { ACCESS } from '../../auth/access';
+import { primaryRole, ROLE_LABELS } from '../../auth/auth.models';
 import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../theme/theme.service';
 
@@ -35,6 +36,12 @@ export class AppShell {
   private readonly theme = inject(ThemeService);
 
   protected readonly user = this.auth.currentUser;
+
+  // Nav entries the current user cannot reach are hidden rather than left to
+  // bounce off their route guard. Same rules as the guards (see ACCESS).
+  protected readonly canSeeUsers = computed(() => this.auth.hasAnyRole(ACCESS.users));
+  protected readonly canSeeTeamLeaders = computed(() => this.auth.hasAnyRole(ACCESS.teamLeaders));
+  protected readonly canSeeCities = computed(() => this.auth.hasAnyRole(ACCESS.cities));
 
   /** Reflects the active theme so the toggle can show the right icon/label. */
   protected readonly isDark = this.theme.isDark;
@@ -88,8 +95,9 @@ export class AppShell {
     }
   }
 
+  /** The broadest role held — the card has room for one. */
   protected readonly roleLabel = computed(() => {
-    const role = this.user()?.role;
+    const role = primaryRole(this.user()?.roles ?? []);
     return role ? ROLE_LABELS[role] : 'Membre';
   });
 
