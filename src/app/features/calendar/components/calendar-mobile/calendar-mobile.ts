@@ -23,6 +23,16 @@ const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'] as const;
  *  where it fires (Chrome/Safari), so it only bites on older engines. */
 const SETTLE_MS = 180;
 
+/** Months fetched either side of the loaded centre — the window handed to the
+ *  page in one request. A full year each way, so the whole year (past months
+ *  included) is browseable without a second request. */
+const LOAD_MONTHS = 12;
+
+/** Drift from the loaded centre, in months, that triggers a silent refetch
+ *  recentred on the current month. Set one inside the window edge so the next
+ *  month is prefetched while the visible months are still covered — no wait. */
+const REFETCH_AT = LOAD_MONTHS - 1;
+
 /** A single square in the month grid. */
 interface DayCell {
   /** `YYYY-MM-DD`, read in local time so the day never slips. */
@@ -177,6 +187,9 @@ export class CalendarMobile implements OnInit, OnDestroy {
 
   private settleTimer?: ReturnType<typeof setTimeout>;
 
+  /** Centre month of the currently-loaded window (see {@link emitRange}). */
+  private loadCenter = startOfMonth(new Date());
+
   constructor() {
     // Whenever the month commits (and once the pager first renders), lock the
     // scroller back onto the middle page — the neighbour just swiped to now
@@ -225,7 +238,7 @@ export class CalendarMobile implements OnInit, OnDestroy {
     this.selected.set(cell.iso);
     if (!cell.inMonth) {
       this.cursor.set(startOfMonth(fromIso(cell.iso)));
-      this.emitRange();
+      this.maybeFetch();
     }
   }
 
@@ -283,7 +296,7 @@ export class CalendarMobile implements OnInit, OnDestroy {
     this.cursor.update((d) => new Date(d.getFullYear(), d.getMonth() + delta, 1));
     this.viewOffset.set(0);
     this.syncSelection();
-    this.emitRange();
+    this.maybeFetch();
   }
 
   /** Keep the agenda relevant after a month change: today when we land on this
@@ -332,13 +345,28 @@ export class CalendarMobile implements OnInit, OnDestroy {
     return weeks;
   }
 
-  /** Cover all three pages so neighbouring months carry their dots pre-swipe. */
+  /** Fetch a fresh window centred on the current month — `LOAD_MONTHS` either
+   *  side, in one request — and remember its centre. */
   private emitRange(): void {
     const cursor = this.cursor();
-    const start = gridStart(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1));
-    const nextStart = gridStart(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
-    const end = new Date(nextStart.getFullYear(), nextStart.getMonth(), nextStart.getDate() + 41);
+    this.loadCenter = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const start = gridStart(new Date(cursor.getFullYear(), cursor.getMonth() - LOAD_MONTHS, 1));
+    const endStart = gridStart(new Date(cursor.getFullYear(), cursor.getMonth() + LOAD_MONTHS, 1));
+    const end = new Date(endStart.getFullYear(), endStart.getMonth(), endStart.getDate() + 41);
     this.rangeChange.emit({ from: toIso(start), to: toIso(end) });
+  }
+
+  /** Refetch only once the month drifts near the loaded window's edge, so most
+   *  swipes are served from what's already in hand and the next chunk is
+   *  prefetched before it's needed. */
+  private maybeFetch(): void {
+    const cursor = this.cursor();
+    const drift =
+      (cursor.getFullYear() - this.loadCenter.getFullYear()) * 12 +
+      (cursor.getMonth() - this.loadCenter.getMonth());
+    if (Math.abs(drift) >= REFETCH_AT) {
+      this.emitRange();
+    }
   }
 }
 
