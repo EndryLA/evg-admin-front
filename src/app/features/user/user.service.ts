@@ -29,7 +29,7 @@ export class UserService {
 
   /** Fetch every account. */
   list(): Observable<User[]> {
-    const params = new HttpParams().set('page', '0').set('size', '2000');
+    const params = new HttpParams().set('page', '0').set('size', '100');
     return this.http
       .get<RawPage<RawUser>>(BASE, { params })
       .pipe(map((page) => (page.content ?? []).map(toUser)));
@@ -52,7 +52,7 @@ export class UserService {
 
   /** Members an account can be attached to. */
   profiles(): Observable<Option[]> {
-    const params = new HttpParams().set('page', '0').set('size', '2000').set('sort', 'lastname,asc');
+    const params = new HttpParams().set('page', '0').set('size', '100').set('sort', 'lastname,asc');
     return this.http.get<RawPage<RawProfile>>('/api/profiles', { params }).pipe(
       map((page) =>
         (page.content ?? []).map((p) => ({

@@ -42,7 +42,7 @@ export class AttendanceService {
   private readonly http = inject(HttpClient);
 
   list(): Observable<Attendance[]> {
-    const params = new HttpParams().set('page', '0').set('size', '2000');
+    const params = new HttpParams().set('page', '0').set('size', '100');
     return this.http
       .get<RawPage<RawAttendance>>(BASE, { params })
       .pipe(map((page) => (page.content ?? []).map(toAttendance)));
@@ -108,7 +108,7 @@ export class AttendanceService {
   outreaches(): Observable<AttendanceOption[]> {
     const params = new HttpParams()
       .set('page', '0')
-      .set('size', '2000')
+      .set('size', '100')
       .set('sort', 'startTime,desc');
     return this.http.get<RawPage<RawOutreachLite>>('/api/outreaches', { params }).pipe(
       map((page) =>
@@ -124,7 +124,7 @@ export class AttendanceService {
   members(): Observable<AttendanceOption[]> {
     const params = new HttpParams()
       .set('page', '0')
-      .set('size', '2000')
+      .set('size', '100')
       .set('sort', 'lastname,asc');
     return this.http.get<RawPage<RawProfileLite>>('/api/profiles', { params }).pipe(
       map((page) =>

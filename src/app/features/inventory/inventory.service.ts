@@ -26,7 +26,7 @@ export class InventoryService {
 
   /** Fetch every inventory item, sorted by name. */
   list(): Observable<InventoryItem[]> {
-    const params = new HttpParams().set('page', '0').set('size', '2000').set('sort', 'name,asc');
+    const params = new HttpParams().set('page', '0').set('size', '20').set('sort', 'name,asc');
     return this.http
       .get<RawPage<RawInventoryItem>>(BASE, { params })
       .pipe(map((page) => (page.content ?? []).map(toInventoryItem)));
@@ -53,7 +53,7 @@ export class InventoryService {
 
   /** Members selectable as the item's responsible. */
   profiles(): Observable<Option[]> {
-    const params = new HttpParams().set('page', '0').set('size', '2000').set('sort', 'lastname,asc');
+    const params = new HttpParams().set('page', '0').set('size', '20').set('sort', 'lastname,asc');
     return this.http.get<RawPage<RawProfile>>('/api/profiles', { params }).pipe(
       map((page) =>
         (page.content ?? []).map((p) => ({

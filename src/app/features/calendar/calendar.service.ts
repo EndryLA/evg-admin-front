@@ -102,7 +102,7 @@ export class CalendarService {
   managers(): Observable<ManagerOption[]> {
     const params = new HttpParams()
       .set('page', '0')
-      .set('size', '2000')
+      .set('size', '100')
       .set('sort', 'lastname,asc');
     return this.http.get<RawPage<RawProfileLite>>('/api/profiles', { params }).pipe(
       map((page) =>

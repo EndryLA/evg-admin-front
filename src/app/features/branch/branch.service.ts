@@ -30,7 +30,7 @@ export class BranchService {
   list(): Observable<Branch[]> {
     const params = new HttpParams()
       .set('page', '0')
-      .set('size', '2000')
+      .set('size', '100')
       .set('sort', 'name,asc');
     return this.http
       .get<RawPage<RawBranch>>(BASE, { params })
@@ -61,7 +61,7 @@ export class BranchService {
   profiles(): Observable<Option[]> {
     const params = new HttpParams()
       .set('page', '0')
-      .set('size', '2000')
+      .set('size', '100')
       .set('sort', 'lastname,asc');
     return this.http.get<RawPage<RawProfile>>('/api/profiles', { params }).pipe(
       map((page) =>
@@ -77,7 +77,7 @@ export class BranchService {
   roles(): Observable<BranchRole[]> {
     const params = new HttpParams()
       .set('page', '0')
-      .set('size', '2000')
+      .set('size', '100')
       .set('sort', 'name,asc');
     return this.http
       .get<RawPage<RawBranchRole>>('/api/branch-roles', { params })

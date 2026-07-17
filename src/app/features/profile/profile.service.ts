@@ -20,7 +20,7 @@ import {
 const BASE = '/api/profiles';
 
 /** Upper bound for {@link ProfileService.listAll} — the department is small. */
-const ALL_SIZE = 2000;
+const ALL_SIZE = 100;
 
 /**
  * Gateway to `/api/profiles`. The list is paged and filtered server-side

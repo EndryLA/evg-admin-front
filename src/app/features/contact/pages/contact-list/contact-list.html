@@ -188,10 +188,10 @@
             </td>
             <td class="cell-main cell-head">{{ contactName(c) }}</td>
             <td data-label="Type"><span class="pill pill--{{ typeTone(c.type) }}">{{ typeLabel(c.type) }}</span></td>
-            <td class="cell-contact" data-label="État civil">{{ civilStateLabel(c) }}</td>
+            <td class="cell-contact hide-sm" data-label="État civil">{{ civilStateLabel(c) }}</td>
             <td class="cell-contact" data-label="Ville">{{ c.cityName || '—' }}</td>
             <td class="cell-contact" data-label="Évangélisé par">{{ c.evangelizedBy || '—' }}</td>
-            <td class="cell-contact" data-label="Téléphone">{{ c.phoneNumber | phoneFr }}</td>
+            <td class="cell-contact hide-sm" data-label="Téléphone">{{ c.phoneNumber | phoneFr }}</td>
             <td class="chevron">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </td>
