@@ -1,19 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
-import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
-import { InventoryDetail } from '../../components/inventory-detail/inventory-detail';
 import { InventoryForm } from '../../components/inventory-form/inventory-form';
 import { InventoryService } from '../../inventory.service';
 import {
+  ITEM_TYPE_LABELS,
   refName,
   type InventoryInput,
   type InventoryItem,
   type Option,
 } from '../../inventory.models';
 
-type SortKey = 'name' | 'quantity' | 'location';
+type SortKey = 'name' | 'type' | 'quantity' | 'location';
 type SortDir = 'asc' | 'desc';
 type PageItem = number | 'gap';
 
@@ -26,18 +26,20 @@ function normalize(value: string): string {
 
 /**
  * Inventaire — the stock table. Loads all items and the responsible picker
- * once, does search / sort / pagination in memory, then orchestrates the
- * detail slide-over, create/edit modal and delete dialog.
+ * once, then does search / sort / pagination in memory. Rows link to the detail
+ * page (`/inventaire/:uuid`), where operations, edit and delete live; only
+ * creation happens here, via the modal.
  */
 @Component({
   selector: 'app-inventory-list',
-  imports: [InventoryDetail, InventoryForm, ConfirmDialog],
+  imports: [InventoryForm],
   host: { class: 'data-list' },
   templateUrl: './inventory-list.html',
   styleUrl: './inventory-list.scss',
 })
 export class InventoryList {
   private readonly service = inject(InventoryService);
+  private readonly router = inject(Router);
 
   // ---- Data ----
   protected readonly items = signal<InventoryItem[]>([]);
@@ -52,14 +54,11 @@ export class InventoryList {
   protected readonly page = signal(1);
 
   // ---- Overlays ----
-  protected readonly selected = signal<InventoryItem | null>(null);
   protected readonly formOpen = signal(false);
-  protected readonly formItem = signal<InventoryItem | null>(null);
   protected readonly saving = signal(false);
-  protected readonly confirmTarget = signal<InventoryItem | null>(null);
-  protected readonly deleting = signal(false);
 
   protected readonly refName = refName;
+  protected readonly itemTypeLabels = ITEM_TYPE_LABELS;
 
   constructor() {
     this.load();
@@ -72,7 +71,9 @@ export class InventoryList {
       return this.items();
     }
     return this.items().filter((it) => {
-      const haystack = normalize(`${it.name} ${it.stockLocation} ${refName(it.managedBy)}`);
+      const haystack = normalize(
+        `${it.name} ${ITEM_TYPE_LABELS[it.type]} ${it.stockLocation} ${refName(it.managedBy)}`,
+      );
       return haystack.includes(q);
     });
   });
@@ -177,66 +178,29 @@ export class InventoryList {
     this.goTo(this.page() + 1);
   }
 
-  // ---- Detail ----
+  // ---- Row action ----
+  /** Rows open the detail page, where operations, edit and delete live. */
   protected view(item: InventoryItem): void {
-    this.selected.set(item);
-  }
-  protected closeDetail(): void {
-    this.selected.set(null);
+    void this.router.navigate(['/inventaire', item.uuid]);
   }
 
-  // ---- Create / edit ----
+  // ---- Create ----
   protected openCreate(): void {
-    this.formItem.set(null);
-    this.formOpen.set(true);
-  }
-  protected openEdit(item: InventoryItem): void {
-    this.selected.set(null);
-    this.formItem.set(item);
     this.formOpen.set(true);
   }
   protected closeForm(): void {
     this.formOpen.set(false);
-    this.formItem.set(null);
   }
+  /** Creates the item, then opens it so its first operation can be recorded. */
   protected onSave(input: InventoryInput): void {
-    const editing = this.formItem();
-    const request$ = editing
-      ? this.service.update(editing.uuid, input)
-      : this.service.create(input);
-
     this.saving.set(true);
-    request$.subscribe({
-      next: () => {
+    this.service.create(input).subscribe({
+      next: (created) => {
         this.saving.set(false);
         this.closeForm();
-        this.load();
+        void this.router.navigate(['/inventaire', created.uuid]);
       },
       error: () => this.saving.set(false),
-    });
-  }
-
-  // ---- Delete ----
-  protected askDelete(item: InventoryItem): void {
-    this.selected.set(null);
-    this.confirmTarget.set(item);
-  }
-  protected cancelDelete(): void {
-    this.confirmTarget.set(null);
-  }
-  protected confirmDelete(): void {
-    const target = this.confirmTarget();
-    if (!target) {
-      return;
-    }
-    this.deleting.set(true);
-    this.service.remove(target.uuid).subscribe({
-      next: () => {
-        this.deleting.set(false);
-        this.confirmTarget.set(null);
-        this.load();
-      },
-      error: () => this.deleting.set(false),
     });
   }
 
@@ -244,6 +208,8 @@ export class InventoryList {
     switch (key) {
       case 'name':
         return a.name.localeCompare(b.name, 'fr');
+      case 'type':
+        return ITEM_TYPE_LABELS[a.type].localeCompare(ITEM_TYPE_LABELS[b.type], 'fr');
       case 'quantity':
         return a.quantity - b.quantity;
       case 'location':

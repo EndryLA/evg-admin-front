@@ -8,4 +8,10 @@ export const INVENTORY_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/inventory-list/inventory-list').then((m) => m.InventoryList),
   },
+  {
+    path: 'inventaire/:uuid',
+    title: 'Article · Évangélisation',
+    loadComponent: () =>
+      import('./pages/inventory-detail/inventory-detail').then((m) => m.InventoryDetailPage),
+  },
 ];

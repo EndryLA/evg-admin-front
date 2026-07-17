@@ -1,0 +1,348 @@
+/* Agenda page chrome — header, filter bar, grid toolbar and the card the
+   calendar sits in. The FullCalendar restyle itself lives in
+   `calendar-grid.scss`.
+
+   This page can't use the shared `.data-list` shell: that block styles bare
+   `table`/`tr`/`td`, which FullCalendar's grid is built from (see the note on
+   the component). So the chrome it would have provided — topbar, filters,
+   search, tabs — is repeated here against the same tokens, the way the
+   `.list-page` pages do. The mobile drawer/FAB rules in styles.scss are
+   host-agnostic and still apply.
+
+   The component runs with encapsulation off so it can reach FullCalendar's
+   DOM, so every selector is scoped under `.agenda` (set on the host) by hand.
+   Keep that prefix on anything added below. */
+
+/* The grid sizes itself from its width (aspectRatio), so this is a normal
+   scrolling block page like the `.list-page` ones — not a fixed-height flex
+   shell. `.main` in the app shell clips its overflow, so the scrolling happens
+   here. */
+.agenda {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+
+  /* ---- Header ---- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 26px 32px 22px;
+
+    h1 { margin: 0; font-size: 26px; }
+  }
+  .topbar__sub { margin: 5px 0 0; font-size: 14px; color: var(--text-muted); }
+
+  /* ---- Filter bar ---- */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 32px 18px;
+    flex-wrap: wrap;
+  }
+  .search {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+    max-width: 380px;
+
+    svg {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-faint);
+      pointer-events: none;
+    }
+    input {
+      width: 100%;
+      padding: 10px 13px 10px 38px;
+      border: 1px solid var(--border-input);
+      border-radius: 9px;
+      background: var(--bg-input);
+      font-size: 14px;
+      color: var(--text-primary);
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-ring);
+      }
+    }
+  }
+
+  .tabs {
+    display: inline-flex;
+    background: var(--bg-inset);
+    border-radius: 9px;
+    padding: 3px;
+  }
+  .tab {
+    border: none;
+    background: transparent;
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .tab--active { background: var(--accent); color: var(--text-on-accent); }
+
+  .filter-field { display: inline-flex; align-items: center; gap: 8px; }
+  .filter-field__label { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
+  .filter-select {
+    padding: 9px 12px;
+    border: 1px solid var(--border-input);
+    border-radius: 9px;
+    background: var(--bg-input);
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-ring);
+    }
+  }
+  .filter-reset { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; }
+  .new-btn { margin-left: auto; flex: 0 0 auto; }
+  .new-btn svg { width: 16px; height: 16px; }
+
+  /* ---- Type filter chips ---- */
+  .type-chips { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+  .type-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border: 1px solid var(--border-input);
+    border-radius: 999px;
+    background: var(--bg-input);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+
+    &:hover { background: var(--bg-sunken); }
+    &:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-ring);
+    }
+  }
+  .type-chip__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ev-solid);
+    flex: 0 0 auto;
+  }
+  .type-chip--active {
+    background: var(--ev-bg);
+    border-color: transparent;
+    color: var(--ev-text);
+  }
+
+  /* ---- Grid toolbar ---- */
+  .cal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 32px 14px;
+    flex-wrap: wrap;
+  }
+  .cal-nav { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .cal-today {
+    padding: 8px 14px;
+    border: 1px solid var(--border-input);
+    border-radius: 9px;
+    background: var(--bg-input);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:hover { background: var(--bg-sunken); }
+  }
+  .cal-arrow {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+
+    &:hover { background: var(--bg-inset); }
+    svg { width: 18px; height: 18px; }
+  }
+  .cal-today:focus-visible,
+  .cal-arrow:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+  .cal-title {
+    margin: 0 0 0 6px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    /* FullCalendar's French titles come through lowercase ("juillet 2026"). */
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Quiet activity hint — the grid keeps the previous range on screen while the
+     next one loads, so this is the only signal a fetch is in flight. */
+  .cal-spinner {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    border: 2px solid var(--border-input);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: cal-spin 0.7s linear infinite;
+  }
+  .cal-views { flex: 0 0 auto; }
+  .cal-alert { margin: 0 32px 14px; }
+
+  /* ---- Grid card ---- */
+  /* No border or padding of its own: FullCalendar draws the grid's outer
+     border, and this just rounds off the corners (design.md §1: 12px table
+     card). Adding one here would double every edge — and punching the library's
+     borders back out to compensate is what broke the grid rules. */
+  .cal-card {
+    margin: 0 32px 24px;
+    border-radius: 12px;
+    background: var(--bg-card);
+    overflow: hidden;
+    transition: opacity 0.12s ease;
+  }
+  .cal-card--busy { opacity: 0.65; }
+
+  /* Week view on a phone: seven time columns can't share 360px, so the grid
+     keeps a usable minimum width and the card scrolls sideways to it. The
+     minimum is on the harness rather than `.fc`, so the grid still measures the
+     width it actually renders at. */
+  .cal-card--scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    .fc-view-harness { min-width: 640px; }
+  }
+}
+
+@keyframes cal-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agenda .cal-spinner { animation-duration: 2s; }
+}
+
+/* ---- Phone: the grid fills the viewport ----
+   Apple's Calendar gives the grid every pixel under the chrome — the page
+   itself never scrolls, and a month is always exactly one screen. Same shape
+   here: the page is a column of compact chrome plus the card as the only
+   flexible pane, and the card hands that height down to FullCalendar.
+
+   The height chain is `.main` (app shell, already a column flex container) →
+   `.agenda` → `.cal-card` → `full-calendar` → `.fc`, and every link grows into
+   its parent by flexing. Deliberately no `height: 100%` anywhere along it: each
+   parent here is itself sized by `flex-grow`, and a percentage height against a
+   flex-grown parent is not reliably definite. When it fails it fails silently —
+   the column falls back to its content height, `flex: 1` on the card finds no
+   free space to claim, and the grid renders at zero height (a blank card under
+   working chrome). Flexing has no such ambiguity, so keep this chain
+   percentage-free; `min-height: 0` on every link is what lets it shrink to the
+   viewport instead of being floored at the grid's natural height. */
+@media (max-width: 720px) {
+  .agenda {
+    display: flex;
+    flex-direction: column;
+    /* Grow into `.main` rather than measuring it. */
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    /* The grid is sized to fit, so nothing here should scroll the page — an
+       overshoot has to clip rather than pull the whole layout up. */
+    overflow: hidden;
+
+    .topbar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      /* Every row above the grid is height the grid doesn't get, so the chrome
+         runs tighter here than on the other phone pages. */
+      padding: 14px 16px 10px;
+    }
+    .topbar h1 { font-size: 20px; }
+    /* The toolbar's month title says where we are; on a screen this size the
+       tagline is the first thing that can go. */
+    .topbar__sub { display: none; }
+
+    .filters { padding: 0 16px 12px; gap: 10px; }
+    .search { max-width: none; min-width: 0; flex: 1; }
+    .tabs { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .cal-toolbar { padding: 0 16px 10px; gap: 10px; }
+    .cal-title { font-size: 16px; }
+    .cal-alert { margin: 0 16px 10px; }
+    .cal-views { width: 100%; }
+    .cal-views .tab { flex: 1; }
+
+    /* The phone calendar owns the pane under the chrome, the way the desktop
+       card does — a definite height it hands to its own internal scroller. */
+    app-calendar-mobile {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+
+    /* Edge to edge, like Apple's: at this width the card's gutters and rounded
+       corners cost a column of cells and buy nothing. */
+    .cal-card {
+      flex: 1;
+      /* Flex items floor at their content's size — without this the grid can
+         push the card past the viewport instead of being bounded by it. */
+      min-height: 0;
+      /* A column, so the calendar element can flex into it (see above). */
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      border-radius: 0;
+      border-top: 1px solid var(--border);
+    }
+    full-calendar {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    /* `height: '100%'` on the component writes an inline `height: 100%` onto
+       this element — the one percentage left, and one we can't remove from the
+       outside. Flexing it defuses that: in a column flex container the main-axis
+       size comes from `flex-basis` (0 here) and the `height` is only consulted
+       when the basis is `auto`, so the grid is sized by the flex fill and the
+       inline percentage never has to resolve. The option still has to stay
+       `'100%'` — it's what puts FullCalendar in liquid-height mode, which is
+       what gives the time grid its internal scroller. */
+    .fc {
+      flex: 1;
+      min-height: 0;
+    }
+  }
+}

@@ -1,0 +1,42 @@
+/* Detail slide-over extras. The panel chrome itself comes from the global
+   `.slideover` block (design.md §3) — only what's specific to an agenda entry
+   lives here. */
+
+/* Free text needs the full width and normal left alignment, unlike the
+   label→value rows it sits among. */
+.detail__desc {
+  flex-direction: column;
+  gap: 6px;
+}
+.detail__desc dd {
+  text-align: left;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.detail__status {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+.detail__status-label {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.detail__status-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.detail__status-btn {
+  flex: 1;
+  min-width: 110px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+}

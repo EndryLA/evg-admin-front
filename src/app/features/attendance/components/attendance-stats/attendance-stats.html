@@ -78,7 +78,9 @@
 
     <div class="panels">
       <section class="panel">
-        <h2 class="panel__title">Membres les plus présents</h2>
+        <div class="panel__head">
+          <h2 class="panel__title">Membres les plus présents</h2>
+        </div>
         @if (topMembers().length) {
           <ul class="leaderboard">
             @for (m of topMembers(); track m.profileUuid; let i = $index) {
@@ -92,30 +94,83 @@
               </li>
             }
           </ul>
+
+          <button type="button" class="panel__more" (click)="showAllMembers()">
+            Voir tous les membres
+          </button>
         } @else {
           <p class="panel__empty">Aucune présence de membre sur cette période.</p>
         }
       </section>
 
       <section class="panel">
-        <h2 class="panel__title">Équipes</h2>
-        @if (teams().length) {
+        <div class="panel__head">
+          <h2 class="panel__title">Équipes</h2>
+          <div class="metric-switch" role="group" aria-label="Trier les équipes par">
+            @for (opt of teamSorts; track opt.key) {
+              <button type="button" class="metric-switch__btn" [class.metric-switch__btn--active]="teamSort() === opt.key"
+                [attr.aria-pressed]="teamSort() === opt.key" (click)="setTeamSort(opt.key)">{{ opt.label }}</button>
+            }
+          </div>
+        </div>
+        @if (visibleTeams().length) {
           <ul class="leaderboard">
-            @for (t of teams(); track t.teamLeaderUuid; let i = $index) {
-              <li class="leader">
-                <span class="leader__rank" [class.leader__rank--top]="i < 3">{{ i + 1 }}</span>
-                <span class="leader__body">
-                  <span class="leader__name">{{ t.teamLeaderFirstname }} {{ t.teamLeaderLastname }}</span>
-                  <span class="leader__sub">{{ t.members }} membre{{ t.members > 1 ? 's' : '' }} · <span class="leader__pct">{{ ratePercent(t.presenceRate) }}</span> de présence</span>
-                </span>
-                <span class="leader__count">{{ t.totalPresences }} présence{{ t.totalPresences > 1 ? 's' : '' }}</span>
+            @for (t of visibleTeams(); track t.teamLeaderUuid; let i = $index) {
+              <li>
+                <!-- Only real teams open a detail dialog; the "sans équipe" bucket
+                     has no leader to scope the roster lookup by. -->
+                @if (t.teamLeaderUuid) {
+                  <button type="button" class="leader leader--action" (click)="showTeam(t)">
+                    <span class="leader__rank" [class.leader__rank--top]="i < 3">{{ i + 1 }}</span>
+                    <span class="leader__body">
+                      <span class="leader__name">{{ teamLabel(t) }}</span>
+                      <span class="leader__sub">{{ t.members }} membre{{ t.members > 1 ? 's' : '' }} · <span class="leader__pct">{{ ratePercent(t.presenceRate) }}</span> de présence</span>
+                    </span>
+                    <span class="leader__count">{{ t.totalPresences }} présence{{ t.totalPresences > 1 ? 's' : '' }}</span>
+                    <span class="leader__chevron" aria-hidden="true"></span>
+                  </button>
+                } @else {
+                  <span class="leader">
+                    <span class="leader__rank" [class.leader__rank--top]="i < 3">{{ i + 1 }}</span>
+                    <span class="leader__body">
+                      <span class="leader__name">{{ teamLabel(t) }}</span>
+                      <span class="leader__sub">{{ t.members }} membre{{ t.members > 1 ? 's' : '' }} · <span class="leader__pct">{{ ratePercent(t.presenceRate) }}</span> de présence</span>
+                    </span>
+                    <span class="leader__count">{{ t.totalPresences }} présence{{ t.totalPresences > 1 ? 's' : '' }}</span>
+                  </span>
+                }
               </li>
             }
           </ul>
+
+          @if (teamsOverflow()) {
+            <button type="button" class="panel__more" [attr.aria-expanded]="teamsExpanded()" (click)="toggleTeams()">
+              {{ teamsExpanded() ? 'Voir moins' : 'Voir les ' + teams().length + ' équipes' }}
+            </button>
+          }
         } @else {
           <p class="panel__empty">Aucune équipe sur cette période.</p>
         }
       </section>
     </div>
+
+    @if (membersOpen()) {
+      <app-attendance-members-dialog
+        [members]="allMembers()"
+        [loading]="allMembersLoading()"
+        [error]="allMembersError()"
+        [outreaches]="s.outreaches"
+        (close)="closeMembers()" />
+    }
+
+    @if (openTeam(); as team) {
+      <app-attendance-team-dialog
+        [team]="team"
+        [roster]="openTeamRoster()"
+        [loading]="teamLoading()"
+        [error]="teamError()"
+        [outreaches]="s.outreaches"
+        (close)="closeTeam()" />
+    }
   }
 }

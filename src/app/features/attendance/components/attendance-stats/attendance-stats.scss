@@ -89,15 +89,38 @@
   border-radius: 12px;
   background: var(--bg-card);
 }
+/* Min-height matches a segmented switch, so a head with only a title lines up
+   with one that has a switch in it — panels sit side by side and their lists
+   must start at the same height. */
 .panel__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 33px;
   margin-bottom: 18px;
 }
 .panel__title { margin: 0; font-size: 16px; }
 .panel__empty { margin: 0; font-size: 13.5px; color: var(--text-muted); }
+
+/* "Voir tous les membres" under the leaderboard — quiet, full-width affordance
+   that opens the roster dialog. */
+.panel__more {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.panel__more:hover { background: var(--bg-inset); color: var(--text-primary); }
 
 .chart-panel { margin-bottom: 16px; }
 .panels {
@@ -140,10 +163,39 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 12px 0;
+  border: none;
   border-bottom: 1px solid var(--border-faint);
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: inherit;
 }
-.leader:last-child { border-bottom: none; }
+/* Rows sit directly in the list (members) or wrapped in an <li> (teams, which
+   carry an expandable roster underneath). Both drop the trailing hairline. */
+.leader:last-child,
+.leaderboard > li:last-child > .leader { border-bottom: none; }
+
+/* A team row is a button: it opens that team's detail dialog. */
+.leader--action { cursor: pointer; transition: background 0.12s ease; }
+.leader--action:hover { background: var(--row-hover); }
+.leader--action:focus-visible {
+  outline: none;
+  border-radius: 8px;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* Trailing chevron — the "opens a detail view" affordance used across the app. */
+.leader__chevron {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border-top: 2px solid var(--text-faint);
+  border-right: 2px solid var(--text-faint);
+  transform: rotate(45deg);
+}
 
 /* Rank shown as a red avatar-style disc; top 3 get a solid fill, the rest a soft tint. */
 .leader__rank {

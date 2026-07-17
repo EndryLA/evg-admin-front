@@ -1,7 +1,14 @@
 import { Component, computed, inject, input, OnInit, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import type { InventoryInput, InventoryItem, Option } from '../../inventory.models';
+import {
+  ITEM_TYPE_LABELS,
+  ITEM_TYPES,
+  type InventoryInput,
+  type InventoryItem,
+  type ItemType,
+  type Option,
+} from '../../inventory.models';
 
 /**
  * Create/edit modal for an inventory item (design.md §3 "Create/Edit modal").
@@ -29,8 +36,12 @@ export class InventoryForm implements OnInit {
   protected readonly isEdit = computed(() => this.item() !== null);
   protected readonly title = computed(() => this.item()?.name || 'Nouvel article');
 
+  protected readonly itemTypes = ITEM_TYPES;
+  protected readonly itemTypeLabels = ITEM_TYPE_LABELS;
+
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required]],
+    type: ['FLYER' as ItemType, [Validators.required]],
     quantity: [0, [Validators.required, Validators.min(0)]],
     stockLocation: [''],
     managedByUuid: [''],
@@ -41,6 +52,7 @@ export class InventoryForm implements OnInit {
     if (item) {
       this.form.setValue({
         name: item.name,
+        type: item.type,
         quantity: item.quantity,
         stockLocation: item.stockLocation,
         managedByUuid: item.managedBy?.uuid ?? '',
@@ -56,6 +68,7 @@ export class InventoryForm implements OnInit {
     const v = this.form.getRawValue();
     this.save.emit({
       name: v.name,
+      type: v.type,
       quantity: Number(v.quantity) || 0,
       stockLocation: v.stockLocation,
       managedByUuid: v.managedByUuid || null,

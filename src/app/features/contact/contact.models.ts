@@ -9,8 +9,8 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
 
 /** Badge tone (see global `.pill--*`) per contact type. */
 export const CONTACT_TYPE_TONES: Record<ContactType, string> = {
-  CONTACT: 'grey',
-  CONVERSION: 'green',
+  CONTACT: 'blue',
+  CONVERSION: 'red',
 };
 
 /** Marital / civil situation of a contact. */

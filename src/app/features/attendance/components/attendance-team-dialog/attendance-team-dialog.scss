@@ -1,0 +1,114 @@
+/* Team detail dialog. Reuses the global `.modal-form` shell (overlay/head/foot)
+   and mirrors the dashboard's tile/roster language inside a scrolling body. */
+
+/* Doubled class beats the global `.modal-form .modal` height/overflow rules. */
+.modal.modal--list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal__sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 26px 16px;
+}
+.modal__section {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 22px 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.modal__section-note { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.modal__state {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+.modal__note { margin: 16px 0 0; }
+
+/* ---- Headline tiles ---- */
+/* Six columns so the row of three totals and the pair of averages below both
+   divide evenly, rather than leaving a ragged gap on the last row. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+.tile--third { grid-column: span 2; }
+.tile--half { grid-column: span 3; }
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.tile__value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
+.tile__value--accent { color: var(--accent-soft-text); }
+.tile__label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+/* The two averages divide the same presences by different things — the hint is
+   what stops "3,7" and "1,4" reading as the same statistic twice. */
+.tile__hint {
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* ---- Roster ---- */
+.roster { list-style: none; margin: 0; padding: 0; }
+.roster__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-faint);
+  font-size: 13.5px;
+}
+.roster__item:last-child { border-bottom: none; }
+.roster__name { flex: 1; min-width: 0; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.roster__pct { flex: none; font-weight: 700; color: var(--accent-soft-text); }
+
+/* Never turned up: recede rather than alarm — this is a roster, not an alert. */
+.roster__item--absent .roster__name { font-weight: 500; color: var(--text-muted); }
+.roster__item--absent .roster__pct { color: var(--text-faint); }
+/* Presence count in its own right-aligned column so the list scans vertically. */
+.roster__count {
+  flex: none;
+  min-width: 24px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+@media (max-width: 560px) {
+  /* Too narrow for thirds: let every tile take half the row. */
+  .tiles { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .tile--third,
+  .tile--half { grid-column: auto; }
+  .tile { padding: 12px; }
+  .tile__value { font-size: 20px; }
+}

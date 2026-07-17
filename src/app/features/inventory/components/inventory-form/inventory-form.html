@@ -23,6 +23,15 @@
         </label>
 
         <label class="field">
+          <span class="field__label">Type</span>
+          <select class="field__control" formControlName="type">
+            @for (t of itemTypes; track t) {
+              <option [value]="t">{{ itemTypeLabels[t] }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
           <span class="field__label">Quantité</span>
           <input class="field__control" type="number" min="0" formControlName="quantity"
             [attr.aria-invalid]="form.controls.quantity.touched && form.controls.quantity.invalid" />
@@ -31,7 +40,7 @@
           }
         </label>
 
-        <label class="field">
+        <label class="field field--span">
           <span class="field__label">Emplacement</span>
           <input class="field__control" formControlName="stockLocation" autocomplete="off"
             placeholder="Ex. Local B, étagère 2" />
@@ -46,6 +55,11 @@
             }
           </select>
         </label>
+
+        <p class="modal__note field--span">
+          Le type détermine les opérations possibles : réception, distribution et utilisation
+          pour les flyers ; sortie et retour pour le matériel.
+        </p>
       </div>
 
       <footer class="modal__foot">

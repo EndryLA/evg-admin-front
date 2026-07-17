@@ -28,6 +28,7 @@
       <thead>
         <tr>
           <th class="col-name sortable" (click)="sortBy('name')">Article <span class="ind">{{ sortIndicator('name') }}</span></th>
+          <th class="col-type sortable" (click)="sortBy('type')">Type <span class="ind">{{ sortIndicator('type') }}</span></th>
           <th class="col-qty center sortable" (click)="sortBy('quantity')">Quantité <span class="ind">{{ sortIndicator('quantity') }}</span></th>
           <th class="col-location sortable" (click)="sortBy('location')">Emplacement <span class="ind">{{ sortIndicator('location') }}</span></th>
           <th class="col-resp">Responsable</th>
@@ -39,6 +40,11 @@
           <tr (click)="view(r)">
             <td class="cell-head">
               <div class="cell-main">{{ r.name }}</div>
+            </td>
+            <td data-label="Type">
+              <span class="pill" [class.pill--blue]="r.type === 'FLYER'" [class.pill--violet]="r.type === 'EQUIPMENT'">
+                {{ itemTypeLabels[r.type] }}
+              </span>
             </td>
             <td class="center" data-label="Quantité">{{ r.quantity }}</td>
             <td class="cell-contact" data-label="Emplacement">{{ r.stockLocation || '—' }}</td>
@@ -93,30 +99,10 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
-@if (selected(); as it) {
-  <app-inventory-detail
-    [item]="it"
-    (close)="closeDetail()"
-    (edit)="openEdit(it)"
-    (remove)="askDelete(it)" />
-}
-
 @if (formOpen()) {
   <app-inventory-form
-    [item]="formItem()"
     [profiles]="profiles()"
     [busy]="saving()"
     (save)="onSave($event)"
     (cancel)="closeForm()" />
-}
-
-@if (confirmTarget(); as target) {
-  <app-confirm-dialog
-    title="Supprimer cet article ?"
-    [busy]="deleting()"
-    (confirm)="confirmDelete()"
-    (cancel)="cancelDelete()">
-    L’article <strong>{{ target.name }}</strong> sera définitivement supprimé de
-    l’inventaire. Cette action est irréversible.
-  </app-confirm-dialog>
 }

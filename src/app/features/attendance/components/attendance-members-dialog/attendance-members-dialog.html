@@ -1,0 +1,47 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div
+    class="modal modal--list"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Membres présents"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Présences</span>
+      <h2 class="modal__title">Tous les membres</h2>
+      @if (list().length) {
+        <p class="modal__sub">
+          {{ list().length }} membre{{ list().length > 1 ? 's' : '' }} sur {{ outreaches() }} sortie{{ outreaches() > 1 ? 's' : '' }}
+          @if (absentCount(); as absent) {
+            · {{ absent }} sans aucune présence
+          }
+        </p>
+      }
+    </header>
+
+    <div class="modal__body">
+      @if (loading()) {
+        <p class="modal__state">Chargement des membres…</p>
+      } @else if (error(); as message) {
+        <p class="modal__error" role="alert">{{ message }}</p>
+      } @else if (list().length) {
+        <ul class="roster">
+          @for (m of list(); track m.profileUuid; let i = $index) {
+            <li class="roster__item" [class.roster__item--absent]="m.presences === 0">
+              <span class="roster__rank" [class.roster__rank--top]="i < 3">{{ i + 1 }}</span>
+              <span class="roster__name">{{ m.firstname }} {{ m.lastname }}</span>
+              <span class="roster__pct">{{ ratePercent(m.presenceRate) }}</span>
+              <span class="roster__count">{{ m.presences }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="modal__state">Aucun membre sur cette période.</p>
+      }
+    </div>
+
+    <footer class="modal__foot">
+      <button type="button" class="btn modal__cancel" (click)="close.emit()">Fermer</button>
+    </footer>
+  </div>
+</div>

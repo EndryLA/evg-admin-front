@@ -1,0 +1,194 @@
+<header class="topbar">
+  <div>
+    <h1>Agenda</h1>
+    <p class="topbar__sub">Sorties, réunions et agapès du département.</p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input
+      #searchInput
+      type="search"
+      [value]="query()"
+      (input)="onSearch($any($event.target).value)"
+      placeholder="Rechercher un événement, un lieu…"
+      aria-label="Rechercher un événement" />
+  </div>
+
+  <!-- Mobile-only trigger for the bottom filter drawer. -->
+  <button type="button" class="filter-toggle" (click)="openFilters()" aria-label="Filtres">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+    Filtres
+    @if (activeFilterCount() > 0) {
+      <span class="filter-toggle__badge">{{ activeFilterCount() }}</span>
+    }
+  </button>
+
+  <!-- Filter controls: inline on desktop, a bottom drawer on mobile. -->
+  <div class="filter-controls" [class.filter-controls--open]="filterDrawerOpen()">
+    <div class="drawer-head">
+      <h2 class="drawer-head__title">Filtres</h2>
+      <button type="button" class="drawer-close" (click)="closeFilters()" aria-label="Fermer les filtres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="type-chips" role="group" aria-label="Filtrer par type">
+        @for (t of typeOptions; track t.value) {
+          <button
+            type="button"
+            class="type-chip type-chip--{{ t.value.toLowerCase() }}"
+            [class.type-chip--active]="isTypeActive(t.value)"
+            [attr.aria-pressed]="isTypeActive(t.value)"
+            (click)="toggleType(t.value)">
+            <span class="type-chip__dot" aria-hidden="true"></span>
+            {{ t.label }}
+          </button>
+        }
+      </div>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Statut</span>
+        <select
+          class="filter-select"
+          [value]="status()"
+          (change)="setStatus($any($event.target).value)"
+          aria-label="Filtrer par statut">
+          <option value="ALL">Tous les statuts</option>
+          @for (s of statusOptions; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-field__label">Responsable</span>
+        <select
+          class="filter-select"
+          [value]="managedBy()"
+          (change)="setManagedBy($any($event.target).value)"
+          aria-label="Filtrer par responsable">
+          <option value="ALL">Tous</option>
+          @for (m of managers(); track m.uuid) {
+            <option [value]="m.uuid">{{ m.label }}</option>
+          }
+        </select>
+      </label>
+
+      @if (hasActiveFilters()) {
+        <button type="button" class="btn filter-reset" (click)="resetFilters()">
+          Réinitialiser
+        </button>
+      }
+    </div>
+
+    <div class="drawer-foot">
+      <button type="button" class="btn btn--primary drawer-apply" (click)="closeFilters()">
+        Voir les résultats ({{ items().length }})
+      </button>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nouvel événement
+  </button>
+</div>
+
+<!-- Backdrop behind the mobile filter drawer. -->
+@if (filterDrawerOpen()) {
+  <button type="button" class="drawer-backdrop" (click)="closeFilters()" aria-label="Fermer les filtres" tabindex="-1"></button>
+}
+
+@if (loadError()) {
+  <p class="alert alert--error cal-alert" role="alert">{{ loadError() }}</p>
+}
+@if (actionError()) {
+  <p class="alert alert--error cal-alert" role="alert">{{ actionError() }}</p>
+}
+
+@if (narrow()) {
+  <!-- Phone: a native-feeling month grid + agenda, in place of FullCalendar. -->
+  <app-calendar-mobile
+    [items]="items()"
+    [loading]="loading()"
+    (rangeChange)="onMobileRange($event)"
+    (selectItem)="onSelectItem($event)"
+    (createOn)="openCreateOn($event)" />
+} @else {
+  <!-- Grid toolbar: navigation + range label + view switcher. -->
+  <div class="cal-toolbar">
+    <div class="cal-nav">
+      <button type="button" class="cal-today" (click)="today()">Aujourd'hui</button>
+      <button type="button" class="cal-arrow" (click)="prev()" aria-label="Période précédente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button type="button" class="cal-arrow" (click)="next()" aria-label="Période suivante">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <h2 class="cal-title" aria-live="polite">{{ viewTitle() }}</h2>
+      @if (loading()) {
+        <span class="cal-spinner" role="status" aria-label="Chargement"></span>
+      }
+    </div>
+
+    <div class="tabs cal-views" role="tablist" aria-label="Changer de vue">
+      @for (v of viewOptions; track v.value) {
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          [class.tab--active]="view() === v.value"
+          [attr.aria-selected]="view() === v.value"
+          (click)="setView(v.value)">
+          {{ v.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div #card class="cal-card" [class.cal-card--busy]="loading()" [class.cal-card--scroll-x]="scrollX()">
+    <full-calendar #calendar [options]="calendarOptions()" />
+  </div>
+}
+
+<!-- Mobile-only floating action button — creates a new event. -->
+<button type="button" class="fab" (click)="openCreate()" aria-label="Nouvel événement">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+@if (selected(); as item) {
+  <app-calendar-event-detail
+    [item]="item"
+    [busy]="saving()"
+    (close)="closeDetail()"
+    (edit)="openEdit()"
+    (remove)="askDelete()"
+    (statusChange)="onStatusChange($event)"
+    (openOutreach)="openOutreach($event)" />
+}
+
+@if (formOpen()) {
+  <app-calendar-event-form
+    [event]="editing()"
+    [managers]="managers()"
+    [defaultDate]="draftDate()"
+    [defaultStartTime]="draftStart()"
+    [defaultEndTime]="draftEnd()"
+    [busy]="saving()"
+    (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}
+
+@if (confirmingDelete(); as item) {
+  <app-confirm-dialog
+    title="Supprimer l'événement ?"
+    [busy]="deleting()"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()">
+    L'événement « {{ item.name }} » sera définitivement supprimé de l'agenda.
+  </app-confirm-dialog>
+}

@@ -1,0 +1,344 @@
+/* Full-page inventory item detail. Generic tokens (pill, btn) live in styles.scss.
+   Mirrors the outreach detail page's shell so the two read as one screen type.
+
+   Mobile-first: the base rules are the phone layout — one column, operations
+   before the summary, history as cards. The 721px breakpoint layers the
+   desktop grid and the real table on top. 720px is the app-wide breakpoint
+   (see the mobile blocks in styles.scss). */
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  padding: 18px 16px calc(32px + env(safe-area-inset-bottom));
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* Comfortable tap target without shifting the text off the grid. */
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.back svg { width: 16px; height: 16px; }
+.back:hover { color: var(--text-primary); }
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.detail-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  margin: 4px 0 20px;
+}
+.detail-head__main h1 { margin: 8px 0 0; font-size: 22px; }
+.detail-head__sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+/* Edit / delete are secondary to recording an operation, so on phones they
+   share one row rather than each taking a full-width line. */
+.detail-head__actions { display: flex; gap: 10px; }
+.detail-head__actions .btn { flex: 1; justify-content: center; min-height: 44px; }
+
+.btn--danger {
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--accent-soft-border);
+}
+.btn--danger:not(:disabled):hover { background: var(--accent-disc-bg); }
+
+.card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- Summary field list ---- */
+.summary { margin: 0; padding: 4px 18px; display: flex; flex-direction: column; }
+.summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border-faint);
+}
+.summary__row--last { border-bottom: none; }
+.summary__row dt { font-size: 13px; color: var(--text-faint); }
+.summary__row dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: right;
+}
+.summary__stock { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.summary__row dd.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-faint);
+  /* A uuid has no spaces and would otherwise push the card wide. */
+  overflow-wrap: anywhere;
+}
+
+/* ---- Operation launcher ----
+   The reason someone opens this page on a phone (recording a movement in the
+   stock room), so it leads on mobile and moves to the sidebar on desktop. */
+.ops-card { order: -1; padding: 18px; }
+.ops-card__title { margin: 0; font-size: 15px; }
+.ops-card__hint {
+  margin: 6px 0 14px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}
+.ops-actions { display: flex; flex-direction: column; gap: 10px; }
+.ops-action {
+  justify-content: flex-start;
+  gap: 10px;
+  /* Full-width, thumb-sized rows: the primary action on a phone. */
+  min-height: 48px;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+.ops-action:hover {
+  border-color: var(--accent);
+  color: var(--accent-soft-text);
+  background: var(--accent-soft-bg);
+}
+.ops-action svg { width: 16px; height: 16px; }
+
+/* ---- History ---- */
+.history { margin-top: 26px; }
+.history__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+.history__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.history .cell-qty { font-weight: 700; font-variant-numeric: tabular-nums; }
+.history .cell-qty--in { color: var(--pill-green-text); }
+.history .cell-qty--out { color: var(--pill-red-text); }
+
+/* Six dense columns don't fit a phone, and a sideways-scrolling table is the
+   thing this page most needed to lose. Each movement becomes a card instead:
+   operation and signed quantity on the title line, the rest as labelled rows —
+   the same idiom the list tables use (see styles.scss). */
+.history .card {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+/* The states render inside `.card`, so they keep a surface of their own. */
+.history .card:has(.state) {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.history thead { display: none; }
+.history table {
+  display: block;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.history tbody { display: flex; flex-direction: column; gap: 10px; }
+.history tbody tr {
+  display: block;
+  position: relative;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.history td { display: block; padding: 0; }
+
+.history td.cell-head {
+  /* Keep the title clear of the quantity pinned top-right. */
+  padding: 0 76px 10px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-faint);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.history td.cell-corner {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: auto;
+  padding: 0;
+  text-align: right;
+  font-size: 15px;
+}
+
+.history td[data-label] {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 5px 0;
+  text-align: right;
+}
+.history td[data-label]::before {
+  content: attr(data-label);
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: left;
+}
+.history .cell-muted { color: var(--text-primary); }
+.history .cell-notes { color: var(--text-secondary); }
+
+/* ---- States ---- */
+.state {
+  padding: 36px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
+.state__hint { margin-top: 6px; }
+.state--error { color: var(--accent-soft-text); }
+.state__retry {
+  display: block;
+  margin: 14px auto 0;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+
+/* ---- Desktop ---- */
+@media (min-width: 721px) {
+  :host { padding: 22px 32px 48px; }
+
+  .detail-head {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 18px 0 22px;
+  }
+  .detail-head__main h1 { font-size: 26px; }
+  .detail-head__actions { flex: 0 0 auto; }
+  .detail-head__actions .btn { flex: 0 0 auto; }
+
+  /* Summary leads, launcher becomes the narrower right-hand column. */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    align-items: start;
+    gap: 20px;
+  }
+  .ops-card { order: 0; padding: 20px 22px; }
+  .ops-action { min-height: 0; padding: 10px 12px; font-size: 13.5px; }
+  .ops-action svg { width: 14px; height: 14px; }
+
+  .summary { padding: 4px 22px; }
+  .summary__row { padding: 14px 0; }
+
+  .history { margin-top: 30px; }
+  .history__title { font-size: 18px; }
+
+  /* Back to a real table. */
+  .history .card {
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+  .history table { display: table; }
+  .history thead { display: table-header-group; }
+  .history thead tr { border-bottom: 1px solid var(--border-subtle); }
+  .history th {
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .history th.right { text-align: right; }
+  .history tbody { display: table-row-group; }
+  .history tbody tr {
+    display: table-row;
+    position: static;
+    padding: 0;
+    border: none;
+    border-bottom: 1px solid var(--border-faint);
+    border-radius: 0;
+  }
+  .history tbody tr:last-child { border-bottom: none; }
+
+  .history td {
+    display: table-cell;
+    padding: 14px 20px;
+    vertical-align: middle;
+  }
+  .history td.cell-head {
+    margin: 0;
+    padding: 14px 20px;
+    border-bottom: none;
+    font-size: 14px;
+  }
+  .history td.cell-corner {
+    position: static;
+    width: auto;
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+  .history td[data-label] { display: table-cell; text-align: left; }
+  .history td[data-label]::before { content: none; }
+  .history .right { text-align: right; }
+  .history .cell-muted { color: var(--text-secondary); white-space: nowrap; }
+  .history .cell-notes { color: var(--text-faint); }
+
+  .state { padding: 40px 24px; }
+}

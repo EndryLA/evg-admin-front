@@ -1,0 +1,79 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div
+    class="modal modal--list"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Équipe de ' + leaderName()"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Équipe</span>
+      <h2 class="modal__title">{{ leaderName() }}</h2>
+      <p class="modal__sub">
+        {{ outreaches() }} sortie{{ outreaches() > 1 ? 's' : '' }} sur la période
+      </p>
+    </header>
+
+    <div class="modal__body">
+      <!-- Totals on the top row, the two averages paired below: they divide the
+           same presences by different things, so they read together. -->
+      <section class="tiles">
+        <div class="tile tile--third">
+          <span class="tile__value">{{ team().members }}</span>
+          <span class="tile__label">Membres</span>
+        </div>
+        <div class="tile tile--third">
+          <span class="tile__value">{{ team().totalPresences }}</span>
+          <span class="tile__label">Présences</span>
+        </div>
+        <div class="tile tile--third">
+          <span class="tile__value tile__value--accent">{{ ratePercent(team().presenceRate) }}</span>
+          <span class="tile__label">Taux</span>
+        </div>
+        <div class="tile tile--half">
+          <span class="tile__value">{{ avgLabel() }}</span>
+          <span class="tile__label">Sorties / membre</span>
+          <span class="tile__hint">Ce qu’un membre suit en moyenne</span>
+        </div>
+        <div class="tile tile--half">
+          <span class="tile__value">{{ avgPerOutreachLabel() }}</span>
+          <span class="tile__label">Membres / sortie</span>
+          <span class="tile__hint">Présents en moyenne par sortie</span>
+        </div>
+      </section>
+
+      <h3 class="modal__section">
+        L’équipe
+        @if (absentCount(); as absent) {
+          <span class="modal__section-note">{{ absent }} sans aucune présence</span>
+        }
+      </h3>
+      @if (loading()) {
+        <p class="modal__state">Chargement de l’équipe…</p>
+      } @else if (error(); as message) {
+        <p class="modal__error" role="alert">{{ message }}</p>
+      } @else if (list().length) {
+        <ul class="roster">
+          @for (m of list(); track m.profileUuid) {
+            <li class="roster__item" [class.roster__item--absent]="m.presences === 0">
+              <span class="roster__name">{{ m.firstname }} {{ m.lastname }}</span>
+              <span class="roster__pct">{{ ratePercent(m.presenceRate) }}</span>
+              <span class="roster__count">{{ m.presences }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="modal__state">Aucun membre dans cette équipe.</p>
+      }
+
+      <p class="modal__note">
+        Le taux est calculé sur l’ensemble de l’équipe : les membres jamais présents
+        comptent pour 0.
+      </p>
+    </div>
+
+    <footer class="modal__foot">
+      <button type="button" class="btn modal__cancel" (click)="close.emit()">Fermer</button>
+    </footer>
+  </div>
+</div>

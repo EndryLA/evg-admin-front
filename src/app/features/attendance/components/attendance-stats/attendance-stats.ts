@@ -24,6 +24,8 @@ import { forkJoin } from 'rxjs';
 
 import { ThemeService } from '../../../../core/theme/theme.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { AttendanceMembersDialog } from '../attendance-members-dialog/attendance-members-dialog';
+import { AttendanceTeamDialog } from '../attendance-team-dialog/attendance-team-dialog';
 import { AttendanceStatsService } from '../../attendance-stats.service';
 import {
   MONTH_LABELS,
@@ -96,6 +98,25 @@ const METRICS: readonly { key: Metric; label: string }[] = [
   { key: 'guest', label: 'Invités' },
 ];
 
+/**
+ * Team ranking order. Rate and total genuinely diverge here — a team's rate
+ * divides by `members × outreaches`, so a small, diligent team can out-rate a
+ * big one. (Members get no such switch: every member's rate shares the same
+ * `outreaches` denominator, so ordering by rate *is* ordering by presences.)
+ */
+type TeamSort = 'presences' | 'rate';
+
+const TEAM_SORTS: readonly { key: TeamSort; label: string }[] = [
+  { key: 'presences', label: 'Total' },
+  { key: 'rate', label: 'Taux' },
+];
+
+/** Label for the bucket of members whose profile has no team leader. */
+const NO_TEAM_LABEL = 'Sans équipe';
+
+/** Rows a leaderboard shows before it has to be expanded — keeps the panels short. */
+const LEADERBOARD_SIZE = 5;
+
 /** Empty query — department-wide, all-time. */
 const EMPTY_QUERY: StatsQuery = {
   period: null,
@@ -115,6 +136,7 @@ const EMPTY_QUERY: StatsQuery = {
 @Component({
   selector: 'app-attendance-stats',
   host: { class: 'stats-dashboard' },
+  imports: [AttendanceMembersDialog, AttendanceTeamDialog],
   templateUrl: './attendance-stats.html',
   styleUrl: './attendance-stats.scss',
 })
@@ -141,6 +163,31 @@ export class AttendanceStats implements OnInit {
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
+
+  // ---- "Tous les membres" dialog ----
+  protected readonly membersOpen = signal(false);
+  /** The full roster, absentees included; fetched once per range. `null` = not loaded. */
+  protected readonly allMembers = signal<ProfilePresence[] | null>(null);
+  protected readonly allMembersLoading = signal(false);
+  protected readonly allMembersError = signal<string | null>(null);
+
+  // ---- Teams panel + team dialog ----
+  protected readonly teamSort = signal<TeamSort>('presences');
+  protected readonly teamSorts = TEAM_SORTS;
+  /** Whether the panel lists every team or just the leading few. */
+  protected readonly teamsExpanded = signal(false);
+  /** The team whose dialog is open, or `null` when closed. */
+  protected readonly openTeam = signal<TeamStats | null>(null);
+  /** Per-team rosters, keyed by leader uuid; cached for the current range. */
+  private readonly teamMembers = signal<Record<string, ProfilePresence[]>>({});
+  protected readonly teamLoading = signal(false);
+  protected readonly teamError = signal<string | null>(null);
+
+  /** The open team's roster — `null` while it loads or if it failed. */
+  protected readonly openTeamRoster = computed(() => {
+    const uuid = this.openTeam()?.teamLeaderUuid;
+    return uuid ? this.teamMembers()[uuid] ?? null : null;
+  });
 
   /** True once we know the range holds no outreaches. */
   protected readonly empty = computed(() => (this.summary()?.outreaches ?? 0) === 0);
@@ -359,14 +406,114 @@ export class AttendanceStats implements OnInit {
     }
   }
 
+  // ---- "Tous les membres" dialog ----
+
+  /** Open the full roster (absentees included), fetching it once per range. */
+  protected showAllMembers(): void {
+    this.membersOpen.set(true);
+    if (this.allMembers() || this.allMembersLoading()) {
+      return;
+    }
+    this.allMembersLoading.set(true);
+    this.allMembersError.set(null);
+    this.service.roster(this.query()).subscribe({
+      next: (members) => {
+        this.allMembers.set(members);
+        this.allMembersLoading.set(false);
+      },
+      error: (err) => {
+        this.allMembersError.set(messageFromError(err, 'Chargement des membres impossible.'));
+        this.allMembersLoading.set(false);
+      },
+    });
+  }
+
+  protected closeMembers(): void {
+    this.membersOpen.set(false);
+  }
+
+  // ---- Teams panel + team dialog ----
+
+  private readonly sortedTeams = computed(() => {
+    const copy = [...this.teams()];
+    return this.teamSort() === 'rate'
+      ? copy.sort((a, b) => b.presenceRate - a.presenceRate)
+      : copy.sort((a, b) => b.totalPresences - a.totalPresences);
+  });
+
+  /** The teams on screen: the leading few, or all of them once expanded. */
+  protected readonly visibleTeams = computed(() =>
+    this.teamsExpanded() ? this.sortedTeams() : this.sortedTeams().slice(0, LEADERBOARD_SIZE),
+  );
+
+  /** True when there are more teams than the panel shows by default. */
+  protected readonly teamsOverflow = computed(() => this.teams().length > LEADERBOARD_SIZE);
+
+  protected toggleTeams(): void {
+    this.teamsExpanded.update((open) => !open);
+  }
+
+  protected setTeamSort(sort: TeamSort): void {
+    this.teamSort.set(sort);
+  }
+
+  /**
+   * Members with no leader are grouped server-side under a null key, which the
+   * adapter flattens to an empty uuid — that row is a bucket, not a real team.
+   */
+  protected teamLabel(team: TeamStats): string {
+    return team.teamLeaderUuid
+      ? `${team.teamLeaderFirstname} ${team.teamLeaderLastname}`.trim()
+      : NO_TEAM_LABEL;
+  }
+
+  /** Open a team's detail dialog, fetching its roster (leader included) once. */
+  protected showTeam(team: TeamStats): void {
+    const uuid = team.teamLeaderUuid;
+    // The "sans équipe" bucket has no leader to scope a lookup by.
+    if (!uuid) {
+      return;
+    }
+    this.openTeam.set(team);
+    this.teamError.set(null);
+    if (this.teamMembers()[uuid]) {
+      this.teamLoading.set(false);
+      return;
+    }
+    this.teamLoading.set(true);
+    this.service.teamMembers(this.query(), uuid).subscribe({
+      next: (members) => {
+        this.teamMembers.update((s) => ({ ...s, [uuid]: members }));
+        this.teamLoading.set(false);
+      },
+      error: (err) => {
+        this.teamError.set(messageFromError(err, 'Chargement de l’équipe impossible.'));
+        this.teamLoading.set(false);
+      },
+    });
+  }
+
+  protected closeTeam(): void {
+    this.openTeam.set(null);
+  }
+
   protected load(): void {
     this.loading.set(true);
     this.loadError.set(null);
+    // Everything below is scoped to the range being replaced.
+    this.membersOpen.set(false);
+    this.allMembers.set(null);
+    this.allMembersError.set(null);
+    this.openTeam.set(null);
+    this.teamsExpanded.set(false);
+    this.teamMembers.set({});
+    this.teamLoading.set(false);
+    this.teamError.set(null);
     const query = this.query();
     forkJoin({
       summary: this.service.summary(query),
       outreaches: this.service.outreaches(query),
-      topMembers: this.service.profiles(query),
+      topMembers: this.service.profiles(query, LEADERBOARD_SIZE),
       teams: this.service.teams(query),
     }).subscribe({
       next: ({ summary, outreaches, topMembers, teams }) => {

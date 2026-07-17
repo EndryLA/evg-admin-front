@@ -7,6 +7,7 @@ import {
 } from './features/attendance/attendance.routes';
 import { AUTH_ROUTES } from './features/auth/auth.routes';
 import { BRANCH_ROUTES } from './features/branch/branch.routes';
+import { CALENDAR_ROUTES } from './features/calendar/calendar.routes';
 import { CITY_ROUTES } from './features/city/city.routes';
 import { CONTACT_ROUTES, PUBLIC_CONTACT_ROUTES } from './features/contact/contact.routes';
 import { INVENTORY_ROUTES } from './features/inventory/inventory.routes';
@@ -28,6 +29,7 @@ export const routes: Routes = [
       ...OUTREACH_ROUTES,
       ...CONTACT_ROUTES,
       ...ATTENDANCE_ROUTES,
+      ...CALENDAR_ROUTES,
       ...BRANCH_ROUTES,
       ...CITY_ROUTES,
       ...INVENTORY_ROUTES,

@@ -32,6 +32,11 @@ export class InventoryService {
       .pipe(map((page) => (page.content ?? []).map(toInventoryItem)));
   }
 
+  /** Fetch one item — the detail page's own source, so it can be opened cold. */
+  getOne(uuid: string): Observable<InventoryItem> {
+    return this.http.get<RawInventoryItem>(`${BASE}/${uuid}`).pipe(map(toInventoryItem));
+  }
+
   create(input: InventoryInput): Observable<InventoryItem> {
     return this.http.post<RawInventoryItem>(BASE, toRawInventoryRequest(input)).pipe(map(toInventoryItem));
   }

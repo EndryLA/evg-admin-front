@@ -1,0 +1,312 @@
+/* Phone month calendar, in the shape of Apple's Calendar — a month grid with
+   event dots over a scrollable agenda of the selected day. Rendered only below
+   the phone breakpoint (see the page template). Own emulated encapsulation, so
+   selectors stay local; colours come from the design tokens. */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+/* Per-type accent, reusing the badge palette (design.md §1) so a type reads the
+   same here as on the desktop grid and the filter chips. */
+.ev--outreach { --ev-solid: #dc2626; }
+.ev--reunion  { --ev-solid: #2563eb; }
+.ev--agape    { --ev-solid: #d97706; }
+.ev--other    { --ev-solid: #7c3aed; }
+
+.mcal {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- Month header ---- */
+.mcal__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px 8px;
+}
+.mcal__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.mcal__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { background: var(--bg-inset); }
+  svg { width: 20px; height: 20px; }
+}
+/* First arrow hugs the title; the second pushes the "today" pill to the edge. */
+.mcal__nav:first-of-type { margin-left: auto; }
+.mcal__today {
+  flex: 0 0 auto;
+  margin-left: 4px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { background: var(--accent-ring); }
+}
+.mcal__spinner {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  margin-left: 8px;
+  border: 2px solid var(--border-input);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: mcal-spin 0.7s linear infinite;
+}
+
+/* ---- Weekday row ---- */
+.mcal__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 2px 8px 6px;
+
+  span {
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+}
+
+/* ---- Month grid ---- */
+.mcal__grid {
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.mcal__week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.mcal__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 0 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The day number sits in a tap-sized disc that fills in when selected. */
+.mcal__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.mcal__cell--out .mcal__num { color: var(--text-faint); }
+.mcal__cell--today .mcal__num { color: var(--accent); font-weight: 700; }
+/* Selected disc: accent for today, a neutral solid otherwise — Apple's cue. */
+.mcal__cell--selected .mcal__num {
+  background: var(--text-primary);
+  color: var(--bg-card);
+  font-weight: 600;
+}
+.mcal__cell--selected.mcal__cell--today .mcal__num {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Event dots under the number. A fixed-height rail keeps every row aligned
+   whether or not its days carry events. */
+.mcal__dots {
+  display: flex;
+  gap: 3px;
+  height: 5px;
+}
+.mcal__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ev-solid);
+}
+
+/* ---- Agenda ---- */
+.mcal__agenda {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.mcal__agenda-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 10px;
+}
+.mcal__agenda-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.mcal__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { background: var(--accent-ring); }
+  svg { width: 17px; height: 17px; }
+}
+
+/* The one scrolling pane on the screen. */
+.mcal__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  list-style: none;
+  margin: 0;
+  padding: 0 12px calc(88px + env(safe-area-inset-bottom, 0px));
+}
+
+.mcal__event {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 8px 11px 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { background: var(--bg-inset); }
+}
+.mcal__time {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 46px;
+  padding-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.mcal__time-start { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.mcal__time-end { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+.mcal__allday { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+
+/* Coloured spine down the event — the type cue, matching the grid dots. */
+.mcal__bar {
+  flex: 0 0 auto;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--ev-solid);
+}
+.mcal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  justify-content: center;
+}
+.mcal__name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcal__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  svg { width: 13px; height: 13px; flex: 0 0 auto; }
+}
+.mcal__chevron {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--text-faint);
+}
+
+/* Cancelled entries: greyed and struck, but still readable. */
+.mcal__event--cancelled {
+  --ev-solid: var(--text-faint);
+
+  .mcal__name { color: var(--text-muted); text-decoration: line-through; }
+  .mcal__time-start { color: var(--text-muted); }
+}
+
+/* ---- Empty day ---- */
+.mcal__empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px 20px 60px;
+  color: var(--text-faint);
+
+  svg { width: 34px; height: 34px; }
+  p { margin: 0; font-size: 14px; color: var(--text-muted); }
+}
+
+@keyframes mcal-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mcal__spinner { animation-duration: 2s; }
+}

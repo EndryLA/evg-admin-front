@@ -1,0 +1,100 @@
+<div class="mcal">
+  <!-- Month header: navigate months, tap the title to jump home. -->
+  <header class="mcal__head">
+    <button type="button" class="mcal__nav" (click)="prevMonth()" aria-label="Mois précédent">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 class="mcal__title" aria-live="polite">{{ title() }}</h2>
+    <button type="button" class="mcal__nav" (click)="nextMonth()" aria-label="Mois suivant">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button type="button" class="mcal__today" (click)="goToday()">Aujourd'hui</button>
+    @if (loading()) {
+      <span class="mcal__spinner" role="status" aria-label="Chargement"></span>
+    }
+  </header>
+
+  <!-- Weekday row. -->
+  <div class="mcal__weekdays" aria-hidden="true">
+    @for (w of weekdays; track $index) {
+      <span>{{ w }}</span>
+    }
+  </div>
+
+  <!-- Month grid. -->
+  <div class="mcal__grid" role="grid" aria-label="Calendrier du mois">
+    @for (week of weeks(); track $index) {
+      <div class="mcal__week" role="row">
+        @for (cell of week; track cell.iso) {
+          <button
+            type="button"
+            role="gridcell"
+            class="mcal__cell"
+            [class.mcal__cell--out]="!cell.inMonth"
+            [class.mcal__cell--today]="cell.isToday"
+            [class.mcal__cell--selected]="cell.iso === selected()"
+            [attr.aria-pressed]="cell.iso === selected()"
+            (click)="selectDay(cell)">
+            <span class="mcal__num">{{ cell.day }}</span>
+            <span class="mcal__dots">
+              @for (t of cell.dots; track t) {
+                <span class="mcal__dot {{ typeClass(t) }}"></span>
+              }
+            </span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Selected day's agenda. -->
+  <section class="mcal__agenda" aria-label="Événements du jour">
+    <div class="mcal__agenda-head">
+      <h3 class="mcal__agenda-title">{{ selectedLabel() }}</h3>
+      <button type="button" class="mcal__add" (click)="createOn.emit(selected())" aria-label="Ajouter un événement ce jour">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+
+    @if (dayEvents().length === 0) {
+      <div class="mcal__empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>
+        <p>Aucun événement ce jour</p>
+      </div>
+    } @else {
+      <ul class="mcal__list">
+        @for (item of dayEvents(); track item.uuid) {
+          <li>
+            <button
+              type="button"
+              class="mcal__event {{ typeClass(item.type) }}"
+              [class.mcal__event--cancelled]="item.status === 'CANCELLED'"
+              (click)="selectItem.emit(item)">
+              <span class="mcal__time">
+                @if (item.startTime) {
+                  <span class="mcal__time-start">{{ time(item.startTime) }}</span>
+                  @if (item.endTime) {
+                    <span class="mcal__time-end">{{ time(item.endTime) }}</span>
+                  }
+                } @else {
+                  <span class="mcal__allday">Journée</span>
+                }
+              </span>
+              <span class="mcal__bar" aria-hidden="true"></span>
+              <span class="mcal__body">
+                <span class="mcal__name">{{ item.name }}</span>
+                @if (item.location || item.cityLabel) {
+                  <span class="mcal__meta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.4"/></svg>
+                    {{ item.location || item.cityLabel }}
+                  </span>
+                }
+              </span>
+              <svg class="mcal__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>

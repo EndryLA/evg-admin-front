@@ -1,0 +1,13 @@
+/* Subtitle under the modal title — the item this operation applies to. */
+.modal__sub {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Explains what the picked operation means, under the operation select. */
+.field__hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-faint);
+}

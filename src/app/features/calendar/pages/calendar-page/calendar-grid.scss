@@ -1,0 +1,214 @@
+/* FullCalendar restyle — the grid itself. Page chrome lives in
+   `calendar-page.scss`; see the header there for why this page carries its own
+   styles and why every selector is scoped under `.agenda` by hand.
+
+   Most of the theming goes through FullCalendar's own custom properties
+   (`--fc-*`), mapped onto the design tokens so the grid follows light/dark with
+   the rest of the app. */
+
+/* ---- Type accents ---- */
+/* One tone per event type, reusing the badge palette (design.md §1). The filter
+   chips and the event blocks both read these three vars, so a type is themed in
+   one place. */
+.agenda .type-chip--outreach,
+.agenda .evg-ev--outreach {
+  --ev-bg: var(--pill-red-bg);
+  --ev-text: var(--pill-red-text);
+  --ev-solid: #dc2626;
+}
+.agenda .type-chip--reunion,
+.agenda .evg-ev--reunion {
+  --ev-bg: var(--pill-blue-bg);
+  --ev-text: var(--pill-blue-text);
+  --ev-solid: #2563eb;
+}
+.agenda .type-chip--agape,
+.agenda .evg-ev--agape {
+  --ev-bg: var(--pill-amber-bg);
+  --ev-text: var(--pill-amber-text);
+  --ev-solid: #d97706;
+}
+.agenda .type-chip--other,
+.agenda .evg-ev--other {
+  --ev-bg: var(--pill-violet-bg);
+  --ev-text: var(--pill-violet-text);
+  --ev-solid: #7c3aed;
+}
+
+/* The custom element is inline by default, which leaves the grid's box in an
+   odd shape. No height here on purpose — see `aspectRatio` on the component. */
+.agenda full-calendar { display: block; }
+
+.agenda .fc {
+  --fc-border-color: var(--border);
+  --fc-page-bg-color: var(--bg-card);
+  --fc-neutral-bg-color: var(--bg-sunken);
+  /* Month view marks today with the day disc below, the way Google's does, so
+     a cell tint would be a second cue for the same thing — and it would sit on
+     top of the hover. The time grid has no disc and re-tints its today column
+     further down. */
+  --fc-today-bg-color: transparent;
+  --fc-now-indicator-color: var(--accent);
+  --fc-highlight-color: var(--accent-ring);
+  --fc-list-event-hover-bg-color: var(--row-hover);
+  --fc-small-font-size: 12px;
+
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--text-primary);
+
+  /* FullCalendar draws the grid's own outer border, and the card clips it to a
+     radius — so the frame is left entirely to the library. Resetting individual
+     scrollgrid borders here (to dodge a double line against a card border) only
+     punches holes in the header and column rules, since the same selectors also
+     match cells *inside* the grid. */
+
+  /* Day-of-week headers: small, uppercase, muted. */
+  .fc-col-header-cell {
+    padding: 10px 0;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+  }
+  .fc-col-header-cell-cushion {
+    padding: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  /* Day numbers sit in a circle; today's is a filled accent disc. */
+  .fc-daygrid-day-top { justify-content: center; padding-top: 5px; }
+  .fc-daygrid-day-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+  .fc-daygrid-day-frame { padding-bottom: 4px; }
+  /* Day cells are click targets — clicking or dragging one opens a prefilled
+     creation, so they have to answer the pointer. */
+  .fc-daygrid-day { cursor: pointer; transition: background 0.12s ease; }
+  .fc-daygrid-day:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .fc-day-today .fc-daygrid-day-number {
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
+  /* Days spilling in from the neighbouring month: faint number, no fill, so the
+     hover above still reads on them. */
+  .fc-day-other .fc-daygrid-day-number { color: var(--text-faint); }
+
+  /* Time grid. */
+  .fc-timegrid-slot { height: 40px; }
+  .fc-timegrid-slot-label-cushion,
+  .fc-timegrid-axis-cushion {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-faint);
+  }
+  /* Half-hour lines are a hint, not a rule. */
+  .fc-timegrid-slot-minor { border-top-style: dotted; }
+  /* No day disc here, so the tint is today's only cue. */
+  .fc-timegrid-col.fc-day-today { background: var(--accent-soft-bg); }
+  .fc-timegrid-col { cursor: pointer; }
+  .fc-timegrid-col:hover { background: var(--bg-sunken); }
+
+  /* Event chips: tinted fill, type-colored text, solid leading bar. */
+  /* Soft tinted fill with a solid accent bar down the left. The bar is a real
+     border rather than an inset shadow, so the hover shadow below can't
+     overwrite it. */
+  .fc-event {
+    border: none;
+    border-left: 3px solid var(--ev-solid);
+    border-radius: 6px;
+    background: var(--ev-bg);
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 0.12s ease, box-shadow 0.12s ease;
+
+    /* Deepen the type tint instead of running a brightness filter over it —
+       a filter darkens in light mode and washes out in dark, while mixing
+       against the card surface tracks whichever theme is live. */
+    &:hover {
+      background-color: color-mix(in srgb, var(--ev-solid) 24%, var(--bg-card));
+      box-shadow: var(--shadow-card-hover);
+    }
+    &:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  }
+  .fc-event-main { color: var(--ev-text); padding: 2px 6px; }
+  .fc-event-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+  .fc-event-time { font-weight: 500; opacity: 0.85; }
+  .fc-daygrid-event { margin: 1px 4px; }
+  .fc-timegrid-event .fc-event-main { padding: 3px 6px; }
+
+  /* Cancelled entries stay on the grid but read as struck through. */
+  .evg-ev--cancelled {
+    --ev-solid: var(--text-faint);
+    background: var(--bg-inset);
+  }
+  .evg-ev--cancelled .fc-event-main {
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  /* "+2 en plus" link and its popover. */
+  .fc-daygrid-more-link {
+    margin: 1px 4px;
+    padding: 1px 5px;
+    border-radius: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+
+    &:hover { background: var(--bg-inset); color: var(--text-primary); }
+  }
+  .fc-popover {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-menu);
+    overflow: hidden;
+  }
+  .fc-popover-header {
+    padding: 9px 11px;
+    background: var(--bg-inset);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .fc-popover-body { padding: 6px 4px; }
+
+  /* List view. */
+  .fc-list { border: none; }
+  .fc-list-day-cushion {
+    padding: 9px 14px;
+    background: var(--bg-inset);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .fc-list-event { cursor: pointer; }
+  .fc-list-event td { padding: 11px 14px; border-color: var(--border-faint); }
+  .fc-list-event-title { font-weight: 600; }
+  .fc-list-event-time { color: var(--text-muted); font-size: 13px; }
+  /* The dot is the list view's only type cue. */
+  .fc-list-event-dot { border-color: var(--ev-solid); }
+  .fc-list-empty { background: var(--bg-card); color: var(--text-muted); font-size: 14px; }
+
+  /* Mirror shown while dragging out a new slot. */
+  .fc-highlight { background: var(--accent-ring); }
+}
+
+@media (max-width: 720px) {
+  .agenda .fc { font-size: 12.5px; }
+  .agenda .fc .fc-timegrid-slot { height: 34px; }
+}

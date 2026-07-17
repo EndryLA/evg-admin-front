@@ -1,0 +1,92 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Nouvelle opération"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Nouvelle opération</span>
+      <h2 class="modal__title">{{ item().name }}</h2>
+      <p class="modal__sub">{{ itemTypeLabel() }} · {{ item().quantity }} en stock</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        <label class="field field--span">
+          <span class="field__label">Opération</span>
+          <select class="field__control" formControlName="type">
+            @for (op of choices(); track op) {
+              <option [value]="op">{{ typeLabels[op] }}</option>
+            }
+          </select>
+          <span class="field__hint">{{ hint() }}</span>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Quantité</span>
+          <!-- `inputmode` brings up the numeric keypad: this form is filled in
+               on a phone, in the stock room. -->
+          <input class="field__control" type="number" inputmode="numeric" min="1"
+            formControlName="quantity"
+            [attr.aria-invalid]="form.controls.quantity.touched && form.controls.quantity.invalid" />
+          @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
+            <span class="field__error">Indiquez une quantité d’au moins 1.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Effectué par</span>
+          <select class="field__control" formControlName="effectuatedByUuid"
+            [attr.aria-invalid]="form.controls.effectuatedByUuid.touched && form.controls.effectuatedByUuid.invalid">
+            <option value="">Choisir un membre</option>
+            @for (p of profiles(); track p.uuid) {
+              <option [value]="p.uuid">{{ p.label }}</option>
+            }
+          </select>
+          @if (form.controls.effectuatedByUuid.touched && form.controls.effectuatedByUuid.invalid) {
+            <span class="field__error">Indiquez qui a effectué l’opération.</span>
+          }
+        </label>
+
+        @if (recipient(); as label) {
+          <label class="field field--span">
+            <span class="field__label">{{ label }}</span>
+            <input class="field__control" formControlName="distributedTo" autocomplete="off"
+              placeholder="Ex. Équipe Bastille, Jean Dupont" />
+          </label>
+        }
+
+        <label class="field field--span">
+          <span class="field__label">Notes</span>
+          <textarea class="field__control" formControlName="notes" rows="2"
+            placeholder="Précisions éventuelles"></textarea>
+        </label>
+
+        @if (wouldOverdraw()) {
+          <p class="modal__error field--span" role="alert">
+            Stock insuffisant : {{ item().quantity }} en stock, {{ quantity() }} demandés.
+          </p>
+        } @else {
+          <p class="modal__note field--span">
+            Stock après l’opération : <strong>{{ projected() }}</strong>
+          </p>
+        }
+
+        @if (error(); as message) {
+          <p class="modal__error field--span" role="alert">{{ message }}</p>
+        }
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy() || wouldOverdraw()">
+          {{ busy() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

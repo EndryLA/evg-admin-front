@@ -78,10 +78,21 @@ export class AttendanceStatsService {
       .pipe(map((list) => (list ?? []).map(toProfilePresence)));
   }
 
-  /** All members with their presence figures. */
+  /** Every member present at least once, with their presence figures. */
   allProfiles(query: StatsQuery): Observable<ProfilePresence[]> {
     return this.http
       .get<RawProfilePresence[]>(`${BASE}/profiles/all`, { params: this.queryParams(query) })
+      .pipe(map((list) => (list ?? []).map(toProfilePresence)));
+  }
+
+  /**
+   * The full roster with everyone's presence figures. Unlike {@link allProfiles},
+   * which is derived from attendances and so only reports people who turned up,
+   * this includes members with no presences at all (at 0).
+   */
+  roster(query: StatsQuery): Observable<ProfilePresence[]> {
+    return this.http
+      .get<RawProfilePresence[]>(`${BASE}/profiles/roster`, { params: this.queryParams(query) })
       .pipe(map((list) => (list ?? []).map(toProfilePresence)));
   }
 
@@ -90,5 +101,18 @@ export class AttendanceStatsService {
     return this.http
       .get<RawTeamStats[]>(`${BASE}/teams`, { params: this.queryParams(query) })
       .pipe(map((list) => (list ?? []).map(toTeamStats)));
+  }
+
+  /**
+   * One team's roster — the leader plus everyone reporting to them. Unlike
+   * {@link allProfiles}, which is derived from attendances and so can only report
+   * people who turned up, this lists members with no presences at all (at 0).
+   */
+  teamMembers(query: StatsQuery, leaderUuid: string): Observable<ProfilePresence[]> {
+    return this.http
+      .get<RawProfilePresence[]>(`${BASE}/teams/${leaderUuid}/members`, {
+        params: this.queryParams(query),
+      })
+      .pipe(map((list) => (list ?? []).map(toProfilePresence)));
   }
 }

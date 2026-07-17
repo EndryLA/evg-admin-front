@@ -1,0 +1,72 @@
+/* Roster dialog. Reuses the global `.modal-form` shell (overlay/head/foot); the
+   body scrolls on its own so the header and footer stay put on long lists. */
+
+/* Doubled class beats the global `.modal-form .modal` height/overflow rules. */
+.modal.modal--list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal__sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 26px 16px;
+}
+.modal__state {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.roster { list-style: none; margin: 0; padding: 0; }
+.roster__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-faint);
+  font-size: 13.5px;
+}
+.roster__item:last-child { border-bottom: none; }
+
+/* Rank disc, matching the dashboard leaderboards: top 3 solid, rest a soft tint. */
+.roster__rank {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.roster__rank--top { background: var(--accent); color: var(--text-on-accent); }
+
+.roster__name { flex: 1; min-width: 0; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.roster__pct { flex: none; font-weight: 700; color: var(--accent-soft-text); }
+
+/* Never turned up: recede rather than alarm — this is a roster, not an alert.
+   The rank disc loses its accent tint so the ranking reads as turnout only. */
+.roster__item--absent .roster__name { font-weight: 500; color: var(--text-muted); }
+.roster__item--absent .roster__pct { color: var(--text-faint); }
+.roster__item--absent .roster__rank { background: var(--bg-inset); color: var(--text-faint); }
+/* Presence count in its own right-aligned column so the list scans vertically. */
+.roster__count {
+  flex: none;
+  min-width: 24px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-muted);
+}
