@@ -26,6 +26,34 @@ export function formatDateFr(value?: string | null): string {
   return `${dd}/${mm}/${date.getFullYear()}`;
 }
 
+/** `03/09/98` — two-digit year, for tight rows where the century is obvious.
+ *  Returns `—` when absent/invalid. */
+export function formatDateShortFr(value?: string | null): string {
+  if (!value) {
+    return PLACEHOLDER;
+  }
+  const date = parseDate(value);
+  if (!date) {
+    return PLACEHOLDER;
+  }
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = String(date.getFullYear()).slice(-2);
+  return `${dd}/${mm}/${yy}`;
+}
+
+/** `03/09/98 - 14:30` — a short date and a clock-time on one line, to save space
+ *  on mobile. Falls back to the short date alone when the time is absent, or `—`
+ *  when there's no date. */
+export function formatDateTimeShortFr(date?: string | null, time?: string | null): string {
+  const d = formatDateShortFr(date);
+  if (d === PLACEHOLDER) {
+    return PLACEHOLDER;
+  }
+  const t = time ? formatTimeFr(time) : PLACEHOLDER;
+  return t === PLACEHOLDER ? d : `${d} - ${t}`;
+}
+
 /** Match a bare clock-time, `HH:mm` or `HH:mm:ss`, as the backend sends for
  *  outreach `startTime`/`endTime` (a Java `LocalTime`, with no date part). */
 const TIME_ONLY = /^(\d{2}):(\d{2})(?::\d{2})?$/;

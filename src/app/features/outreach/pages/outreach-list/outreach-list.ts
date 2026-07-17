@@ -12,7 +12,11 @@ import {
 import { Router } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
-import { formatDateFr, formatTimeFr } from '../../../../shared/util/date.util';
+import {
+  formatDateFr,
+  formatDateTimeShortFr,
+  formatTimeFr,
+} from '../../../../shared/util/date.util';
 import { OutreachForm } from '../../components/outreach-form/outreach-form';
 import { OutreachService } from '../../outreach.service';
 import {
@@ -93,6 +97,9 @@ export class OutreachList implements OnDestroy {
 
   protected readonly fmtDate = formatDateFr;
   protected readonly fmtTime = formatTimeFr;
+  /** Compact `17/07/26 - 14:30` used in the mobile card, where date + start
+   *  time share one line. */
+  protected readonly fmtDateTimeShort = formatDateTimeShortFr;
 
   /** True when any filter is narrowing the list (drives the reset button). */
   protected readonly hasActiveFilters = computed(

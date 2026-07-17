@@ -78,3 +78,14 @@
   background: transparent;
   cursor: default;
 }
+
+/* ---- Compact card gutters (phone) ----
+   The card's wide right gutter exists only to keep the corner kebab off the
+   header line; the rows beneath don't need it. Reclaim it so the date/status
+   line and the superviseur line both sit flush on the card's right edge and
+   line up with one another — the header keeps enough right padding to clear
+   the kebab. */
+@media (max-width: 720px) {
+  tbody tr { padding-right: 16px; }
+  tbody td.cell-head { padding-right: 44px; }
+}

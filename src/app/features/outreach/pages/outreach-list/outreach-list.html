@@ -64,7 +64,7 @@
           class="filter-select"
           [value]="managedBy()"
           (change)="setManagedBy($any($event.target).value)"
-          aria-label="Filtrer par responsable">
+          aria-label="Filtrer par superviseur">
           <option value="ALL">Tous</option>
           @for (m of managers(); track m.uuid) {
             <option [value]="m.uuid">{{ m.label }}</option>
@@ -146,13 +146,19 @@
               <div class="cell-main">{{ o.name }}</div>
               <div class="cell-sub">{{ o.location }}</div>
             </td>
-            <td class="cell-contact cell-plain" data-label="Date">{{ fmtDate(o.date) }}</td>
-            <td class="cell-contact cell-plain" data-label="Début">{{ fmtTime(o.startTime) }}</td>
+            <!-- Wide table: date, start and end each in their own column. -->
+            <td class="cell-contact cell-plain hide-sm" data-label="Date">{{ fmtDate(o.date) }}</td>
+            <td class="cell-contact cell-plain hide-sm" data-label="Début">{{ fmtTime(o.startTime) }}</td>
             <td class="cell-contact hide-sm" data-label="Fin">{{ fmtTime(o.endTime) }}</td>
-            <td class="cell-plain">
+            <!-- Compact card: date + start time on one side, status on the other. -->
+            <td class="cell-plain show-sm card-split">
+              <span class="cell-contact">{{ fmtDateTimeShort(o.date, o.startTime) }}</span>
               <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
             </td>
-            <td class="cell-contact" data-label="Responsable">{{ o.managedBy?.name || '—' }}</td>
+            <td class="cell-plain hide-sm">
+              <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+            </td>
+            <td class="cell-contact" data-label="Superviseur">{{ o.managedBy?.name || '—' }}</td>
             <td class="actions">
               <button
                 type="button"

@@ -36,7 +36,7 @@ const BASE = '/api/outreaches';
 /**
  * Gateway to `/api/outreaches`. Like profiles, the backend paginates without a
  * search endpoint, so {@link list} fetches the full set and the UI filters in
- * memory. {@link managers} feeds the "responsable" selector — it reads the
+ * memory. {@link managers} feeds the "superviseur" selector — it reads the
  * profiles endpoint directly to avoid a cross-feature import.
  */
 @Injectable({ providedIn: 'root' })

@@ -784,7 +784,9 @@ input, select, button, textarea { font-family: inherit; }
   .data-list .topbar h1 { font-size: 22px; }
 
   .data-list .filters { padding: 0 16px 14px; gap: 10px; }
-  .data-list .search { max-width: none; min-width: 0; flex-basis: 100%; }
+  /* Search shares its row with the "Filtres" trigger instead of taking a whole
+     line to itself — one compact row rather than two. */
+  .data-list .search { max-width: none; min-width: 0; flex: 1 1 auto; }
   .data-list .tabs {
     max-width: 100%;
     overflow-x: auto;
@@ -943,6 +945,18 @@ input, select, button, textarea { font-family: inherit; }
 
   /* Surname (or similar) folded into the card's title to form one full name. */
   .data-list .show-sm { display: inline; }
+  /* A whole cell that only appears in the card still stacks like a card row,
+     rather than sitting inline as the span helper above does. */
+  .data-list td.show-sm { display: block; }
+  /* Two values sharing one card line — pushed to opposite edges (e.g. the
+     date/time on the left, a status pill on the right). */
+  .data-list td.card-split {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 0;
+  }
 
   /* A cell marked `cell-corner` takes the card's top-right for its value — a
      status pill reads better there than the chevron, and the whole card is
