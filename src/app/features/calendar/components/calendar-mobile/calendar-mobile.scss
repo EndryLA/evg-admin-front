@@ -100,10 +100,35 @@
   }
 }
 
-/* ---- Month grid ---- */
-.mcal__grid {
-  padding: 0 8px 8px;
+/* ---- Month grid (vertical pager) ---- */
+/* A vertical scroll-snap track of three month pages. The pager is exactly one
+   month tall and each page fills it and snaps hard, so a swipe up/down always
+   locks to exactly one month; the component recentres on the middle page after
+   each commit. */
+.mcal__pager {
+  /* Six week rows — the pager's height, and each page's. */
+  --mcal-row: 46px;
+  height: calc(var(--mcal-row) * 6);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   border-bottom: 1px solid var(--border);
+  /* The snap does the paging — the bar itself stays out of the way. */
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+.mcal__page {
+  flex: 0 0 100%;
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 0 8px;
 }
 .mcal__week {
   display: grid;
@@ -113,8 +138,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 3px;
-  padding: 5px 0 4px;
+  height: 100%;
+  padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;

@@ -9,7 +9,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
     </button>
     <button type="button" class="mcal__today" (click)="goToday()">Aujourd'hui</button>
-    @if (loading()) {
+    @if (loading() && !items().length) {
       <span class="mcal__spinner" role="status" aria-label="Chargement"></span>
     }
   </header>
@@ -21,27 +21,31 @@
     }
   </div>
 
-  <!-- Month grid. -->
-  <div class="mcal__grid" role="grid" aria-label="Calendrier du mois">
-    @for (week of weeks(); track $index) {
-      <div class="mcal__week" role="row">
-        @for (cell of week; track cell.iso) {
-          <button
-            type="button"
-            role="gridcell"
-            class="mcal__cell"
-            [class.mcal__cell--out]="!cell.inMonth"
-            [class.mcal__cell--today]="cell.isToday"
-            [class.mcal__cell--selected]="cell.iso === selected()"
-            [attr.aria-pressed]="cell.iso === selected()"
-            (click)="selectDay(cell)">
-            <span class="mcal__num">{{ cell.day }}</span>
-            <span class="mcal__dots">
-              @for (t of cell.dots; track t) {
-                <span class="mcal__dot {{ typeClass(t) }}"></span>
-              }
-            </span>
-          </button>
+  <!-- Month grid: a swipeable, month-snapping pager of prev / current / next. -->
+  <div #pager class="mcal__pager" (scroll)="onPagerScroll()" (scrollend)="onPagerSettle()">
+    @for (page of pages(); track page.key) {
+      <div class="mcal__page" role="grid" aria-label="Calendrier du mois">
+        @for (week of page.weeks; track $index) {
+          <div class="mcal__week" role="row">
+            @for (cell of week; track cell.iso) {
+              <button
+                type="button"
+                role="gridcell"
+                class="mcal__cell"
+                [class.mcal__cell--out]="!cell.inMonth"
+                [class.mcal__cell--today]="cell.isToday"
+                [class.mcal__cell--selected]="cell.iso === selected()"
+                [attr.aria-pressed]="cell.iso === selected()"
+                (click)="selectDay(cell)">
+                <span class="mcal__num">{{ cell.day }}</span>
+                <span class="mcal__dots">
+                  @for (t of cell.dots; track t) {
+                    <span class="mcal__dot {{ typeClass(t) }}"></span>
+                  }
+                </span>
+              </button>
+            }
+          </div>
         }
       </div>
     }
