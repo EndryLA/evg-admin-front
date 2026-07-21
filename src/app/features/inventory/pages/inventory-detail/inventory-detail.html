@@ -65,9 +65,40 @@
       </p>
       <div class="ops-actions">
         @for (op of choices(); track op) {
-          <button type="button" class="btn ops-action" (click)="openOperation(op)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            {{ typeLabels[op] }}
+          <button
+            type="button"
+            class="ops-action"
+            [class.ops-action--in]="isInbound(op)"
+            (click)="openOperation(op)">
+            <span class="ops-action__icon" aria-hidden="true">
+              @switch (op) {
+                @case ('RECEPTION') {
+                  <!-- delivery truck: new stock received -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+                }
+                @case ('DISTRIBUTION') {
+                  <!-- paper plane: flyers handed out to people/teams -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>
+                }
+                @case ('USE') {
+                  <!-- check: flyers consumed by the department itself -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>
+                }
+                @case ('RETRIEVAL') {
+                  <!-- box leaving: equipment taken out and entrusted to a member -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+                }
+                @case ('RETURN') {
+                  <!-- return arrow: equipment brought back into stock -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                }
+              }
+            </span>
+            <span class="ops-action__body">
+              <span class="ops-action__label">{{ typeLabels[op] }}</span>
+              <span class="ops-action__dir">{{ isInbound(op) ? 'Ajoute au stock' : 'Retire du stock' }}</span>
+            </span>
+            <svg class="ops-action__chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
           </button>
         }
       </div>
@@ -96,34 +127,58 @@
           <div class="state__hint">Aucun mouvement n’a encore été enregistré pour cet article.</div>
         </div>
       } @else {
-        <!-- Column order leads with the operation so that on phones, where each
+        <!-- Columns follow the item: equipment moves one unit and names no
+             recipient, so it drops the Quantité and Destinataire columns.
+             Notes move to the per-operation detail a row click opens.
+             Column order leads with the operation so that on phones, where each
              row collapses into a card, the card's title line reads
              "Réception  +500". -->
         <table>
           <thead>
             <tr>
               <th>Opération</th>
-              <th class="right">Quantité</th>
+              @if (!isEquipment()) { <th class="right">Quantité</th> }
               <th>Date</th>
               <th>Effectué par</th>
-              <th>Destinataire</th>
-              <th>Notes</th>
+              @if (!isEquipment()) { <th>Destinataire</th> }
             </tr>
           </thead>
           <tbody>
             @for (op of operations(); track op.uuid) {
-              <tr>
-                <td class="cell-head">{{ typeLabels[op.type] }}</td>
-                <td
-                  class="right cell-qty cell-corner"
-                  [class.cell-qty--in]="isInbound(op.type)"
-                  [class.cell-qty--out]="!isInbound(op.type)">
-                  {{ signedQuantity(op.type, op.quantity) }}
+              <tr
+                class="op-row"
+                role="button"
+                tabindex="0"
+                (click)="openOperationDetail(op)"
+                (keydown.enter)="openOperationDetail(op)">
+                <td class="cell-head" [class.cell-head--full]="isEquipment()">
+                  <span
+                    class="op-badge"
+                    [class.op-badge--in]="isInbound(op.type)"
+                    aria-hidden="true">
+                    @if (isInbound(op.type)) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="m6 12 6 7 6-7"/></svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v13"/><path d="m6 12 6-7 6 7"/></svg>
+                    }
+                  </span>
+                  {{ typeLabels[op.type] }}
                 </td>
-                <td class="cell-muted" data-label="Date">{{ timestamp(op.createdAt) }}</td>
+                @if (!isEquipment()) {
+                  <td
+                    class="right cell-qty cell-corner"
+                    [class.cell-qty--in]="isInbound(op.type)"
+                    [class.cell-qty--out]="!isInbound(op.type)">
+                    {{ signedQuantity(op.type, op.quantity) }}
+                  </td>
+                }
+                <td class="cell-muted" data-label="Date">{{ day(op.createdAt) }}</td>
                 <td class="cell-muted" data-label="Effectué par">{{ refName(op.effectuatedBy) }}</td>
-                <td class="cell-muted" data-label="Destinataire">{{ op.distributedTo || '—' }}</td>
-                <td class="cell-notes" data-label="Notes">{{ op.notes || '—' }}</td>
+                @if (!isEquipment()) {
+                  <td class="cell-muted" data-label="Destinataire" [class.is-empty]="!op.distributedTo">
+                    {{ op.distributedTo }}
+                  </td>
+                }
               </tr>
             }
           </tbody>
@@ -151,6 +206,13 @@
       [error]="recordError()"
       (save)="onRecord($event)"
       (cancel)="closeOperation()" />
+  }
+
+  @if (selectedOperation(); as op) {
+    <app-inventory-operation-detail
+      [operation]="op"
+      [item]="it"
+      (close)="closeOperationDetail()" />
   }
 
   @if (confirmOpen()) {

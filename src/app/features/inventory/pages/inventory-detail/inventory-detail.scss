@@ -117,22 +117,66 @@
 }
 .ops-actions { display: flex; flex-direction: column; gap: 10px; }
 .ops-action {
-  justify-content: flex-start;
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   /* Full-width, thumb-sized rows: the primary action on a phone. */
-  min-height: 48px;
-  padding: 12px 14px;
-  font-size: 14px;
+  min-height: 56px;
+  padding: 10px 12px;
+  text-align: left;
   background: var(--bg-card);
-  color: var(--text-tertiary);
   border: 1px solid var(--border-input);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
 .ops-action:hover {
-  border-color: var(--accent);
-  color: var(--accent-soft-text);
-  background: var(--accent-soft-bg);
+  border-color: var(--border-input);
+  background: var(--bg-inset);
 }
-.ops-action svg { width: 16px; height: 16px; }
+
+/* Direction is carried by a coloured icon disc: outbound leans on the accent
+   red the page already uses for stock leaving, inbound on the green the
+   quantity column uses for stock arriving. */
+.ops-action__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--pill-red-bg);
+  color: var(--pill-red-text);
+}
+.ops-action--in .ops-action__icon {
+  background: var(--pill-green-bg);
+  color: var(--pill-green-text);
+}
+.ops-action__icon svg { width: 19px; height: 19px; }
+
+.ops-action__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ops-action__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.ops-action__dir {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.ops-action__chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--text-faint);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.ops-action:hover .ops-action__chevron { opacity: 1; transform: none; }
 
 /* ---- History ---- */
 .history { margin-top: 26px; }
@@ -156,6 +200,23 @@
   font-size: 12.5px;
   font-weight: 600;
 }
+
+/* Small directional glyph before the operation name, echoing the signed
+   quantity's colour — outbound red, inbound green. */
+.op-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -3px;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  border-radius: 6px;
+  background: var(--pill-red-bg);
+  color: var(--pill-red-text);
+}
+.op-badge--in { background: var(--pill-green-bg); color: var(--pill-green-text); }
+.op-badge svg { width: 13px; height: 13px; }
 
 .history .cell-qty { font-weight: 700; font-variant-numeric: tabular-nums; }
 .history .cell-qty--in { color: var(--pill-green-text); }
@@ -195,6 +256,19 @@
 }
 .history td { display: block; padding: 0; }
 
+/* Each row opens the operation's full detail (notes, recipient), so it reads
+   as a pressable card. */
+.history .op-row {
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.history .op-row:hover { border-color: var(--accent-soft-border); background: var(--accent-soft-bg); }
+.history .op-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* A labelled row with nothing to show (e.g. Destinataire on a non-distribution)
+   is dropped from the card rather than left blank. */
+.history td.is-empty { display: none; }
+
 .history td.cell-head {
   /* Keep the title clear of the quantity pinned top-right. */
   padding: 0 76px 10px 0;
@@ -204,6 +278,8 @@
   font-weight: 600;
   color: var(--text-primary);
 }
+/* Equipment rows have no pinned quantity, so the title spans the full width. */
+.history td.cell-head--full { padding-right: 0; }
 
 .history td.cell-corner {
   position: absolute;
@@ -234,7 +310,6 @@
   text-align: left;
 }
 .history .cell-muted { color: var(--text-primary); }
-.history .cell-notes { color: var(--text-secondary); }
 
 /* ---- States ---- */
 .state {
@@ -277,8 +352,9 @@
     gap: 20px;
   }
   .ops-card { order: 0; padding: 20px 22px; }
-  .ops-action { min-height: 0; padding: 10px 12px; font-size: 13.5px; }
-  .ops-action svg { width: 14px; height: 14px; }
+  .ops-action { min-height: 52px; gap: 11px; }
+  .ops-action__icon { width: 34px; height: 34px; }
+  .ops-action__icon svg { width: 17px; height: 17px; }
 
   .summary { padding: 4px 22px; }
   .summary__row { padding: 14px 0; }
@@ -316,6 +392,10 @@
     border-radius: 0;
   }
   .history tbody tr:last-child { border-bottom: none; }
+  .history tbody tr.op-row:hover { background: var(--accent-soft-bg); border-color: var(--border-faint); }
+  .history .op-row:focus-visible { outline-offset: -2px; }
+  /* Empty cells hold their column in the table rather than collapsing. */
+  .history td.is-empty { display: table-cell; }
 
   .history td {
     display: table-cell;
@@ -338,7 +418,6 @@
   .history td[data-label]::before { content: none; }
   .history .right { text-align: right; }
   .history .cell-muted { color: var(--text-secondary); white-space: nowrap; }
-  .history .cell-notes { color: var(--text-faint); }
 
   .state { padding: 40px 24px; }
 }

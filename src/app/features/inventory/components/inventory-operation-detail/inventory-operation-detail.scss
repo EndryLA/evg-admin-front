@@ -1,0 +1,48 @@
+/* Subtitle under the modal title — the item this operation applies to. */
+.modal__sub {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Label → value list, echoing the item detail's summary. */
+.op-detail {
+  margin: 0;
+  padding: 6px 26px 20px;
+  display: flex;
+  flex-direction: column;
+}
+.op-detail__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border-faint);
+}
+.op-detail__row:last-child { border-bottom: none; }
+.op-detail__row dt {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+.op-detail__row dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.op-detail__qty { font-weight: 700; font-variant-numeric: tabular-nums; }
+.op-detail__qty--in { color: var(--pill-green-text); }
+.op-detail__qty--out { color: var(--pill-red-text); }
+
+/* Notes can run long, so they stack under their label and read left-aligned. */
+.op-detail__row--notes { flex-direction: column; gap: 6px; }
+.op-detail__row--notes dd {
+  text-align: left;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}

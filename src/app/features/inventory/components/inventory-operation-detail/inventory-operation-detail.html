@@ -1,0 +1,57 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="typeLabels[operation().type]"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Opération</span>
+      <h2 class="modal__title">{{ typeLabels[operation().type] }}</h2>
+      <p class="modal__sub">{{ item().name }} · {{ itemTypeLabel() }}</p>
+    </header>
+
+    <dl class="op-detail">
+      @if (!isEquipment()) {
+        <div class="op-detail__row">
+          <dt>Quantité</dt>
+          <dd
+            class="op-detail__qty"
+            [class.op-detail__qty--in]="isInbound()"
+            [class.op-detail__qty--out]="!isInbound()">
+            {{ signedQty() }}
+          </dd>
+        </div>
+      }
+
+      <div class="op-detail__row">
+        <dt>Date</dt>
+        <dd>{{ timestamp() }}</dd>
+      </div>
+
+      <div class="op-detail__row">
+        <dt>Effectué par</dt>
+        <dd>{{ refName(operation().effectuatedBy) }}</dd>
+      </div>
+
+      @if (recipientLabel(); as label) {
+        @if (operation().distributedTo) {
+          <div class="op-detail__row">
+            <dt>{{ label }}</dt>
+            <dd>{{ operation().distributedTo }}</dd>
+          </div>
+        }
+      }
+
+      <div class="op-detail__row op-detail__row--notes">
+        <dt>Notes</dt>
+        <dd>{{ operation().notes || '—' }}</dd>
+      </div>
+    </dl>
+
+    <footer class="modal__foot">
+      <button type="button" class="btn btn--primary" (click)="close.emit()">Fermer</button>
+    </footer>
+  </div>
+</div>

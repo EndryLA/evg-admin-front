@@ -50,6 +50,8 @@ export class InventoryOperationForm implements OnInit {
 
   protected readonly itemTypeLabel = computed(() => ITEM_TYPE_LABELS[this.item().type]);
   protected readonly choices = computed(() => operationsFor(this.item().type));
+  /** Equipment moves one unit at a time, so its operations omit a quantity. */
+  protected readonly isEquipment = computed(() => this.item().type === 'EQUIPMENT');
   protected readonly typeLabels = OPERATION_TYPE_LABELS;
 
   protected readonly form = this.fb.nonNullable.group({

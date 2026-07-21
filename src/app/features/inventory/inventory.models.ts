@@ -57,7 +57,7 @@ export const OPERATION_TYPE_LABELS: Record<OperationType, string> = {
   RECEPTION: 'Réception',
   DISTRIBUTION: 'Distribution',
   USE: 'Utilisation',
-  RETRIEVAL: 'Sortie',
+  RETRIEVAL: 'Retrait',
   RETURN: 'Retour',
 };
 
@@ -99,8 +99,8 @@ const OPERATION_TYPES: Record<OperationType, OperationMeta> = {
   RETRIEVAL: {
     itemType: 'EQUIPMENT',
     sign: -1,
-    recipientLabel: 'Remis à',
-    hint: 'Matériel sorti du stock et confié à un membre.',
+    recipientLabel: null,
+    hint: 'Matériel retiré du stock.',
   },
   RETURN: {
     itemType: 'EQUIPMENT',

@@ -24,19 +24,21 @@
           <span class="field__hint">{{ hint() }}</span>
         </label>
 
-        <label class="field">
-          <span class="field__label">Quantité</span>
-          <!-- `inputmode` brings up the numeric keypad: this form is filled in
-               on a phone, in the stock room. -->
-          <input class="field__control" type="number" inputmode="numeric" min="1"
-            formControlName="quantity"
-            [attr.aria-invalid]="form.controls.quantity.touched && form.controls.quantity.invalid" />
-          @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
-            <span class="field__error">Indiquez une quantité d’au moins 1.</span>
-          }
-        </label>
+        @if (!isEquipment()) {
+          <label class="field">
+            <span class="field__label">Quantité</span>
+            <!-- `inputmode` brings up the numeric keypad: this form is filled in
+                 on a phone, in the stock room. -->
+            <input class="field__control" type="number" inputmode="numeric" min="1"
+              formControlName="quantity"
+              [attr.aria-invalid]="form.controls.quantity.touched && form.controls.quantity.invalid" />
+            @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
+              <span class="field__error">Indiquez une quantité d’au moins 1.</span>
+            }
+          </label>
+        }
 
-        <label class="field">
+        <label class="field" [class.field--span]="isEquipment()">
           <span class="field__label">Effectué par</span>
           <select class="field__control" formControlName="effectuatedByUuid"
             [attr.aria-invalid]="form.controls.effectuatedByUuid.touched && form.controls.effectuatedByUuid.invalid">

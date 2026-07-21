@@ -4,8 +4,9 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
-import { formatDateFr, formatTimeFr } from '../../../../shared/util/date.util';
+import { formatDateFr } from '../../../../shared/util/date.util';
 import { InventoryForm } from '../../components/inventory-form/inventory-form';
+import { InventoryOperationDetail } from '../../components/inventory-operation-detail/inventory-operation-detail';
 import { InventoryOperationForm } from '../../components/inventory-operation-form/inventory-operation-form';
 import { InventoryOperationService } from '../../inventory-operation.service';
 import { InventoryService } from '../../inventory.service';
@@ -35,7 +36,13 @@ import {
  */
 @Component({
   selector: 'app-inventory-detail-page',
-  imports: [RouterLink, InventoryForm, InventoryOperationForm, ConfirmDialog],
+  imports: [
+    RouterLink,
+    InventoryForm,
+    InventoryOperationForm,
+    InventoryOperationDetail,
+    ConfirmDialog,
+  ],
   host: { class: 'detail-page' },
   templateUrl: './inventory-detail.html',
   styleUrl: './inventory-detail.scss',
@@ -68,6 +75,8 @@ export class InventoryDetailPage implements OnInit {
   protected readonly operationType = signal<OperationType | null>(null);
   protected readonly recording = signal(false);
   protected readonly recordError = signal<string | null>(null);
+  /** History row opened for its full detail, or `null` when the modal is closed. */
+  protected readonly selectedOperation = signal<InventoryOperation | null>(null);
 
   protected readonly refName = refName;
   protected readonly signedQuantity = signedQuantity;
@@ -78,6 +87,8 @@ export class InventoryDetailPage implements OnInit {
     return it ? ITEM_TYPE_LABELS[it.type] : '';
   });
   protected readonly typeTone = computed(() => (this.item()?.type === 'FLYER' ? 'blue' : 'violet'));
+  /** Equipment moves one unit at a time, so its history hides the quantity. */
+  protected readonly isEquipment = computed(() => this.item()?.type === 'EQUIPMENT');
   protected readonly choices = computed(() => {
     const it = this.item();
     return it ? operationsFor(it.type) : [];
@@ -212,13 +223,21 @@ export class InventoryDetailPage implements OnInit {
     });
   }
 
+  protected openOperationDetail(op: InventoryOperation): void {
+    this.selectedOperation.set(op);
+  }
+  protected closeOperationDetail(): void {
+    this.selectedOperation.set(null);
+  }
+
   /** `true` when the operation adds stock — drives the entry's colour. */
   protected isInbound(type: OperationType): boolean {
     return operationSign(type) > 0;
   }
 
-  /** `17/07/2026 · 14:30` for an operation's timestamp. */
-  protected timestamp(value: string): string {
-    return `${formatDateFr(value)} · ${formatTimeFr(value)}`;
+  /** `17/07/2026` for an operation's timestamp — the history shows the day only,
+   *  the full time lives in the operation detail. */
+  protected day(value: string): string {
+    return formatDateFr(value);
   }
 }
