@@ -8,6 +8,7 @@ import {
   type ValidationErrors,
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
 import {
@@ -36,7 +37,7 @@ function memberPicked(control: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-public-attendance-form',
-  imports: [ReactiveFormsModule, NgOptimizedImage, MemberAutocomplete],
+  imports: [ReactiveFormsModule, NgOptimizedImage, MemberAutocomplete, RouterLink],
   templateUrl: './public-attendance-form.html',
   styleUrl: './public-attendance-form.scss',
 })

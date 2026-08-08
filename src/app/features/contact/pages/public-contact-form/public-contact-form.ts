@@ -1,7 +1,7 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { unformatPhone } from '../../../../shared/util/text.util';
@@ -22,7 +22,7 @@ import type { CivilState } from '../../contact.models';
  */
 @Component({
   selector: 'app-public-contact-form',
-  imports: [ReactiveFormsModule, NgOptimizedImage, ContactFields],
+  imports: [ReactiveFormsModule, NgOptimizedImage, ContactFields, RouterLink],
   templateUrl: './public-contact-form.html',
   styleUrl: './public-contact-form.scss',
 })
