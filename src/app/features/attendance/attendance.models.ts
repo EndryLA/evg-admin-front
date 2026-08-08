@@ -104,9 +104,16 @@ export interface AttendanceInput {
   outreachUuid: string;
 }
 
-/** Full name helper for an attendance row. */
+/**
+ * Full name helper for an attendance row. A member is only linked by profile —
+ * the record's own name fields stay empty for them — so the linked profile's
+ * name takes precedence when there is one.
+ */
 export function attendanceName(
-  attendance: Pick<Attendance, 'firstname' | 'lastname'>,
+  attendance: Pick<Attendance, 'firstname' | 'lastname' | 'profile'>,
 ): string {
-  return `${attendance.firstname} ${attendance.lastname}`.trim();
+  const profile = attendance.profile;
+  const firstname = profile?.firstname || attendance.firstname;
+  const lastname = profile?.lastname || attendance.lastname;
+  return `${firstname} ${lastname}`.trim();
 }

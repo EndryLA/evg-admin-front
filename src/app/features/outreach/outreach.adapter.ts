@@ -62,6 +62,9 @@ export interface RawOutreachAttendance {
   invitedBy?: string;
   type?: string | null;
   reason?: string | null;
+  /** Linked department profile — present for MEMBER presences, and where their
+   *  name lives (the top-level name fields are only filled for guests). */
+  profile?: { firstname?: string; lastname?: string } | null;
   outreachUuid?: string;
 }
 
@@ -213,12 +216,17 @@ export function toRawOutreachRequest(input: OutreachInput): RawOutreachRequest {
   return request;
 }
 
-/** Map a raw attendance to the outreach feature's presence model. */
+/**
+ * Map a raw attendance to the outreach feature's presence model. A member is
+ * only linked by profile — the top-level name fields stay empty for them — so
+ * the profile's name takes precedence when there is one.
+ */
 export function toOutreachAttendance(raw: RawOutreachAttendance): OutreachAttendance {
+  const profile = raw.profile;
   return {
     uuid: raw.uuid ?? '',
-    firstname: raw.firstname ?? '',
-    lastname: raw.lastname ?? '',
+    firstname: profile?.firstname || raw.firstname || '',
+    lastname: profile?.lastname || raw.lastname || '',
     invitedBy: raw.invitedBy ?? '',
     type: toAttendanceType(raw.type),
     reason: toAttendanceReason(raw.reason),
