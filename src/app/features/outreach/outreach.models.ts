@@ -243,5 +243,9 @@ export interface ContactEntry {
   cityName: string;
   evangelizedBy: string;
   phoneNumber: string;
+  /** Wants to attend the GF: yes/no, or `null` when not asked/answered. */
+  wantsToAttendGF: boolean | null;
+  /** Wants to attend church: yes/no, or `null` when not asked/answered. */
+  wantsToAttendChurch: boolean | null;
   observations: string;
 }

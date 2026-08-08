@@ -91,6 +91,8 @@ export interface RawContactEntry {
   cityLabel?: string | null;
   evangelizedBy?: string;
   phoneNumber?: string;
+  wantsToAttendGF?: boolean | null;
+  wantsToAttendChurch?: boolean | null;
   observations?: string;
 }
 
@@ -253,6 +255,8 @@ export function toContactEntry(raw: RawContactEntry): ContactEntry {
     cityName: city?.officialName ?? raw.cityLabel ?? '',
     evangelizedBy: raw.evangelizedBy ?? '',
     phoneNumber: raw.phoneNumber ?? '',
+    wantsToAttendGF: raw.wantsToAttendGF ?? null,
+    wantsToAttendChurch: raw.wantsToAttendChurch ?? null,
     observations: raw.observations ?? '',
   };
 }

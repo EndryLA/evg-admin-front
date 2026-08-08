@@ -10,6 +10,7 @@ import { BRANCH_ROUTES } from './features/branch/branch.routes';
 import { CALENDAR_ROUTES } from './features/calendar/calendar.routes';
 import { CITY_ROUTES } from './features/city/city.routes';
 import { CONTACT_ROUTES, PUBLIC_CONTACT_ROUTES } from './features/contact/contact.routes';
+import { DASHBOARD_ROUTES } from './features/dashboard/dashboard.routes';
 import { INVENTORY_ROUTES } from './features/inventory/inventory.routes';
 import { OUTREACH_ROUTES } from './features/outreach/outreach.routes';
 import { PROFILE_ROUTES } from './features/profile/profile.routes';
@@ -26,7 +27,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./core/layout/app-shell/app-shell').then((m) => m.AppShell),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'profils' },
+      { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
+      ...DASHBOARD_ROUTES,
       ...PROFILE_ROUTES,
       ...OUTREACH_ROUTES,
       ...CONTACT_ROUTES,

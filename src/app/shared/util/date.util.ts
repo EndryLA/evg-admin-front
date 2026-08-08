@@ -26,6 +26,47 @@ export function formatDateFr(value?: string | null): string {
   return `${dd}/${mm}/${date.getFullYear()}`;
 }
 
+const WEEKDAYS_FR = [
+  'dimanche',
+  'lundi',
+  'mardi',
+  'mercredi',
+  'jeudi',
+  'vendredi',
+  'samedi',
+];
+
+const MONTHS_FR = [
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
+];
+
+/** `samedi 3 septembre 1998` — spelled out, for headline dates. Returns `—`
+ *  when absent/invalid. Written out rather than left to `toLocaleDateString`,
+ *  which depends on the runtime's locale data. */
+export function formatLongDateFr(value?: string | null): string {
+  if (!value) {
+    return PLACEHOLDER;
+  }
+  const date = parseDate(value);
+  if (!date) {
+    return PLACEHOLDER;
+  }
+  // 1ᵉʳ, then plain numerals — French ordinals only mark the first of the month.
+  const day = date.getDate() === 1 ? '1ᵉʳ' : String(date.getDate());
+  return `${WEEKDAYS_FR[date.getDay()]} ${day} ${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
+}
+
 /** `03/09/98` — two-digit year, for tight rows where the century is obvious.
  *  Returns `—` when absent/invalid. */
 export function formatDateShortFr(value?: string | null): string {

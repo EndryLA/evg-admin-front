@@ -1,0 +1,114 @@
+/* Dashboard landing page. Pill/button tokens are global (styles.scss). */
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  padding: 22px 32px 48px;
+}
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.page-head { margin: 0 0 24px; }
+.page-head h1 { margin: 8px 0 0; font-size: 26px; }
+.page-head__sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  /* The weekday/month names are lowercase in French; capitalise the leading one. */
+  &::first-letter { text-transform: uppercase; }
+}
+
+/* ---- Hero: the next sortie ---- */
+.hero {
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.hero__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hero__countdown {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent-soft-text);
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent-soft-border);
+  border-radius: 999px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+.hero__title {
+  margin: 10px 0 10px;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+.hero__empty { margin: 10px 0 0; font-size: 13.5px; color: var(--text-muted); }
+
+.hero__when {
+  margin: 14px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.hero__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.hero__actions .btn { text-decoration: none; }
+
+/* ---- Roster card ---- */
+.roster {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.roster__figures { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.roster__value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.roster__split { font-size: 13px; color: var(--text-muted); }
+.roster .btn { flex: none; text-decoration: none; }
+
+/* ---- States ---- */
+.state {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.state--error { color: var(--accent-soft-text); }
+.state__retry {
+  display: block;
+  margin: 14px auto 0;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 720px) {
+  :host { padding: 18px 16px 40px; }
+  .page-head h1 { font-size: 22px; }
+  .hero { padding: 18px 16px; }
+  .hero__title { font-size: 19px; }
+  .hero__actions .btn { flex: 1; justify-content: center; }
+  .roster { padding: 16px; }
+  .roster__value { font-size: 24px; }
+}

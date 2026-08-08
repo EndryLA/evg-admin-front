@@ -32,6 +32,17 @@ export function displayPhoneFr(value?: string | null): string {
 }
 
 /**
+ * Render a tri-state yes/no answer. `null` means the question was never asked
+ * or answered, which stays blank so it reads apart from an explicit "Non".
+ */
+export function displayYesNo(value: boolean | null | undefined): string {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return value ? 'Oui' : 'Non';
+}
+
+/**
  * Capitalize a person's name: `Xxxxx`, and `Xxxxx-Xxxxx` for compound names.
  * Each part split on a hyphen, space, or apostrophe is capitalized, so
  * `jean-pierre` → `Jean-Pierre` and `d'artagnan` → `D'Artagnan`.

@@ -1,0 +1,55 @@
+<header class="page-head">
+  <span class="eyebrow">Tableau de bord</span>
+  <h1>{{ greeting() }}</h1>
+  <p class="page-head__sub">{{ todayLabel }}</p>
+</header>
+
+@if (loading()) {
+  <div class="state">Chargement du tableau de bord…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else {
+  <!-- The page's headline: the next sortie ahead, and the way into it. -->
+  <section class="hero" aria-labelledby="hero-title">
+    @if (nextOutreach(); as next) {
+      <div class="hero__head">
+        <span class="eyebrow">Prochaine sortie</span>
+        <span class="hero__countdown">{{ countdownLabel() }}</span>
+      </div>
+
+      <h2 class="hero__title" id="hero-title">{{ next.name }}</h2>
+      <span class="pill pill--{{ nextStatusTone() }}">{{ nextStatusLabel() }}</span>
+
+      <p class="hero__when">{{ nextScheduleLabel() }}</p>
+
+      <div class="hero__actions">
+        <a class="btn btn--primary" [routerLink]="['/sorties', next.uuid, 'gestion']">
+          Gérer la sortie
+        </a>
+      </div>
+    } @else {
+      <span class="eyebrow">Prochaine sortie</span>
+      <h2 class="hero__title" id="hero-title">Aucune sortie à venir</h2>
+      <p class="hero__empty">
+        Aucune sortie n'est planifiée à partir d'aujourd'hui.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" routerLink="/sorties">Planifier une sortie</a>
+      </div>
+    }
+  </section>
+
+  <section class="roster" aria-labelledby="roster-title">
+    <div class="roster__figures">
+      <span class="eyebrow" id="roster-title">Effectif</span>
+      <span class="roster__value">{{ counts().members }}</span>
+      <span class="roster__split">
+        {{ counts().ouvriers }} ouvriers · {{ counts().aides }} aides
+      </span>
+    </div>
+    <a class="btn" routerLink="/profils">Voir l'effectif</a>
+  </section>
+}
