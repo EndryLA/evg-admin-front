@@ -80,25 +80,24 @@
 .action-btn { padding: 14px; font-size: 15px; }
 .action-btn svg { width: 18px; height: 18px; }
 
-.closed-note {
+/* "Clôturer" is deliberately not accent-coloured: the two lifecycle actions must
+   never look alike, so a mistaken second tap can't follow a first one. */
+.action-btn--close {
+  background: var(--pill-dark-bg);
+  color: var(--pill-dark-text);
+}
+.action-btn--close:not(:disabled):hover { background: var(--text-primary); }
+
+/* Terminal states are information, not an action — no button affordance. */
+.status-note {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid var(--success-border);
-  border-radius: 9px;
-  background: var(--alert-success-bg);
-  color: var(--alert-success-text);
-  font-size: 14px;
-  font-weight: 600;
+  gap: 7px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
 }
-.closed-note svg { width: 18px; height: 18px; }
-.closed-note--muted {
-  border-color: var(--border);
-  background: var(--bg-inset);
-  color: var(--text-tertiary);
-}
+.status-note svg { width: 15px; height: 15px; flex: 0 0 auto; }
 
 .card {
   border: 1px solid var(--border-subtle);
@@ -304,11 +303,12 @@
     align-items: stretch;
   }
   .manage-actions .action-btn,
-  .manage-actions .closed-note,
   .manage-actions .stats-link {
     flex: 1 1 0;
     margin: 0;
   }
+  /* Keeps its own line above the actions instead of masquerading as one. */
+  .manage-actions .status-note { flex: 1 1 100%; }
   /* Error banner keeps its own full-width line above the action row. */
   .manage-actions .alert {
     order: -1;
@@ -328,6 +328,14 @@
   .manage-head h1 { font-size: 22px; }
 
   .manage-card { padding: 18px; }
+
+  /* Both link actions share the row equally, whatever their label length. */
+  .link-row__actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 
   /* Wide contacts table scrolls rather than squishing. */
   .contacts .card { overflow-x: auto; }

@@ -1,15 +1,19 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { OutreachService } from '../../outreach.service';
 import {
+  ATTENDANCE_TYPE_LABELS,
+  ATTENDANCE_TYPE_TONES,
   CIVIL_STATE_LABELS,
   STATUS_LABELS,
   STATUS_TONES,
   type CivilState,
   type ContactEntry,
   type Outreach,
+  type OutreachAttendance,
 } from '../../outreach.models';
 
 /** A civil-state slice of the contacts, for the breakdown list. */
@@ -19,13 +23,11 @@ interface CivilStateSlice {
   percent: number;
 }
 
-/** A single evangelist's tally, for the leaderboard. */
-interface WorkerTally {
+/** One ouvrier on the roster, built from a recorded presence. */
+interface WorkerRow {
   name: string;
-  /** Everyone they met, both types — what the ranking is on. */
-  total: number;
-  contacts: number;
-  conversions: number;
+  typeLabel: string;
+  typeTone: string;
 }
 
 /**
@@ -48,6 +50,7 @@ export class OutreachStats implements OnInit {
 
   protected readonly outreach = signal<Outreach | null>(null);
   protected readonly contacts = signal<ContactEntry[]>([]);
+  protected readonly attendances = signal<OutreachAttendance[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
 
@@ -73,8 +76,11 @@ export class OutreachStats implements OnInit {
     const total = this.entryCount();
     return total ? Math.round((this.conversionCount() / total) * 100) : 0;
   });
-  /** Distinct evangelists who recorded at least one contact. */
-  protected readonly workerCount = computed(() => this.workers().length);
+  /**
+   * Ouvriers on the sortie, taken from the recorded presences rather than from
+   * the contact entries — someone can be there without registering a contact.
+   */
+  protected readonly workerCount = computed(() => this.attendances().length);
 
   /** Civil-state distribution, largest slice first, empty ones dropped. */
   protected readonly civilBreakdown = computed<CivilStateSlice[]>(() => {
@@ -92,26 +98,21 @@ export class OutreachStats implements OnInit {
       .sort((a, b) => b.count - a.count);
   });
 
-  /** Per-evangelist tallies, most contacts first. */
-  protected readonly workers = computed<WorkerTally[]>(() => {
-    const byName = new Map<string, WorkerTally>();
-    for (const c of this.contacts()) {
-      const name = c.evangelizedBy.trim();
-      if (!name) {
-        continue;
-      }
-      const key = name.toLowerCase();
-      const tally = byName.get(key) ?? { name, total: 0, contacts: 0, conversions: 0 };
-      tally.total += 1;
-      if (c.type === 'CONVERSION') {
-        tally.conversions += 1;
-      } else {
-        tally.contacts += 1;
-      }
-      byName.set(key, tally);
-    }
-    return [...byName.values()].sort((a, b) => b.total - a.total);
-  });
+  /** The presence roster, members first then alphabetically. */
+  protected readonly workers = computed<WorkerRow[]>(() =>
+    this.attendances()
+      .map((a) => ({
+        name: `${a.firstname} ${a.lastname}`.trim(),
+        typeLabel: ATTENDANCE_TYPE_LABELS[a.type],
+        typeTone: ATTENDANCE_TYPE_TONES[a.type],
+      }))
+      .sort(
+        (a, b) =>
+          Number(b.typeLabel === ATTENDANCE_TYPE_LABELS.MEMBER) -
+            Number(a.typeLabel === ATTENDANCE_TYPE_LABELS.MEMBER) ||
+          a.name.localeCompare(b.name, 'fr'),
+      ),
+  );
 
   ngOnInit(): void {
     this.load();
@@ -127,13 +128,17 @@ export class OutreachStats implements OnInit {
         this.loadError.set(messageFromError(err, 'Chargement de la sortie impossible.')),
     });
 
-    this.service.contactEntries(this.uuid()).subscribe({
-      next: (data) => {
-        this.contacts.set(data);
+    forkJoin({
+      contacts: this.service.contactEntries(this.uuid()),
+      attendances: this.service.attendances(this.uuid()),
+    }).subscribe({
+      next: ({ contacts, attendances }) => {
+        this.contacts.set(contacts);
+        this.attendances.set(attendances);
         this.loading.set(false);
       },
       error: (err) => {
-        this.loadError.set(messageFromError(err, 'Chargement des contacts impossible.'));
+        this.loadError.set(messageFromError(err, 'Chargement des statistiques impossible.'));
         this.loading.set(false);
       },
     });

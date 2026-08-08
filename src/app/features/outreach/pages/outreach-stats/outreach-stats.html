@@ -34,50 +34,51 @@
     </div>
     <div class="tile">
       <span class="tile__value">{{ workerCount() }}</span>
-      <span class="tile__label">Ouvriers actifs</span>
+      <span class="tile__label">Personnes présentes</span>
     </div>
   </section>
 
-  @if (entryCount() === 0) {
+  @if (entryCount() === 0 && workerCount() === 0) {
     <div class="state">
       <div class="state__title">Aucune donnée</div>
-      <div class="state__hint">Aucun contact n'a encore été enregistré pour cette sortie.</div>
+      <div class="state__hint">Aucune présence ni contact n'a encore été enregistré pour cette sortie.</div>
     </div>
   } @else {
     <div class="panels">
-      <section class="panel">
-        <h2 class="panel__title">Répartition par état civil</h2>
-        <ul class="breakdown">
-          @for (slice of civilBreakdown(); track slice.label) {
-            <li class="breakdown__row">
-              <div class="breakdown__head">
-                <span class="breakdown__label">{{ slice.label }}</span>
-                <span class="breakdown__count">{{ slice.count }} · {{ slice.percent }}%</span>
-              </div>
-              <div class="breakdown__bar">
-                <span class="breakdown__fill" [style.width.%]="slice.percent"></span>
-              </div>
-            </li>
-          }
-        </ul>
-      </section>
+      @if (entryCount() > 0) {
+        <section class="panel">
+          <h2 class="panel__title">Répartition par état civil</h2>
+          <ul class="breakdown">
+            @for (slice of civilBreakdown(); track slice.label) {
+              <li class="breakdown__row">
+                <div class="breakdown__head">
+                  <span class="breakdown__label">{{ slice.label }}</span>
+                  <span class="breakdown__count">{{ slice.count }} · {{ slice.percent }}%</span>
+                </div>
+                <div class="breakdown__bar">
+                  <span class="breakdown__fill" [style.width.%]="slice.percent"></span>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
 
       <section class="panel">
-        <h2 class="panel__title">Ouvriers</h2>
-        <ul class="leaderboard">
-          @for (w of workers(); track w.name; let i = $index) {
-            <li class="leader">
-              <span class="leader__rank">{{ i + 1 }}</span>
-              <span class="leader__name">{{ w.name }}</span>
-              <span class="leader__stats">
-                <span class="leader__count">{{ w.contacts }} contact{{ w.contacts > 1 ? 's' : '' }}</span>
-                @if (w.conversions > 0) {
-                  <span class="leader__conv">{{ w.conversions }} conv.</span>
-                }
-              </span>
-            </li>
-          }
-        </ul>
+        <h2 class="panel__title">Présences</h2>
+        @if (workerCount() === 0) {
+          <p class="panel__empty">Aucune présence enregistrée.</p>
+        } @else {
+          <ul class="leaderboard">
+            @for (w of workers(); track $index) {
+              <li class="leader">
+                <span class="leader__rank">{{ $index + 1 }}</span>
+                <span class="leader__name">{{ w.name }}</span>
+                <span class="pill pill--{{ w.typeTone }}">{{ w.typeLabel }}</span>
+              </li>
+            }
+          </ul>
+        }
       </section>
     </div>
   }

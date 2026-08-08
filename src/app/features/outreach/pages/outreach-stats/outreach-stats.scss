@@ -69,6 +69,7 @@
   background: var(--bg-card);
 }
 .panel__title { margin: 0 0 18px; font-size: 16px; }
+.panel__empty { margin: 0; font-size: 13.5px; color: var(--text-muted); }
 
 /* ---- Civil-state breakdown ---- */
 .breakdown { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
@@ -95,7 +96,7 @@
   transition: width 0.3s ease;
 }
 
-/* ---- Worker leaderboard ---- */
+/* ---- Worker roster (from the recorded presences) ---- */
 .leaderboard { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .leader {
   display: flex;
@@ -119,17 +120,7 @@
   font-weight: 700;
 }
 .leader__name { flex: 1; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
-.leader__stats { flex: none; display: flex; align-items: center; gap: 8px; }
-.leader__count { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
-.leader__conv {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--pill-green-bg);
-  color: var(--pill-green-text);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
+.leader .pill { flex: none; }
 
 /* ---- States ---- */
 .state {

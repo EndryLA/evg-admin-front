@@ -74,22 +74,16 @@
         </button>
       }
       @case ('IN_PROGRESS') {
-        <button type="button" class="btn btn--primary btn--block action-btn" (click)="openClose()">
+        <button type="button" class="btn btn--block action-btn action-btn--close" (click)="openClose()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           Clôturer la sortie
         </button>
       }
-      @case ('FINISHED') {
-        <div class="closed-note">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-          Sortie clôturée
-        </div>
-      }
       @case ('CANCELLED') {
-        <div class="closed-note closed-note--muted">
+        <p class="status-note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
           Sortie annulée
-        </div>
+        </p>
       }
     }
 
