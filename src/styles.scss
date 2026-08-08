@@ -1184,7 +1184,7 @@ input, select, button, textarea { font-family: inherit; }
   justify-content: center;
   margin-bottom: 24px;
 }
-.public-brand img { height: 56px; width: auto; }
+.public-brand app-brand-logo { height: 56px; }
 
 /* Return-to-menu control at the top of a public form — a clearly tappable pill
    so a visitor sees how to switch to the other form. */
@@ -1234,6 +1234,6 @@ input, select, button, textarea { font-family: inherit; }
     flex: initial;
     max-width: 560px;
   }
-  .public-brand img { height: 64px; }
+  .public-brand app-brand-logo { height: 64px; }
   .public-head h1 { font-size: 24px; }
 }

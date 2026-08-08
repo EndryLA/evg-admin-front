@@ -1,5 +1,6 @@
-import { NgOptimizedImage } from '@angular/common';
 import { Component, input } from '@angular/core';
+
+import { BrandLogo } from '../../../../shared/ui/brand-logo/brand-logo';
 
 /**
  * Presentational shell shared by every auth screen: centered card on a plain
@@ -7,17 +8,12 @@ import { Component, input } from '@angular/core';
  */
 @Component({
   selector: 'app-auth-card',
-  imports: [NgOptimizedImage],
+  imports: [BrandLogo],
   template: `
     <main class="auth-shell">
       <section class="auth-card" role="region" [attr.aria-label]="title()">
         <div class="auth-brand">
-          <img
-            ngSrc="assets/logo.svg"
-            width="220"
-            height="65"
-            priority
-            alt="Département Évangélisation" />
+          <app-brand-logo [priority]="true" />
         </div>
 
         <header class="auth-head">

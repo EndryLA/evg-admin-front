@@ -1,9 +1,9 @@
-import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { BrandLogo } from '../../../../shared/ui/brand-logo/brand-logo';
 import { unformatPhone } from '../../../../shared/util/text.util';
 import { ContactFields } from '../../components/contact-fields/contact-fields';
 import { ContactEditTokenStore } from '../../../../core/contact-edit/contact-edit-token.store';
@@ -22,7 +22,7 @@ import type { CivilState, ContactType } from '../../contact.models';
  */
 @Component({
   selector: 'app-public-contact-form',
-  imports: [ReactiveFormsModule, NgOptimizedImage, ContactFields, RouterLink],
+  imports: [ReactiveFormsModule, BrandLogo, ContactFields, RouterLink],
   templateUrl: './public-contact-form.html',
   styleUrl: './public-contact-form.scss',
 })

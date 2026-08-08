@@ -1,8 +1,8 @@
-import { NgOptimizedImage } from '@angular/common';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { ContactEditTokenStore } from '../../../../core/contact-edit/contact-edit-token.store';
+import { BrandLogo } from '../../../../shared/ui/brand-logo/brand-logo';
 import { SortieService } from '../../sortie.service';
 
 /**
@@ -16,7 +16,7 @@ import { SortieService } from '../../sortie.service';
  */
 @Component({
   selector: 'app-sortie-landing',
-  imports: [RouterLink, NgOptimizedImage],
+  imports: [RouterLink, BrandLogo],
   templateUrl: './sortie-landing.html',
   styleUrl: './sortie-landing.scss',
 })

@@ -13,6 +13,7 @@ import { ACCESS } from '../../auth/access';
 import { primaryRole, ROLE_LABELS } from '../../auth/auth.models';
 import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../theme/theme.service';
+import { BrandLogo } from '../../../shared/ui/brand-logo/brand-logo';
 
 /**
  * Authenticated layout: a dark sidebar (brand, grouped nav, user card) plus a
@@ -23,7 +24,7 @@ import { ThemeService } from '../../theme/theme.service';
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, BrandLogo],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {

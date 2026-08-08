@@ -1,4 +1,3 @@
-import { NgOptimizedImage } from '@angular/common';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import {
   FormBuilder,
@@ -10,6 +9,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
+import { BrandLogo } from '../../../../shared/ui/brand-logo/brand-logo';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import {
   MemberAutocomplete,
@@ -37,7 +37,7 @@ function memberPicked(control: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-public-attendance-form',
-  imports: [ReactiveFormsModule, NgOptimizedImage, MemberAutocomplete, RouterLink],
+  imports: [ReactiveFormsModule, BrandLogo, MemberAutocomplete, RouterLink],
   templateUrl: './public-attendance-form.html',
   styleUrl: './public-attendance-form.scss',
 })

@@ -31,7 +31,7 @@
 .topbar__logo {
   display: inline-flex;
 }
-.topbar__logo img { height: 26px; width: auto; display: block; }
+.topbar__logo app-brand-logo { height: 26px; }
 
 /* ---- Scrim (mobile overlay backdrop) ---- */
 .scrim {
