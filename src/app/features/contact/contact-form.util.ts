@@ -12,12 +12,13 @@ import type { Contact, CivilState, ContactType } from './contact.models';
 export const EMPTY_CITY: CityValue = { inseeCode: null, label: '' };
 
 /**
- * The city must be an actual suggestion picked from the list — free text that
- * resolves to no INSEE code is rejected, so the entry always links a commune.
+ * A person needs at least one of the two name fields — on the street either the
+ * first or the last name may be all that was given, but not neither.
  */
-export function cityPicked(control: AbstractControl): ValidationErrors | null {
-  const value = control.value as CityValue | null;
-  return value && value.inseeCode != null ? null : { cityRequired: true };
+export function nameGiven(group: AbstractControl): ValidationErrors | null {
+  const firstname = (group.get('firstname')?.value as string | null)?.trim() ?? '';
+  const lastname = (group.get('lastname')?.value as string | null)?.trim() ?? '';
+  return firstname || lastname ? null : { nameRequired: true };
 }
 
 /**
@@ -43,18 +44,22 @@ export function boolToAttend(value: boolean | null): AttendChoice {
 }
 
 export function buildContactForm(fb: FormBuilder) {
-  return fb.nonNullable.group({
-    firstname: [''],
-    lastname: [''],
-    type: ['CONTACT' as ContactType, [Validators.required]],
-    civilState: ['' as CivilState | '', [Validators.required]],
-    city: [{ ...EMPTY_CITY } as CityValue, [cityPicked]],
-    evangelizedBy: ['', [Validators.required]],
-    phoneNumber: [''],
-    wantsToAttendGF: ['' as AttendChoice],
-    wantsToAttendChurch: ['' as AttendChoice],
-    observations: [''],
-  });
+  return fb.nonNullable.group(
+    {
+      firstname: [''],
+      lastname: [''],
+      type: ['' as ContactType | '', [Validators.required]],
+      civilState: ['' as CivilState | '', [Validators.required]],
+      // Optional: left empty, or free text when the commune is not in the list.
+      city: [{ ...EMPTY_CITY } as CityValue],
+      evangelizedBy: ['', [Validators.required]],
+      phoneNumber: [''],
+      wantsToAttendGF: ['' as AttendChoice],
+      wantsToAttendChurch: ['' as AttendChoice],
+      observations: [''],
+    },
+    { validators: [nameGiven] },
+  );
 }
 
 export type ContactFormGroup = ReturnType<typeof buildContactForm>;

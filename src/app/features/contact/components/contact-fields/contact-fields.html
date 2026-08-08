@@ -2,21 +2,30 @@
   <div class="field">
     <label class="field__label" for="firstname">Prénom</label>
     <input id="firstname" class="field__control" formControlName="firstname" autocomplete="off"
-      (blur)="capitalize('firstname')" />
+      [attr.aria-invalid]="nameMissing()" (blur)="capitalize('firstname')" />
   </div>
 
   <div class="field">
     <label class="field__label" for="lastname">Nom</label>
     <input id="lastname" class="field__control" formControlName="lastname" autocomplete="off"
-      (blur)="capitalize('lastname')" />
+      [attr.aria-invalid]="nameMissing()" (blur)="capitalize('lastname')" />
   </div>
+
+  @if (nameMissing()) {
+    <span class="field__error field--span">Indiquez au moins le prénom ou le nom.</span>
+  }
 
   <div class="field">
     <label class="field__label" for="type">Type</label>
-    <select id="type" class="field__control" formControlName="type">
+    <select id="type" class="field__control" formControlName="type"
+      [attr.aria-invalid]="form().controls.type.touched && form().controls.type.invalid">
+      <option value="" disabled>— Choisir —</option>
       <option value="CONTACT">Contact</option>
       <option value="CONVERSION">Conversion</option>
     </select>
+    @if (form().controls.type.touched && form().controls.type.invalid) {
+      <span class="field__error">Le type est requis.</span>
+    }
   </div>
 
   <div class="field">
@@ -34,12 +43,8 @@
   </div>
 
   <div class="field">
-    <label class="field__label" for="city">Ville</label>
-    <app-city-autocomplete inputId="city" formControlName="city" placeholder=""
-      [ariaInvalid]="form().controls.city.touched && form().controls.city.invalid" />
-    @if (form().controls.city.touched && form().controls.city.invalid) {
-      <span class="field__error">Choisissez une ville dans la liste.</span>
-    }
+    <label class="field__label" for="city">Ville <span class="field__optional">(facultatif)</span></label>
+    <app-city-autocomplete inputId="city" formControlName="city" placeholder="" />
   </div>
 
   <div class="field">

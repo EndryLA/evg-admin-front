@@ -30,6 +30,18 @@ export class ContactFields {
 
   protected readonly civilStates = CIVIL_STATE_OPTIONS;
 
+  /**
+   * Whether the "prénom or nom" rule is broken and worth showing. The rule lives
+   * on the group, so it only surfaces once one of the two fields was touched.
+   */
+  protected nameMissing(): boolean {
+    const form = this.form();
+    return (
+      form.hasError('nameRequired') &&
+      (form.controls.firstname.touched || form.controls.lastname.touched)
+    );
+  }
+
   /** Group the phone as `XX XX XX XX XX` while it is typed. */
   protected formatPhone(): void {
     const control = this.form().controls.phoneNumber;

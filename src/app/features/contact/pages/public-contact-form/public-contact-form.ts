@@ -9,7 +9,7 @@ import { ContactFields } from '../../components/contact-fields/contact-fields';
 import { ContactEditTokenStore } from '../../contact-edit-token.store';
 import { attendToBool, buildContactForm, EMPTY_CITY } from '../../contact-form.util';
 import { ContactService } from '../../contact.service';
-import type { CivilState } from '../../contact.models';
+import type { CivilState, ContactType } from '../../contact.models';
 
 /**
  * Public, unauthenticated form (`/sortie/:uuid/contact`) for recording a person
@@ -62,7 +62,7 @@ export class PublicContactForm implements OnInit {
       .submitPublic(this.uuid(), {
         firstname: v.firstname,
         lastname: v.lastname,
-        type: v.type,
+        type: v.type as ContactType,
         civilState: v.civilState as CivilState,
         // A picked suggestion carries an INSEE code; free text keeps its label.
         cityInseeCode: v.city.inseeCode,
@@ -98,7 +98,7 @@ export class PublicContactForm implements OnInit {
 
   /** Reset the form to accept another submission. */
   protected again(): void {
-    this.form.reset({ type: 'CONTACT', civilState: '', city: { ...EMPTY_CITY } });
+    this.form.reset({ type: '', civilState: '', city: { ...EMPTY_CITY } });
     this.submitted.set(false);
   }
 }

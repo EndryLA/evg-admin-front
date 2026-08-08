@@ -9,6 +9,9 @@
   margin-bottom: 22px;
 }
 .field--span { grid-column: 1 / -1; }
+/* The name rule spans both fields, so its message sits on its own row. */
+span.field--span { margin-top: -10px; }
+.field__optional { font-weight: 400; color: var(--text-faint); }
 
 textarea.field__control { resize: vertical; min-height: 78px; }
 

@@ -14,7 +14,12 @@ import {
   contactToCityValue,
 } from '../../contact-form.util';
 import { ContactService } from '../../contact.service';
-import { CONTACT_TYPE_LABELS, type CivilState, type Contact } from '../../contact.models';
+import {
+  CONTACT_TYPE_LABELS,
+  type CivilState,
+  type Contact,
+  type ContactType,
+} from '../../contact.models';
 
 /** What the page is currently doing — drives which section renders. */
 type ViewState = 'loading' | 'error' | 'closed' | 'empty' | 'list';
@@ -134,7 +139,7 @@ export class PublicContactEdit implements OnInit {
       .updatePublic(this.uuid(), target.uuid, token, {
         firstname: v.firstname,
         lastname: v.lastname,
-        type: v.type,
+        type: v.type as ContactType,
         civilState: v.civilState as CivilState,
         cityInseeCode: v.city.inseeCode,
         cityLabel: v.city.inseeCode == null ? v.city.label : null,
