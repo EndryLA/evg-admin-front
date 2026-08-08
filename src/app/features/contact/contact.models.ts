@@ -7,6 +7,12 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
   CONVERSION: 'Conversion',
 };
 
+/** Labels used in spreadsheet exports — colour-coded to mirror the in-app pills. */
+export const CONTACT_TYPE_EXPORT_LABELS: Record<ContactType, string> = {
+  CONTACT: '🔵  Contact',
+  CONVERSION: '🔴  Conversion',
+};
+
 /** Badge tone (see global `.pill--*`) per contact type. */
 export const CONTACT_TYPE_TONES: Record<ContactType, string> = {
   CONTACT: 'blue',
@@ -118,6 +124,20 @@ export interface Contact {
   /** Wants to attend church: yes/no, or `null` when not asked/answered. */
   wantsToAttendChurch: boolean | null;
   observations: string;
+}
+
+/**
+ * The outreach details a contact export needs — when and where the outreach
+ * happened. `ContactEntryResponse` carries only an `outreachUuid`, so these are
+ * resolved separately (see `ContactService.outreachContexts`).
+ */
+export interface OutreachContext {
+  /** Calendar day of the outreach, `YYYY-MM-DD`, or `null` when unknown. */
+  date: string | null;
+  /** The outreach's commune: official name, else free-text label, else empty. */
+  cityName: string;
+  /** INSEE code of that commune, or `null` when it is only free text. */
+  cityInseeCode: number | null;
 }
 
 /** Fields a member of the public submits for an outreach (`PublicContactEntryRequest`). */

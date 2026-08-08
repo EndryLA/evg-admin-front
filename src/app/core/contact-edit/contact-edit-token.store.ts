@@ -20,6 +20,10 @@ interface StoredToken {
  * person who filled in contacts can come back and edit them — until the outreach
  * closes (backend-enforced) or 24h passes (client safety net). Guarded against
  * environments where storage is unavailable.
+ *
+ * Lives in `core/` because both the contact feature (which mints and consumes the
+ * token) and the sortie landing page (which only checks whether one exists, to
+ * offer the "modifier" entry point) read it.
  */
 @Injectable({ providedIn: 'root' })
 export class ContactEditTokenStore {

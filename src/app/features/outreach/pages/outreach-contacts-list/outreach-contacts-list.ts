@@ -18,6 +18,8 @@ import {
 
 /** Type filter for the contacts list: all, or one {@link ContactType}. */
 type TypeFilter = 'ALL' | ContactType;
+/** Display order of the list: contacts first, conversions after. */
+const TYPE_ORDER: Record<ContactType, number> = { CONTACT: 0, CONVERSION: 1 };
 /** Civil-state filter: all, or one {@link CivilState}. */
 type CivilStateFilter = 'ALL' | CivilState;
 
@@ -80,14 +82,14 @@ export class OutreachContactsList implements OnInit {
     this.filterDrawerOpen.set(false);
   }
 
-  /** Contacts after applying every filter. */
+  /** Contacts after applying every filter, grouped by {@link TYPE_ORDER}. */
   protected readonly filtered = computed<ContactEntry[]>(() => {
     const type = this.typeFilter();
     const civilState = this.civilState();
     const sector = this.sector();
     const q = this.query().trim().toLowerCase();
     const by = this.evangelizedBy().trim().toLowerCase();
-    return this.contacts().filter((c) => {
+    const rows = this.contacts().filter((c) => {
       if (type !== 'ALL' && c.type !== type) {
         return false;
       }
@@ -118,6 +120,8 @@ export class OutreachContactsList implements OnInit {
         .toLowerCase();
       return haystack.includes(q);
     });
+    // Stable sort: keeps the API order inside each group.
+    return rows.sort((a, b) => TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
   });
 
   protected readonly statusLabel = computed(() => {

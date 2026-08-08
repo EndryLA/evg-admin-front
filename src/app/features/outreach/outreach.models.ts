@@ -141,6 +141,12 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
   CONVERSION: 'Conversion',
 };
 
+/** Labels used in spreadsheet exports — colour-coded to mirror the in-app pills. */
+export const CONTACT_TYPE_EXPORT_LABELS: Record<ContactType, string> = {
+  CONTACT: '🔵  Contact',
+  CONVERSION: '🔴  Conversion',
+};
+
 /** Badge tone (see global `.pill--*`) per contact type. */
 export const CONTACT_TYPE_TONES: Record<ContactType, string> = {
   CONTACT: 'blue',

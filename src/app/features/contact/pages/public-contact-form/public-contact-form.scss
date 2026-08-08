@@ -1,22 +1,6 @@
 /* Contact-form specifics. The field grid lives in the shared <app-contact-fields>
    component; shell chrome + field/button tokens are global (styles.scss). */
 
-/* Entry point to the editable list, shown when contacts were already saved. */
-.edit-mine-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 18px;
-  padding: 4px 0;
-  border: none;
-  background: none;
-  font-size: 14px;
-  color: var(--accent);
-  cursor: pointer;
-}
-.edit-mine-link:hover { text-decoration: underline; }
-.edit-mine-link svg { width: 15px; height: 15px; }
-
 /* Space the secondary action below the primary one in the thank-you state. */
 .public-done .btn + .btn { margin-top: 10px; }
 

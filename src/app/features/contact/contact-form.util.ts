@@ -27,20 +27,27 @@ export function nameGiven(group: AbstractControl): ValidationErrors | null {
  * callers agree on the exact shape.
  */
 /**
- * A tri-state "wants to attend" answer as the `<select>` holds it: `''` (not
- * answered → null), `'true'` (yes), or `'false'` (no). Native selects carry
- * strings, so the boolean/null is converted at the form boundary.
+ * A "wants to attend" answer as the `<select>` holds it: `''` (nothing picked
+ * yet — the "— Choisir —" placeholder), `'unknown'` ("Je ne sais pas"),
+ * `'true'` (yes), or `'false'` (no). Native selects carry strings, so the
+ * boolean/null is converted at the form boundary. Both `''` and `'unknown'`
+ * mean "no answer" to the backend, which stores a plain nullable boolean.
  */
-export type AttendChoice = '' | 'true' | 'false';
+export type AttendChoice = '' | 'unknown' | 'true' | 'false';
 
 /** Select string → the nullable boolean the backend expects. */
 export function attendToBool(choice: AttendChoice): boolean | null {
-  return choice === '' ? null : choice === 'true';
+  return choice === '' || choice === 'unknown' ? null : choice === 'true';
 }
 
-/** Nullable boolean → the select string, for pre-filling the edit form. */
+/**
+ * Nullable boolean → the select string, for pre-filling the edit form. A stored
+ * `null` maps back to `'unknown'`: the backend cannot tell "not answered" from
+ * "Je ne sais pas", and showing the explicit answer avoids the field looking
+ * unfilled on an already-saved contact.
+ */
 export function boolToAttend(value: boolean | null): AttendChoice {
-  return value == null ? '' : value ? 'true' : 'false';
+  return value == null ? 'unknown' : value ? 'true' : 'false';
 }
 
 export function buildContactForm(fb: FormBuilder) {

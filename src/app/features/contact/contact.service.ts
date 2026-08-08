@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, of, type Observable } from 'rxjs';
+import { catchError, forkJoin, map, of, type Observable } from 'rxjs';
 
 import {
   toContact,
@@ -16,12 +16,17 @@ import {
   type Contact,
   type ContactFilter,
   type MyContacts,
+  type OutreachContext,
   type Page,
   type PublicContactInput,
 } from './contact.models';
 
+/** The slice of `OutreachResponse` this feature reads directly (see below). */
 interface RawOutreachLite {
   name?: string;
+  date?: string | null;
+  city?: { officialName?: string; inseeCode?: number | null } | null;
+  cityLabel?: string | null;
 }
 
 const BASE = '/api/contact-entries';
@@ -94,6 +99,35 @@ export class ContactService {
     return this.http.get<RawOutreachLite>(`/api/outreaches/${uuid}`).pipe(
       map((o) => o.name ?? ''),
       catchError(() => of('')),
+    );
+  }
+
+  /**
+   * Date and city of each given outreach, keyed by uuid — the outreach columns of
+   * the Excel export, which `ContactEntryResponse` doesn't carry. Duplicated uuids
+   * are fetched once. Best-effort per outreach: one failing lookup leaves that key
+   * absent rather than failing the whole export.
+   */
+  outreachContexts(uuids: readonly string[]): Observable<Map<string, OutreachContext>> {
+    const unique = [...new Set(uuids.filter(Boolean))];
+    if (unique.length === 0) {
+      return of(new Map());
+    }
+    const lookups = unique.map((uuid) =>
+      this.http.get<RawOutreachLite>(`/api/outreaches/${uuid}`).pipe(
+        map((o): [string, OutreachContext] | null => [
+          uuid,
+          {
+            date: o.date ?? null,
+            cityName: o.city?.officialName ?? o.cityLabel ?? '',
+            cityInseeCode: o.city?.inseeCode ?? null,
+          },
+        ]),
+        catchError(() => of(null)),
+      ),
+    );
+    return forkJoin(lookups).pipe(
+      map((entries) => new Map(entries.filter((e) => e !== null))),
     );
   }
 

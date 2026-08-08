@@ -6,7 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { unformatPhone } from '../../../../shared/util/text.util';
 import { ContactFields } from '../../components/contact-fields/contact-fields';
-import { ContactEditTokenStore } from '../../contact-edit-token.store';
+import { ContactEditTokenStore } from '../../../../core/contact-edit/contact-edit-token.store';
 import { attendToBool, buildContactForm, EMPTY_CITY } from '../../contact-form.util';
 import { ContactService } from '../../contact.service';
 import type { CivilState, ContactType } from '../../contact.models';
@@ -39,15 +39,12 @@ export class PublicContactForm implements OnInit {
   protected readonly submitted = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly outreachName = signal('');
-  /** Whether a stored token exists — drives the "modifier" entry points. */
-  protected readonly hasSaved = signal(false);
 
   protected readonly form = buildContactForm(this.fb);
 
   ngOnInit(): void {
     // Best-effort context: show which outreach this is, if the lookup succeeds.
     this.service.outreachName(this.uuid()).subscribe((name) => this.outreachName.set(name));
-    this.hasSaved.set(this.tokens.read(this.uuid()) != null);
   }
 
   protected submit(): void {
@@ -79,7 +76,6 @@ export class PublicContactForm implements OnInit {
           // Remember the token so this person can edit their contacts later.
           if (token) {
             this.tokens.write(this.uuid(), token);
-            this.hasSaved.set(true);
           }
           this.submitting.set(false);
           this.submitted.set(true);

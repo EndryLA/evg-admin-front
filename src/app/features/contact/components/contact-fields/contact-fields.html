@@ -65,18 +65,20 @@
   <div class="field">
     <label class="field__label" for="wantsToAttendGF">Souhaite venir au GF</label>
     <select id="wantsToAttendGF" class="field__control" formControlName="wantsToAttendGF">
-      <option value="">Je ne sais pas</option>
+      <option value="" disabled>— Choisir —</option>
       <option value="true">Oui</option>
       <option value="false">Non</option>
+      <option value="unknown">Je ne sais pas</option>
     </select>
   </div>
 
   <div class="field">
     <label class="field__label" for="wantsToAttendChurch">Souhaite venir à l'église</label>
     <select id="wantsToAttendChurch" class="field__control" formControlName="wantsToAttendChurch">
-      <option value="">Je ne sais pas</option>
+      <option value="" disabled>— Choisir —</option>
       <option value="true">Oui</option>
       <option value="false">Non</option>
+      <option value="unknown">Je ne sais pas</option>
     </select>
   </div>
 

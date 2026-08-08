@@ -11,14 +11,19 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { firstValueFrom } from 'rxjs';
+
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
+import { isSameCity } from '../../../../shared/util/city.util';
+import { formatDateFr } from '../../../../shared/util/date.util';
 import { displayPhoneFr, displayYesNo } from '../../../../shared/util/text.util';
-import { exportRowsToXlsx, type XlsxColumn } from '../../../../shared/util/xlsx.util';
+import { exportSheetsToXlsx, type XlsxColumn } from '../../../../shared/util/xlsx.util';
 import { ContactService } from '../../contact.service';
 import {
   CIVIL_STATE_LABELS,
   CIVIL_STATE_OPTIONS,
+  CONTACT_TYPE_EXPORT_LABELS,
   CONTACT_TYPE_LABELS,
   CONTACT_TYPE_TONES,
   EMPTY_CONTACT_FILTER,
@@ -34,6 +39,8 @@ import {
 type TypeFilter = ContactFilter['type'];
 
 const PAGE_SIZE = 20;
+/** Font colour in the export for a contact who lives outside their outreach's commune. */
+const OUT_OF_CITY_COLOR = 'FFFF0000'; // pure red
 /** Debounce before the free-text search triggers a server reload. */
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -286,32 +293,80 @@ export class ContactList implements OnDestroy {
     });
   }
 
-  /** Export the selected rows to a styled `.xlsx` file. */
+  /**
+   * Export the selected rows to a styled `.xlsx` file — contacts and conversions
+   * land on their own tab, each row tagged with its colour-coded type label.
+   */
   protected async exportSelected(): Promise<void> {
     const chosen = this.selectedUuids();
     const selected = this.rows().filter((c) => chosen.has(c.uuid));
     if (selected.length === 0 || this.exporting()) {
       return;
     }
-    const columns: XlsxColumn<Contact>[] = [
-      { header: 'Nom', value: (c) => c.lastname || '' },
-      { header: 'Prénom', value: (c) => c.firstname || '' },
-      { header: 'Type', value: (c) => this.typeLabel(c.type) },
-      { header: 'État civil', value: (c) => this.civilStateLabel(c) },
-      { header: 'Ville', value: (c) => c.cityName || '' },
-      { header: 'Secteur', value: (c) => c.city?.sector ?? '' },
-      { header: 'Évangélisé par', value: (c) => c.evangelizedBy || '' },
-      { header: 'Téléphone', value: (c) => (c.phoneNumber ? displayPhoneFr(c.phoneNumber) : '') },
-      { header: 'Souhaite venir au GF', value: (c) => displayYesNo(c.wantsToAttendGF) },
-      { header: "Souhaite venir à l'église", value: (c) => displayYesNo(c.wantsToAttendChurch) },
-      { header: 'Observations', value: (c) => c.observations || '', width: 70 },
-    ];
     this.exporting.set(true);
     try {
-      await exportRowsToXlsx(selected, columns, 'Contacts', {
-        sheetName: 'Contacts',
-        numbered: true,
-      });
+      // Date and outreach city live on the outreach, not the contact — resolve
+      // them for the selected rows before building the sheets.
+      const contexts = await firstValueFrom(
+        this.service.outreachContexts(selected.map((c) => c.outreachUuid)),
+      );
+      const columns: XlsxColumn<Contact>[] = [
+        { header: 'Type', value: (c) => CONTACT_TYPE_EXPORT_LABELS[c.type] },
+        {
+          header: 'Date',
+          value: (c) => {
+            const date = contexts.get(c.outreachUuid)?.date;
+            return date ? formatDateFr(date) : '';
+          },
+        },
+        { header: 'Secteur', value: (c) => c.city?.sector ?? '' },
+        { header: 'État civil', value: (c) => this.civilStateLabel(c) },
+        { header: 'Nom', value: (c) => c.lastname || '' },
+        { header: 'Prénom', value: (c) => c.firstname || '' },
+        { header: 'Ville', value: (c) => c.cityName || '' },
+        {
+          header: 'Ville évangélisée',
+          value: (c) => contexts.get(c.outreachUuid)?.cityName ?? '',
+        },
+        { header: 'Téléphone', value: (c) => (c.phoneNumber ? displayPhoneFr(c.phoneNumber) : '') },
+        { header: 'Évangélisé par', value: (c) => c.evangelizedBy || '' },
+        { header: 'Souhaite venir au GF', value: (c) => displayYesNo(c.wantsToAttendGF) },
+        { header: "Souhaite venir à l'église", value: (c) => displayYesNo(c.wantsToAttendChurch) },
+        { header: 'Observations', value: (c) => c.observations || '', width: 70 },
+      ];
+
+      // Flag people who don't live in the commune their outreach took place in.
+      const rowTextColor = (c: Contact): string | undefined => {
+        const outreach = contexts.get(c.outreachUuid);
+        if (!outreach) {
+          return undefined;
+        }
+        const same = isSameCity(
+          { inseeCode: c.city?.inseeCode ?? null, name: c.cityName },
+          { inseeCode: outreach.cityInseeCode, name: outreach.cityName },
+        );
+        return same ? undefined : OUT_OF_CITY_COLOR;
+      };
+
+      await exportSheetsToXlsx(
+        [
+          {
+            name: 'Contacts',
+            rows: selected.filter((c) => c.type === 'CONTACT'),
+            columns,
+            numbered: true,
+            rowTextColor,
+          },
+          {
+            name: 'Conversions',
+            rows: selected.filter((c) => c.type === 'CONVERSION'),
+            columns,
+            numbered: true,
+            rowTextColor,
+          },
+        ],
+        'Contacts',
+      );
     } finally {
       this.exporting.set(false);
     }

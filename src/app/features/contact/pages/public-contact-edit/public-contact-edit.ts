@@ -3,10 +3,10 @@ import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
+import { ContactEditTokenStore } from '../../../../core/contact-edit/contact-edit-token.store';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { formatPhoneFr, unformatPhone } from '../../../../shared/util/text.util';
 import { ContactFields } from '../../components/contact-fields/contact-fields';
-import { ContactEditTokenStore } from '../../contact-edit-token.store';
 import {
   attendToBool,
   boolToAttend,

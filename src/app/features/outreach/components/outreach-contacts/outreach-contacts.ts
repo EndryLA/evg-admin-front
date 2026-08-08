@@ -2,19 +2,26 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
+import { isSameCity, type CityRef } from '../../../../shared/util/city.util';
+import { formatDateFr } from '../../../../shared/util/date.util';
 import { displayPhoneFr, displayYesNo } from '../../../../shared/util/text.util';
 
-import { exportRowsToXlsx, type XlsxColumn } from '../../../../shared/util/xlsx.util';
+import { exportSheetsToXlsx, type XlsxColumn } from '../../../../shared/util/xlsx.util';
 import {
   CIVIL_STATE_LABELS,
+  CONTACT_TYPE_EXPORT_LABELS,
   CONTACT_TYPE_LABELS,
   CONTACT_TYPE_TONES,
   type ContactEntry,
   type ContactType,
+  type Outreach,
 } from '../../outreach.models';
 
 /** How many contacts show before the "Voir tout" toggle reveals the rest. */
 const PREVIEW_COUNT = 5;
+
+/** Font colour in the export for a contact who lives outside the outreach's commune. */
+const OUT_OF_CITY_COLOR = 'FFFF0000'; // pure red
 
 /**
  * Contacts card for an outreach — a compact list capped at {@link PREVIEW_COUNT}
@@ -44,6 +51,11 @@ export class OutreachContacts {
   readonly selectable = input(false);
   /** Base name for the exported file, e.g. the outreach name. */
   readonly exportName = input('contacts');
+  /**
+   * The outreach these contacts belong to — supplies the export's date and
+   * "Ville évangélisée" columns, which live on the outreach, not the contact.
+   */
+  readonly outreach = input<Outreach | null>(null);
 
   readonly retry = output<void>();
 
@@ -99,31 +111,68 @@ export class OutreachContacts {
     });
   }
 
+  /**
+   * Export the selected rows to a styled `.xlsx` file — contacts and conversions
+   * land on their own tab, each row tagged with its colour-coded type label.
+   */
   protected async exportSelected(): Promise<void> {
     const chosen = this.selectedUuids();
     const rows = this.visible().filter((c) => chosen.has(c.uuid));
     if (rows.length === 0 || this.exporting()) {
       return;
     }
+    // Same for every row here: they all belong to this one outreach.
+    const outreach = this.outreach();
+    const date = outreach?.date ? formatDateFr(outreach.date) : '';
+    const outreachCity = outreach?.city?.officialName ?? outreach?.cityName ?? '';
+
     const columns: XlsxColumn<ContactEntry>[] = [
+      { header: 'Type', value: (c) => CONTACT_TYPE_EXPORT_LABELS[c.type] },
+      { header: 'Date', value: () => date },
+      { header: 'Secteur', value: (c) => c.city?.sector ?? '' },
+      { header: 'État civil', value: (c) => this.civilStateLabel(c) },
       { header: 'Nom', value: (c) => c.lastname || '' },
       { header: 'Prénom', value: (c) => c.firstname || '' },
-      { header: 'Type', value: (c) => this.typeLabel(c.type) },
-      { header: 'État civil', value: (c) => this.civilStateLabel(c) },
       { header: 'Ville', value: (c) => c.cityName || '' },
-      { header: 'Secteur', value: (c) => c.city?.sector ?? '' },
-      { header: 'Évangélisé par', value: (c) => c.evangelizedBy || '' },
+      { header: 'Ville évangélisée', value: () => outreachCity },
       { header: 'Téléphone', value: (c) => (c.phoneNumber ? displayPhoneFr(c.phoneNumber) : '') },
+      { header: 'Évangélisé par', value: (c) => c.evangelizedBy || '' },
       { header: 'Souhaite venir au GF', value: (c) => displayYesNo(c.wantsToAttendGF) },
       { header: "Souhaite venir à l'église", value: (c) => displayYesNo(c.wantsToAttendChurch) },
       { header: 'Observations', value: (c) => c.observations || '', width: 70 },
     ];
+
+    // Flag people who don't live in the commune the outreach took place in.
+    const outreachRef: CityRef = {
+      inseeCode: outreach?.city?.inseeCode ?? null,
+      name: outreachCity,
+    };
+    const rowTextColor = (c: ContactEntry): string | undefined =>
+      isSameCity({ inseeCode: c.city?.inseeCode ?? null, name: c.cityName }, outreachRef)
+        ? undefined
+        : OUT_OF_CITY_COLOR;
+
     this.exporting.set(true);
     try {
-      await exportRowsToXlsx(rows, columns, this.exportName(), {
-        sheetName: 'Contacts',
-        numbered: true,
-      });
+      await exportSheetsToXlsx(
+        [
+          {
+            name: 'Contacts',
+            rows: rows.filter((c) => c.type === 'CONTACT'),
+            columns,
+            numbered: true,
+            rowTextColor,
+          },
+          {
+            name: 'Conversions',
+            rows: rows.filter((c) => c.type === 'CONVERSION'),
+            columns,
+            numbered: true,
+            rowTextColor,
+          },
+        ],
+        this.exportName(),
+      );
     } finally {
       this.exporting.set(false);
     }
