@@ -1,0 +1,48 @@
+<div class="member-ac">
+  <input
+    #input
+    [id]="inputId()"
+    class="field__control member-ac__input"
+    type="text"
+    role="combobox"
+    autocomplete="off"
+    aria-autocomplete="list"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="inputId() + '-listbox'"
+    [attr.aria-activedescendant]="active() >= 0 ? optionId(active()) : null"
+    [attr.aria-invalid]="ariaInvalid() ? true : null"
+    [placeholder]="placeholder()"
+    [value]="query()"
+    [disabled]="disabled()"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)" />
+
+  @if (open()) {
+    <ul
+      class="member-ac__list"
+      role="listbox"
+      [id]="inputId() + '-listbox'"
+      aria-label="Membres proposés">
+      @if (searching() && results().length === 0) {
+        <li class="member-ac__state" role="presentation">Recherche…</li>
+      } @else if (results().length === 0) {
+        <li class="member-ac__state" role="presentation">Aucun membre trouvé.</li>
+      } @else {
+        @for (r of results(); track r.uuid; let i = $index) {
+          <li
+            class="member-ac__option"
+            [class.member-ac__option--active]="i === active()"
+            role="option"
+            [id]="optionId(i)"
+            [attr.aria-selected]="i === active()"
+            (mousedown)="$event.preventDefault(); pick(r)"
+            (mouseenter)="active.set(i)">
+            <span class="member-ac__label">{{ r.label }}</span>
+          </li>
+        }
+      }
+    </ul>
+  }
+</div>

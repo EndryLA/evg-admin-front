@@ -1,57 +1,24 @@
-/* Standalone public form. Field/button tokens are global (styles.scss). */
-.public-shell {
-  display: flex;
+/* Contact-form specifics. The field grid lives in the shared <app-contact-fields>
+   component; shell chrome + field/button tokens are global (styles.scss). */
+
+/* Entry point to the editable list, shown when contacts were already saved. */
+.edit-mine-link {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 24px;
-  background:
-    radial-gradient(1200px 600px at 50% -10%, var(--accent-soft-bg) 0%, transparent 60%),
-    var(--bg-page);
-}
-
-.public-card {
-  width: 100%;
-  max-width: 560px;
-  padding: 32px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-soft);
-  animation: evgPop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.public-brand {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 26px;
-}
-.public-brand img { height: 64px; width: auto; }
-
-.public-head { text-align: center; margin-bottom: 22px; }
-.public-head h1 { font-size: 24px; }
-.public-sub {
-  margin: 8px 0 0;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 4px 0;
+  border: none;
+  background: none;
   font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-muted);
+  color: var(--accent);
+  cursor: pointer;
 }
+.edit-mine-link:hover { text-decoration: underline; }
+.edit-mine-link svg { width: 15px; height: 15px; }
 
-.public-form .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 22px;
-}
-.public-form .field--span { grid-column: 1 / -1; }
-.public-form textarea.field__control { resize: vertical; min-height: 78px; }
-
-@media (max-width: 560px) {
-  .public-form .grid { grid-template-columns: 1fr; }
-  .public-shell { padding: 16px; }
-  .public-card { padding: 24px 20px; }
-  .public-head h1 { font-size: 22px; }
-}
+/* Space the secondary action below the primary one in the thank-you state. */
+.public-done .btn + .btn { margin-top: 10px; }
 
 /* ---- Thank-you state ---- */
 .public-done { text-align: center; padding: 8px 0 4px; }

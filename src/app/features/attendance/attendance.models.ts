@@ -7,6 +7,34 @@ export const ATTENDANCE_TYPE_LABELS: Record<AttendanceType, string> = {
   MEMBER: 'Membre',
 };
 
+/** How a guest came to the outreach (mirrors the backend `AttendanceReason`). */
+export type AttendanceReason =
+  | 'INVITATION'
+  | 'INFO_GROUP'
+  | 'INSTAGRAM'
+  | 'BLOC'
+  | 'SECTOR'
+  | 'OTHER';
+
+/** French labels for {@link AttendanceReason}, in the order shown to guests. */
+export const ATTENDANCE_REASON_OPTIONS: readonly {
+  value: AttendanceReason;
+  label: string;
+}[] = [
+  { value: 'INVITATION', label: 'Invitation' },
+  { value: 'INFO_GROUP', label: "Groupe d'info" },
+  { value: 'INSTAGRAM', label: 'Instagram' },
+  { value: 'BLOC', label: 'Bloc' },
+  { value: 'SECTOR', label: 'Secteur' },
+  { value: 'OTHER', label: 'Autre' },
+];
+
+/** French labels for {@link AttendanceReason}, keyed for display of a stored value. */
+export const ATTENDANCE_REASON_LABELS: Record<AttendanceReason, string> =
+  Object.fromEntries(
+    ATTENDANCE_REASON_OPTIONS.map((o) => [o.value, o.label]),
+  ) as Record<AttendanceReason, string>;
+
 /** Badge tone (see global `.pill--*`) per attendance type. */
 export const ATTENDANCE_TYPE_TONES: Record<AttendanceType, string> = {
   GUEST: 'grey',
@@ -29,6 +57,10 @@ export interface PublicAttendanceInput {
   lastname: string;
   invitedBy: string;
   type: AttendanceType;
+  /** Guest only — how they came to the outreach. Null for a member. */
+  reason: AttendanceReason | null;
+  /** Member only — the linked department profile. Null for a guest. */
+  profileUuid: string | null;
 }
 
 /**
@@ -50,6 +82,8 @@ export interface Attendance {
   /** Free-text name of whoever invited the attendee. */
   invitedBy: string;
   type: AttendanceType;
+  /** How a guest came to the outreach — present for GUEST records. */
+  reason: AttendanceReason | null;
   /** Linked member profile — present for MEMBER records. */
   profile: AttendanceProfile | null;
   outreachUuid: string;
@@ -65,6 +99,7 @@ export interface AttendanceInput {
   lastname: string | null;
   invitedBy: string | null;
   type: AttendanceType;
+  reason: AttendanceReason | null;
   profileUuid: string | null;
   outreachUuid: string;
 }

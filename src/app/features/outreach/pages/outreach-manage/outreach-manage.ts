@@ -55,9 +55,8 @@ export class OutreachManage implements OnInit {
   protected readonly saveError = signal<string | null>(null);
 
   protected readonly qrDataUrl = signal<string>('');
-  protected readonly presenceQrDataUrl = signal<string>('');
-  /** Which public link, if any, was just copied — drives the "Copié" state. */
-  protected readonly copied = signal<'contact' | 'presence' | null>(null);
+  /** Whether the public link was just copied — drives the "Copié" state. */
+  protected readonly copied = signal(false);
   // Fullscreen QR overlay — holds whichever code was opened.
   protected readonly qrOpen = signal(false);
   protected readonly qrFsSrc = signal<string>('');
@@ -72,26 +71,17 @@ export class OutreachManage implements OnInit {
     return o ? STATUS_TONES[o.status] : 'grey';
   });
 
-  protected readonly publicFormPath = computed(() => `/sortie/${this.uuid()}/contact`);
+  protected readonly publicFormPath = computed(() => `/sortie/${this.uuid()}`);
   protected readonly publicFormUrl = computed(
     () => `${this.document.location.origin}${this.publicFormPath()}`,
   );
 
-  protected readonly publicPresencePath = computed(() => `/sortie/${this.uuid()}/presence`);
-  protected readonly publicPresenceUrl = computed(
-    () => `${this.document.location.origin}${this.publicPresencePath()}`,
-  );
-
   ngOnInit(): void {
     this.load();
-    // Render at high resolution so each code stays crisp when opened fullscreen.
+    // Render at high resolution so the code stays crisp when opened fullscreen.
     toDataURL(this.publicFormUrl(), { width: 640, margin: 1 }).then(
       (url) => this.qrDataUrl.set(url),
       () => this.qrDataUrl.set(''),
-    );
-    toDataURL(this.publicPresenceUrl(), { width: 640, margin: 1 }).then(
-      (url) => this.presenceQrDataUrl.set(url),
-      () => this.presenceQrDataUrl.set(''),
     );
   }
 
@@ -206,14 +196,14 @@ export class OutreachManage implements OnInit {
     this.qrOpen.set(false);
   }
 
-  protected copyLink(url: string, which: 'contact' | 'presence'): void {
+  protected copyLink(url: string): void {
     const clipboard = this.document.defaultView?.navigator.clipboard;
     if (!clipboard) {
       return;
     }
     clipboard.writeText(url).then(() => {
-      this.copied.set(which);
-      setTimeout(() => this.copied.set(null), 2000);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
     }, () => undefined);
   }
 }

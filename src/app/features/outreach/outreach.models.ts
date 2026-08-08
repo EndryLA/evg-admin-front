@@ -190,6 +190,25 @@ export const ATTENDANCE_TYPE_TONES: Record<AttendanceType, string> = {
   MEMBER: 'red',
 };
 
+/** How a guest came to the outreach (mirrors the backend `AttendanceReason`). */
+export type AttendanceReason =
+  | 'INVITATION'
+  | 'INFO_GROUP'
+  | 'INSTAGRAM'
+  | 'BLOC'
+  | 'SECTOR'
+  | 'OTHER';
+
+/** French labels for {@link AttendanceReason}. */
+export const ATTENDANCE_REASON_LABELS: Record<AttendanceReason, string> = {
+  INVITATION: 'Invitation',
+  INFO_GROUP: "Groupe d'info",
+  INSTAGRAM: 'Instagram',
+  BLOC: 'Bloc',
+  SECTOR: 'Secteur',
+  OTHER: 'Autre',
+};
+
 /**
  * A presence recorded at an outreach, mapped from the backend
  * `AttendanceResponse`. A local subset — the outreach feature reads the
@@ -201,6 +220,8 @@ export interface OutreachAttendance {
   lastname: string;
   invitedBy: string;
   type: AttendanceType;
+  /** How a guest came — present for GUEST presences, null for members. */
+  reason: AttendanceReason | null;
 }
 
 /** A person met during an outreach, mapped from `ContactEntryResponse`. */

@@ -2,6 +2,7 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import {
+  ATTENDANCE_REASON_LABELS,
   ATTENDANCE_TYPE_LABELS,
   ATTENDANCE_TYPE_TONES,
   type AttendanceType,
@@ -56,6 +57,10 @@ export class OutreachPresences {
   }
   protected name(p: OutreachAttendance): string {
     return `${p.firstname} ${p.lastname}`.trim() || '—';
+  }
+  /** "Provenance" for a guest; members have no reason. */
+  protected reasonLabel(p: OutreachAttendance): string {
+    return p.reason ? ATTENDANCE_REASON_LABELS[p.reason] : '—';
   }
 
   protected toggle(): void {

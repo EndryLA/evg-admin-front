@@ -24,16 +24,16 @@
   <div class="manage-body">
     <div class="qr-cards">
     <section class="card manage-card">
-      <h2 class="manage-card__title">Formulaire de contact</h2>
+      <h2 class="manage-card__title">Formulaire de la sortie</h2>
       <p class="manage-card__hint">
-        Les ouvriers scannent ce code (ou ouvrent le lien) pour enregistrer les personnes
-        rencontrées lors de cette sortie.
+        Partagez ce code (ou ce lien) : chacun choisit ensuite de marquer sa présence
+        ou d'enregistrer les personnes rencontrées lors de cette sortie.
       </p>
 
       <div class="qr">
         @if (qrDataUrl(); as src) {
           <button type="button" class="qr__btn" (click)="openQr(src, publicFormUrl())" aria-label="Afficher le QR code en plein écran">
-            <img class="qr__img" [src]="src" alt="QR code du formulaire de contact" width="220" height="220" />
+            <img class="qr__img" [src]="src" alt="QR code du formulaire de la sortie" width="220" height="220" />
             <span class="qr__expand">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
               Plein écran
@@ -48,8 +48,8 @@
         <code class="link-row__url">{{ publicFormUrl() }}</code>
       </div>
       <div class="link-row__actions">
-        <button type="button" class="btn" (click)="copyLink(publicFormUrl(), 'contact')">
-          @if (copied() === 'contact') {
+        <button type="button" class="btn" (click)="copyLink(publicFormUrl())">
+          @if (copied()) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
             Copié
           } @else {
@@ -58,47 +58,6 @@
           }
         </button>
         <a class="btn" [href]="publicFormPath()" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
-          Ouvrir
-        </a>
-      </div>
-    </section>
-
-    <section class="card manage-card">
-      <h2 class="manage-card__title">Formulaire de présence</h2>
-      <p class="manage-card__hint">
-        Les participants scannent ce code (ou ouvrent le lien) pour marquer leur présence
-        à cette sortie.
-      </p>
-
-      <div class="qr">
-        @if (presenceQrDataUrl(); as src) {
-          <button type="button" class="qr__btn" (click)="openQr(src, publicPresenceUrl())" aria-label="Afficher le QR code en plein écran">
-            <img class="qr__img" [src]="src" alt="QR code du formulaire de présence" width="220" height="220" />
-            <span class="qr__expand">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-              Plein écran
-            </span>
-          </button>
-        } @else {
-          <div class="qr__fallback">QR indisponible</div>
-        }
-      </div>
-
-      <div class="link-row">
-        <code class="link-row__url">{{ publicPresenceUrl() }}</code>
-      </div>
-      <div class="link-row__actions">
-        <button type="button" class="btn" (click)="copyLink(publicPresenceUrl(), 'presence')">
-          @if (copied() === 'presence') {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-            Copié
-          } @else {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copier le lien
-          }
-        </button>
-        <a class="btn" [href]="publicPresencePath()" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
           Ouvrir
         </a>

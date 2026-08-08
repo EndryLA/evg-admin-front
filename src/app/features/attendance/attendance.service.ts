@@ -81,20 +81,22 @@ export class AttendanceService {
   }
 
   /**
-   * Public presence submission for a given outreach. There is no outreach-scoped
-   * attendance endpoint, so this posts to the collection with the outreach id in
-   * the body; no member linkage is sent from the public form.
+   * Public presence submission for a given outreach. Posts to the outreach-scoped
+   * public endpoint (open only while the outreach is IN_PROGRESS). A MEMBER sends
+   * a `profileUuid`; a GUEST sends a name, a reason, and — for an INVITATION —
+   * who invited them.
    */
   submitPublic(outreachUuid: string, input: PublicAttendanceInput): Observable<void> {
     return this.http
       .post(
-        BASE,
+        `/api/outreaches/${outreachUuid}/attendances`,
         toRawAttendanceRequest({
           firstname: input.firstname,
           lastname: input.lastname,
           invitedBy: input.invitedBy,
           type: input.type,
-          profileUuid: null,
+          reason: input.reason,
+          profileUuid: input.profileUuid,
           outreachUuid,
         }),
       )

@@ -1159,3 +1159,57 @@ input, select, button, textarea { font-family: inherit; }
   }
   .fab svg { width: 24px; height: 24px; }
 }
+
+/* ===== Public pages (sortie landing + presence/contact forms) =====
+   Unauthenticated and mobile-first: fill the whole viewport, no floating
+   card. On wider screens it settles into a comfortable centered column. */
+.public-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 28px 16px calc(28px + env(safe-area-inset-bottom));
+  background: var(--bg-page);
+}
+
+.public-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+}
+
+.public-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.public-brand img { height: 56px; width: auto; }
+
+.public-head { text-align: center; margin-bottom: 22px; }
+.public-head h1 { font-size: 22px; }
+.public-sub {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Vertically centred variant (e.g. the sortie landing, which is short). */
+.public-shell--center { justify-content: center; }
+.public-shell--center .public-card { flex: initial; }
+
+@media (min-width: 640px) {
+  .public-shell {
+    align-items: center;
+    justify-content: flex-start;
+    padding: 44px 24px;
+  }
+  .public-shell--center { justify-content: center; }
+  .public-card {
+    flex: initial;
+    max-width: 560px;
+  }
+  .public-brand img { height: 64px; }
+  .public-head h1 { font-size: 24px; }
+}

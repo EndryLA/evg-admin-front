@@ -1,4 +1,9 @@
-import type { Attendance, AttendanceInput, AttendanceType } from './attendance.models';
+import type {
+  Attendance,
+  AttendanceInput,
+  AttendanceReason,
+  AttendanceType,
+} from './attendance.models';
 
 /** Nested profile as returned inside `AttendanceResponse.profile`. */
 export interface RawAttendanceProfile {
@@ -14,6 +19,7 @@ export interface RawAttendance {
   lastname?: string;
   invitedBy?: string;
   type?: string | null;
+  reason?: string | null;
   profile?: RawAttendanceProfile | null;
   outreachUuid?: string;
 }
@@ -24,6 +30,7 @@ export interface RawAttendanceRequest {
   lastname?: string;
   invitedBy?: string;
   type: AttendanceType;
+  reason?: AttendanceReason;
   profileUuid?: string;
   outreachUuid: string;
 }
@@ -36,6 +43,21 @@ function toType(value: string | null | undefined): AttendanceType {
     : 'GUEST';
 }
 
+const ATTENDANCE_REASONS: readonly AttendanceReason[] = [
+  'INVITATION',
+  'INFO_GROUP',
+  'INSTAGRAM',
+  'BLOC',
+  'SECTOR',
+  'OTHER',
+];
+
+function toReason(value: string | null | undefined): AttendanceReason | null {
+  return ATTENDANCE_REASONS.includes(value as AttendanceReason)
+    ? (value as AttendanceReason)
+    : null;
+}
+
 /** Map a raw attendance to the clean domain model. */
 export function toAttendance(raw: RawAttendance): Attendance {
   const profile = raw.profile;
@@ -45,6 +67,7 @@ export function toAttendance(raw: RawAttendance): Attendance {
     lastname: raw.lastname ?? '',
     invitedBy: raw.invitedBy ?? '',
     type: toType(raw.type),
+    reason: toReason(raw.reason),
     profile:
       profile && profile.uuid
         ? {
@@ -75,6 +98,8 @@ export function toRawAttendanceRequest(input: AttendanceInput): RawAttendanceReq
 
   const invitedBy = input.invitedBy?.trim();
   if (invitedBy) request.invitedBy = invitedBy;
+
+  if (input.reason) request.reason = input.reason;
 
   if (input.profileUuid) request.profileUuid = input.profileUuid;
 

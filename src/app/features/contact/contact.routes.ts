@@ -29,4 +29,12 @@ export const PUBLIC_CONTACT_ROUTES: Routes = [
         (m) => m.PublicContactForm,
       ),
   },
+  {
+    path: 'sortie/:uuid/mes-contacts',
+    title: 'Mes contacts · Évangélisation',
+    loadComponent: () =>
+      import('./pages/public-contact-edit/public-contact-edit').then(
+        (m) => m.PublicContactEdit,
+      ),
+  },
 ];

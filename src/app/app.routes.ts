@@ -13,10 +13,12 @@ import { CONTACT_ROUTES, PUBLIC_CONTACT_ROUTES } from './features/contact/contac
 import { INVENTORY_ROUTES } from './features/inventory/inventory.routes';
 import { OUTREACH_ROUTES } from './features/outreach/outreach.routes';
 import { PROFILE_ROUTES } from './features/profile/profile.routes';
+import { PUBLIC_SORTIE_ROUTES } from './features/sortie/sortie.routes';
 import { USER_ROUTES } from './features/user/user.routes';
 
 export const routes: Routes = [
   ...AUTH_ROUTES,
+  ...PUBLIC_SORTIE_ROUTES,
   ...PUBLIC_CONTACT_ROUTES,
   ...PUBLIC_ATTENDANCE_ROUTES,
   {

@@ -1,4 +1,5 @@
 import type {
+  AttendanceReason,
   AttendanceType,
   City,
   CivilState,
@@ -56,6 +57,7 @@ export interface RawOutreachAttendance {
   lastname?: string;
   invitedBy?: string;
   type?: string | null;
+  reason?: string | null;
   outreachUuid?: string;
 }
 
@@ -107,6 +109,21 @@ function toAttendanceType(value: string | null | undefined): AttendanceType {
   return ATTENDANCE_TYPES.includes(value as AttendanceType)
     ? (value as AttendanceType)
     : 'GUEST';
+}
+
+const ATTENDANCE_REASONS: readonly AttendanceReason[] = [
+  'INVITATION',
+  'INFO_GROUP',
+  'INSTAGRAM',
+  'BLOC',
+  'SECTOR',
+  'OTHER',
+];
+
+function toAttendanceReason(value: string | null | undefined): AttendanceReason | null {
+  return ATTENDANCE_REASONS.includes(value as AttendanceReason)
+    ? (value as AttendanceReason)
+    : null;
 }
 
 const CONTACT_TYPES: readonly ContactType[] = ['CONTACT', 'CONVERSION'];
@@ -186,6 +203,7 @@ export function toOutreachAttendance(raw: RawOutreachAttendance): OutreachAttend
     lastname: raw.lastname ?? '',
     invitedBy: raw.invitedBy ?? '',
     type: toAttendanceType(raw.type),
+    reason: toAttendanceReason(raw.reason),
   };
 }
 

@@ -5,14 +5,17 @@ import { catchError, map, of, type Observable } from 'rxjs';
 import {
   toContact,
   toContactPage,
+  toMyContacts,
   toRawPublicContactRequest,
   type RawContactEntry,
+  type RawMyContacts,
   type RawPage,
 } from './contact.adapter';
 import {
   EMPTY_CONTACT_FILTER,
   type Contact,
   type ContactFilter,
+  type MyContacts,
   type Page,
   type PublicContactInput,
 } from './contact.models';
@@ -94,10 +97,54 @@ export class ContactService {
     );
   }
 
-  /** Public submission for a given outreach — no authentication required. */
-  submitPublic(outreachUuid: string, input: PublicContactInput): Observable<void> {
+  /**
+   * Public submission for a given outreach — no authentication required. Passes
+   * the caller's edit token (if any) so their contacts group together, and
+   * returns the token from the response so the front can store it.
+   */
+  submitPublic(
+    outreachUuid: string,
+    input: PublicContactInput,
+    token: string | null,
+  ): Observable<string> {
+    let params = new HttpParams();
+    if (token) {
+      params = params.set('token', token);
+    }
     return this.http
-      .post(`/api/outreaches/${outreachUuid}/contact-entries`, toRawPublicContactRequest(input))
-      .pipe(map(() => undefined));
+      .post<RawContactEntry>(
+        `/api/outreaches/${outreachUuid}/contact-entries`,
+        toRawPublicContactRequest(input),
+        { params },
+      )
+      .pipe(map((raw) => raw.submitterToken ?? ''));
+  }
+
+  /**
+   * The contacts a submitter added to an outreach, by their edit token, plus the
+   * outreach status. The list is empty once the outreach is no longer open.
+   */
+  myContacts(outreachUuid: string, token: string): Observable<MyContacts> {
+    const params = new HttpParams().set('token', token);
+    return this.http
+      .get<RawMyContacts>(`/api/outreaches/${outreachUuid}/contact-entries/mine`, { params })
+      .pipe(map(toMyContacts));
+  }
+
+  /** Public edit of one of the submitter's contacts, while the outreach is open. */
+  updatePublic(
+    outreachUuid: string,
+    contactUuid: string,
+    token: string,
+    input: PublicContactInput,
+  ): Observable<Contact> {
+    const params = new HttpParams().set('token', token);
+    return this.http
+      .put<RawContactEntry>(
+        `/api/outreaches/${outreachUuid}/contact-entries/${contactUuid}`,
+        toRawPublicContactRequest(input),
+        { params },
+      )
+      .pipe(map(toContact));
   }
 }

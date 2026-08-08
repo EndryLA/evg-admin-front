@@ -1,0 +1,17 @@
+/* Shared contact field group. Field/button tokens are global (styles.scss);
+   this only lays the fields out on a two-column grid. */
+:host { display: block; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.field--span { grid-column: 1 / -1; }
+
+textarea.field__control { resize: vertical; min-height: 78px; }
+
+@media (max-width: 560px) {
+  .grid { grid-template-columns: 1fr; }
+}

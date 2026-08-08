@@ -3,6 +3,8 @@ import type {
   CivilState,
   Contact,
   ContactType,
+  MyContacts,
+  OutreachStatus,
   Page,
   PublicContactInput,
 } from './contact.models';
@@ -32,7 +34,17 @@ export interface RawContactEntry {
   cityLabel?: string | null;
   evangelizedBy?: string;
   phoneNumber?: string;
+  wantsToAttendGF?: boolean | null;
+  wantsToAttendChurch?: boolean | null;
   observations?: string;
+  /** Present on public submit/edit responses — the submitter's edit token. */
+  submitterToken?: string | null;
+}
+
+/** Raw `MyContactsResponse` from the anonymous "my contacts" endpoint. */
+export interface RawMyContacts {
+  outreachStatus?: string | null;
+  contacts?: RawContactEntry[];
 }
 
 /** Raw Spring `Page<T>` wrapper. */
@@ -58,6 +70,8 @@ export interface RawPublicContactRequest {
   cityLabel?: string;
   evangelizedBy: string;
   phoneNumber?: string;
+  wantsToAttendGF?: boolean | null;
+  wantsToAttendChurch?: boolean | null;
   observations?: string;
 }
 
@@ -115,7 +129,31 @@ export function toContact(raw: RawContactEntry): Contact {
     cityName: city?.officialName ?? raw.cityLabel ?? '',
     evangelizedBy: raw.evangelizedBy ?? '',
     phoneNumber: raw.phoneNumber ?? '',
+    wantsToAttendGF: raw.wantsToAttendGF ?? null,
+    wantsToAttendChurch: raw.wantsToAttendChurch ?? null,
     observations: raw.observations ?? '',
+  };
+}
+
+const OUTREACH_STATUSES: readonly OutreachStatus[] = [
+  'SCHEDULED',
+  'IN_PROGRESS',
+  'FINISHED',
+  'CANCELLED',
+];
+
+function toOutreachStatus(value: string | null | undefined): OutreachStatus {
+  // Unknown/absent is treated as not-open, so the front hides the edit list.
+  return OUTREACH_STATUSES.includes(value as OutreachStatus)
+    ? (value as OutreachStatus)
+    : 'FINISHED';
+}
+
+/** Map the raw "my contacts" response to the clean {@link MyContacts} model. */
+export function toMyContacts(raw: RawMyContacts): MyContacts {
+  return {
+    status: toOutreachStatus(raw.outreachStatus),
+    contacts: (raw.contacts ?? []).map(toContact),
   };
 }
 
@@ -143,6 +181,9 @@ export function toRawPublicContactRequest(
     lastname: input.lastname.trim() || undefined,
     evangelizedBy: input.evangelizedBy.trim(),
     phoneNumber: input.phoneNumber.trim() || undefined,
+    // Nullable tri-state: send true/false; omit (undefined) when not answered.
+    wantsToAttendGF: input.wantsToAttendGF ?? undefined,
+    wantsToAttendChurch: input.wantsToAttendChurch ?? undefined,
     observations: input.observations.trim() || undefined,
   };
 

@@ -113,6 +113,10 @@ export interface Contact {
   cityName: string;
   evangelizedBy: string;
   phoneNumber: string;
+  /** Wants to attend the GF: yes/no, or `null` when not asked/answered. */
+  wantsToAttendGF: boolean | null;
+  /** Wants to attend church: yes/no, or `null` when not asked/answered. */
+  wantsToAttendChurch: boolean | null;
   observations: string;
 }
 
@@ -128,7 +132,24 @@ export interface PublicContactInput {
   cityLabel: string | null;
   evangelizedBy: string;
   phoneNumber: string;
+  /** Wants to attend the GF: yes/no, or `null` when left unspecified. */
+  wantsToAttendGF: boolean | null;
+  /** Wants to attend church: yes/no, or `null` when left unspecified. */
+  wantsToAttendChurch: boolean | null;
   observations: string;
+}
+
+/** Lifecycle status of an outreach (mirrors the backend `OutreachStatus`). */
+export type OutreachStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
+
+/**
+ * Result of the anonymous "my contacts" lookup: the outreach status (so the
+ * front can drop the token once it is no longer open) and the submitter's own
+ * contacts — non-empty only while the outreach is IN_PROGRESS.
+ */
+export interface MyContacts {
+  status: OutreachStatus;
+  contacts: Contact[];
 }
 
 /** A page of results, mapped from a Spring `Page<T>` wrapper. */

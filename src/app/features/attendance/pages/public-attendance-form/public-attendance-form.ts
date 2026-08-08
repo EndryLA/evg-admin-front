@@ -1,19 +1,42 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+  type AbstractControl,
+  type ValidationErrors,
+} from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import {
+  MemberAutocomplete,
+  type MemberValue,
+} from '../../../../shared/ui/member-autocomplete/member-autocomplete';
+import { toNameCase } from '../../../../shared/util/text.util';
 import { AttendanceService } from '../../attendance.service';
-import type { AttendanceType } from '../../attendance.models';
+import { ATTENDANCE_REASON_OPTIONS, type AttendanceReason } from '../../attendance.models';
+
+/** Initial/reset value for the member field: no pick, empty label. */
+const EMPTY_MEMBER: MemberValue = { uuid: null, label: '' };
+
+/** The member must be an actual pick from the list — free text is rejected. */
+function memberPicked(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as MemberValue | null;
+  return value && value.uuid != null ? null : { memberRequired: true };
+}
 
 /**
  * Public, unauthenticated form (`/sortie/:uuid/presence`) for recording a
- * person's presence at an outreach — filled in on the spot. Submits to the
- * attendance endpoint with the outreach from the route and shows a confirmation.
+ * person's presence at an outreach. First asks whether the visitor is part of
+ * the department: a member picks themselves from an autocomplete (linking their
+ * profile); a guest gives their name and how they came — with "invité par" shown
+ * only for an invitation.
  */
 @Component({
   selector: 'app-public-attendance-form',
-  imports: [ReactiveFormsModule, NgOptimizedImage],
+  imports: [ReactiveFormsModule, NgOptimizedImage, MemberAutocomplete],
   templateUrl: './public-attendance-form.html',
   styleUrl: './public-attendance-form.scss',
 })
@@ -24,53 +47,126 @@ export class PublicAttendanceForm implements OnInit {
   /** Outreach id from the route, bound via `withComponentInputBinding`. */
   readonly uuid = input.required<string>();
 
+  protected readonly reasonOptions = ATTENDANCE_REASON_OPTIONS;
+
+  /** Step-1 branch: null until the visitor answers "Êtes-vous du département ?". */
+  protected readonly branch = signal<'MEMBER' | 'GUEST' | null>(null);
+
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly outreachName = signal('');
 
-  protected readonly form = this.fb.nonNullable.group({
+  protected readonly memberForm = this.fb.nonNullable.group({
+    member: [{ ...EMPTY_MEMBER } as MemberValue, [memberPicked]],
+  });
+
+  protected readonly guestForm = this.fb.nonNullable.group({
     firstname: ['', [Validators.required]],
     lastname: ['', [Validators.required]],
+    reason: ['' as AttendanceReason | '', [Validators.required]],
     invitedBy: [''],
-    type: ['GUEST' as AttendanceType, [Validators.required]],
   });
+
+  constructor() {
+    // "Invité par" is required only when the guest came through an invitation.
+    this.guestForm.controls.reason.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((reason) => {
+        const invitedBy = this.guestForm.controls.invitedBy;
+        if (reason === 'INVITATION') {
+          invitedBy.addValidators(Validators.required);
+        } else {
+          invitedBy.removeValidators(Validators.required);
+          invitedBy.setValue('', { emitEvent: false });
+        }
+        invitedBy.updateValueAndValidity({ emitEvent: false });
+      });
+  }
 
   ngOnInit(): void {
     // Best-effort context: show which outreach this is, if the lookup succeeds.
     this.service.outreachName(this.uuid()).subscribe((name) => this.outreachName.set(name));
   }
 
-  protected submit(): void {
-    if (this.form.invalid || this.submitting()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    const v = this.form.getRawValue();
-    this.submitting.set(true);
+  /** Pick the department branch and clear any stale error. */
+  protected choose(branch: 'MEMBER' | 'GUEST'): void {
     this.error.set(null);
-    this.service
-      .submitPublic(this.uuid(), {
-        firstname: v.firstname,
-        lastname: v.lastname,
-        invitedBy: v.invitedBy,
-        type: v.type,
-      })
-      .subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.submitted.set(true);
-        },
-        error: (err) => {
-          this.submitting.set(false);
-          this.error.set(messageFromError(err, 'Envoi impossible. Veuillez réessayer.'));
-        },
-      });
+    this.branch.set(branch);
   }
 
-  /** Reset the form to accept another submission. */
+  /** Return to the department question, keeping entered values. */
+  protected back(): void {
+    this.error.set(null);
+    this.branch.set(null);
+  }
+
+  protected get showInvitedBy(): boolean {
+    return this.guestForm.controls.reason.value === 'INVITATION';
+  }
+
+  /**
+   * Capitalize a name field once the user leaves it — doing it per keystroke
+   * would send the caret to the end mid-word.
+   */
+  protected capitalize(field: 'firstname' | 'lastname'): void {
+    const control = this.guestForm.controls[field];
+    control.setValue(toNameCase(control.value.trim()), { emitEvent: false });
+  }
+
+  protected submit(): void {
+    if (this.submitting()) {
+      return;
+    }
+    const branch = this.branch();
+    const form = branch === 'MEMBER' ? this.memberForm : this.guestForm;
+    if (form.invalid) {
+      form.markAllAsTouched();
+      return;
+    }
+
+    this.submitting.set(true);
+    this.error.set(null);
+
+    const payload =
+      branch === 'MEMBER'
+        ? {
+            type: 'MEMBER' as const,
+            profileUuid: this.memberForm.getRawValue().member.uuid,
+            firstname: '',
+            lastname: '',
+            invitedBy: '',
+            reason: null,
+          }
+        : (() => {
+            const v = this.guestForm.getRawValue();
+            return {
+              type: 'GUEST' as const,
+              profileUuid: null,
+              firstname: v.firstname,
+              lastname: v.lastname,
+              invitedBy: v.reason === 'INVITATION' ? v.invitedBy : '',
+              reason: v.reason as AttendanceReason,
+            };
+          })();
+
+    this.service.submitPublic(this.uuid(), payload).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.submitted.set(true);
+      },
+      error: (err) => {
+        this.submitting.set(false);
+        this.error.set(messageFromError(err, 'Envoi impossible. Veuillez réessayer.'));
+      },
+    });
+  }
+
+  /** Reset both branches to accept another submission. */
   protected again(): void {
-    this.form.reset({ type: 'GUEST' });
+    this.memberForm.reset({ member: { ...EMPTY_MEMBER } });
+    this.guestForm.reset({ firstname: '', lastname: '', reason: '', invitedBy: '' });
+    this.branch.set(null);
     this.submitted.set(false);
   }
 }

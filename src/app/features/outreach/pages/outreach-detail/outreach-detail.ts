@@ -62,7 +62,7 @@ export class OutreachDetail implements OnInit {
   protected readonly fmtDate = formatDateFr;
   protected readonly fmtTime = formatTimeFr;
 
-  protected readonly publicPresencePath = computed(() => `/sortie/${this.uuid()}/presence`);
+  protected readonly publicFormPath = computed(() => `/sortie/${this.uuid()}`);
 
   protected readonly statusLabel = computed(() => {
     const o = this.outreach();

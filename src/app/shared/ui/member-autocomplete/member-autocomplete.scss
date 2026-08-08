@@ -1,0 +1,56 @@
+/* Autocomplete combobox. Input token (.field__control) is global (styles.scss);
+   this only adds the floating results panel. Mirrors city-autocomplete. */
+.member-ac {
+  position: relative;
+  /* Lift the whole control so its dropdown paints above following siblings
+     (e.g. the submit button), not just above content inside .member-ac. */
+  z-index: 5;
+}
+
+.member-ac__input {
+  width: 100%;
+}
+
+.member-ac__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  max-height: 244px;
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-menu);
+  animation: evgFade 0.12s ease;
+}
+
+.member-ac__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.member-ac__option--active {
+  background: var(--row-hover);
+}
+
+.member-ac__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-ac__state {
+  padding: 10px 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}

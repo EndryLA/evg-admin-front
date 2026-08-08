@@ -25,6 +25,7 @@
           <tr>
             <th>Personne</th>
             <th>Type</th>
+            <th>Provenance</th>
             <th>Invité par</th>
           </tr>
         </thead>
@@ -33,6 +34,7 @@
             <tr>
               <td class="cell-main">{{ name(p) }}</td>
               <td><span class="pill pill--{{ typeTone(p.type) }}">{{ typeLabel(p.type) }}</span></td>
+              <td class="cell-muted">{{ reasonLabel(p) }}</td>
               <td class="cell-muted">{{ p.invitedBy || '—' }}</td>
             </tr>
           }

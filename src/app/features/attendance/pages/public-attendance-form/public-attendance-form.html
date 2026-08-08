@@ -20,56 +20,119 @@
         <h1>Marquer sa présence</h1>
         <p class="public-sub">
           @if (outreachName()) {
-            Renseignez vos informations pour la sortie « {{ outreachName() }} ».
+            Pour la sortie « {{ outreachName() }} ».
           } @else {
             Renseignez vos informations pour marquer votre présence.
           }
         </p>
       </header>
 
-      <form class="public-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        @if (error(); as message) {
-          <p class="alert alert--error" role="alert">{{ message }}</p>
-        }
+      @if (error(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
 
-        <div class="grid">
-          <div class="field">
-            <label class="field__label" for="firstname">Prénom</label>
-            <input id="firstname" class="field__control" formControlName="firstname" autocomplete="off"
-              [attr.aria-invalid]="form.controls.firstname.touched && form.controls.firstname.invalid" />
-            @if (form.controls.firstname.touched && form.controls.firstname.invalid) {
-              <span class="field__error">Le prénom est requis.</span>
-            }
-          </div>
-
-          <div class="field">
-            <label class="field__label" for="lastname">Nom</label>
-            <input id="lastname" class="field__control" formControlName="lastname" autocomplete="off"
-              [attr.aria-invalid]="form.controls.lastname.touched && form.controls.lastname.invalid" />
-            @if (form.controls.lastname.touched && form.controls.lastname.invalid) {
-              <span class="field__error">Le nom est requis.</span>
-            }
-          </div>
-
-          <div class="field">
-            <label class="field__label" for="type">Type</label>
-            <select id="type" class="field__control" formControlName="type">
-              <option value="GUEST">Invité</option>
-              <option value="MEMBER">Membre</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label class="field__label" for="invitedBy">Invité par</label>
-            <input id="invitedBy" class="field__control" formControlName="invitedBy" autocomplete="off"
-              placeholder="Nom de la personne qui vous a invité(e)" />
+      <!-- Step 1 — department or not -->
+      @if (branch() === null) {
+        <div class="branch">
+          <p class="branch__q">Êtes-vous du département&nbsp;?</p>
+          <div class="branch__options">
+            <button type="button" class="btn btn--primary btn--block" (click)="choose('MEMBER')">
+              Oui, je suis du département
+            </button>
+            <button type="button" class="btn btn--block" (click)="choose('GUEST')">
+              Non, je suis invité(e)
+            </button>
           </div>
         </div>
+      }
 
-        <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
-          {{ submitting() ? 'Enregistrement…' : 'Enregistrer ma présence' }}
-        </button>
-      </form>
+      <!-- Member branch -->
+      @if (branch() === 'MEMBER') {
+        <form class="public-form" [formGroup]="memberForm" (ngSubmit)="submit()" novalidate>
+          <button type="button" class="back-link" (click)="back()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Changer
+          </button>
+
+          <div class="field">
+            <label class="field__label" for="member">Votre nom</label>
+            <app-member-autocomplete
+              inputId="member"
+              formControlName="member"
+              placeholder="Commencez à taper votre nom…"
+              [ariaInvalid]="memberForm.controls.member.touched && memberForm.controls.member.invalid" />
+            @if (memberForm.controls.member.touched && memberForm.controls.member.invalid) {
+              <span class="field__error">Sélectionnez votre nom dans la liste.</span>
+            }
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+            {{ submitting() ? 'Enregistrement…' : 'Enregistrer ma présence' }}
+          </button>
+        </form>
+      }
+
+      <!-- Guest branch -->
+      @if (branch() === 'GUEST') {
+        <form class="public-form" [formGroup]="guestForm" (ngSubmit)="submit()" novalidate>
+          <button type="button" class="back-link" (click)="back()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Changer
+          </button>
+
+          <div class="grid">
+            <div class="field">
+              <label class="field__label" for="firstname">Prénom</label>
+              <input id="firstname" class="field__control" formControlName="firstname" autocomplete="off"
+                (blur)="capitalize('firstname')"
+                [attr.aria-invalid]="guestForm.controls.firstname.touched && guestForm.controls.firstname.invalid" />
+              @if (guestForm.controls.firstname.touched && guestForm.controls.firstname.invalid) {
+                <span class="field__error">Le prénom est requis.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="lastname">Nom</label>
+              <input id="lastname" class="field__control" formControlName="lastname" autocomplete="off"
+                (blur)="capitalize('lastname')"
+                [attr.aria-invalid]="guestForm.controls.lastname.touched && guestForm.controls.lastname.invalid" />
+              @if (guestForm.controls.lastname.touched && guestForm.controls.lastname.invalid) {
+                <span class="field__error">Le nom est requis.</span>
+              }
+            </div>
+
+            <div class="field field--span">
+              <label class="field__label" for="reason">Comment êtes-vous venu(e)&nbsp;?</label>
+              <select id="reason" class="field__control" formControlName="reason"
+                [attr.aria-invalid]="guestForm.controls.reason.touched && guestForm.controls.reason.invalid">
+                <option value="" disabled>Choisissez…</option>
+                @for (option of reasonOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                }
+              </select>
+              @if (guestForm.controls.reason.touched && guestForm.controls.reason.invalid) {
+                <span class="field__error">Ce champ est requis.</span>
+              }
+            </div>
+
+            @if (showInvitedBy) {
+              <div class="field field--span">
+                <label class="field__label" for="invitedBy">Invité(e) par</label>
+                <input id="invitedBy" class="field__control" formControlName="invitedBy" autocomplete="off"
+                  placeholder="Nom de la personne qui vous a invité(e)"
+                  [attr.aria-invalid]="guestForm.controls.invitedBy.touched && guestForm.controls.invitedBy.invalid" />
+                @if (guestForm.controls.invitedBy.touched && guestForm.controls.invitedBy.invalid) {
+                  <span class="field__error">Indiquez qui vous a invité(e).</span>
+                }
+              </div>
+            }
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+            {{ submitting() ? 'Enregistrement…' : 'Enregistrer ma présence' }}
+          </button>
+        </form>
+      }
     }
   </section>
 </main>

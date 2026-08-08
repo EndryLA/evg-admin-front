@@ -1,0 +1,63 @@
+/* Landing-specific styles. Shell chrome (.public-shell/.public-card/.public-brand
+   /.public-head/.public-sub) is shared and lives in styles.scss. */
+
+.choices {
+  display: grid;
+  gap: 14px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.choice:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-soft);
+}
+.choice:active { transform: scale(0.99); }
+.choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.choice__icon {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+}
+.choice__icon svg { width: 24px; height: 24px; }
+
+.choice__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.choice__title { font-size: 16px; font-weight: 600; }
+.choice__hint {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.choice__arrow {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  color: var(--text-muted);
+}
