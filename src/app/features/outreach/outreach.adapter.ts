@@ -47,6 +47,10 @@ export interface RawOutreachRequest {
   date: string;
   startTime: string;
   endTime: string;
+  /** Send one of the two: `cityInseeCode` for a picked commune… */
+  cityInseeCode?: number;
+  /** …otherwise `cityLabel` for raw free text. Never both. */
+  cityLabel?: string;
   managedByUuid: string | null;
 }
 
@@ -185,7 +189,7 @@ export function toOutreachPage(raw: RawPage<RawOutreach>): OutreachPage {
 
 /** Map a domain input to the raw `OutreachRequest`. */
 export function toRawOutreachRequest(input: OutreachInput): RawOutreachRequest {
-  return {
+  const request: RawOutreachRequest = {
     name: input.name.trim(),
     location: input.location.trim(),
     date: input.date,
@@ -193,6 +197,18 @@ export function toRawOutreachRequest(input: OutreachInput): RawOutreachRequest {
     endTime: input.endTime,
     managedByUuid: input.managedByUuid || null,
   };
+
+  // Send exactly one side: the INSEE code of a picked commune, else raw free text.
+  if (input.cityInseeCode != null) {
+    request.cityInseeCode = input.cityInseeCode;
+  } else {
+    const label = input.cityLabel?.trim();
+    if (label) {
+      request.cityLabel = label;
+    }
+  }
+
+  return request;
 }
 
 /** Map a raw attendance to the outreach feature's presence model. */

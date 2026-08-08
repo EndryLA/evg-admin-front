@@ -119,6 +119,10 @@ export interface OutreachInput {
   startTime: string;
   /** Wall-clock time, `HH:MM`. */
   endTime: string;
+  /** INSEE code of a picked commune, or `null` for free text / no city. */
+  cityInseeCode: number | null;
+  /** Free-text city when no commune was picked; `null` otherwise. */
+  cityLabel: string | null;
   managedByUuid: string | null;
 }
 

@@ -31,6 +31,11 @@
           }
         </label>
 
+        <div class="field field--span">
+          <label class="field__label" for="outreach-city">Ville</label>
+          <app-city-autocomplete inputId="outreach-city" formControlName="city" placeholder="" />
+        </div>
+
         <label class="field field--span">
           <span class="field__label">Date</span>
           <input class="field__control" type="date" formControlName="date"

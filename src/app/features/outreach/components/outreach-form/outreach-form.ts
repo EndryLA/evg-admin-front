@@ -1,7 +1,14 @@
 import { Component, computed, inject, input, OnInit, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import {
+  CityAutocomplete,
+  type CityValue,
+} from '../../../../shared/ui/city-autocomplete/city-autocomplete';
 import type { ManagerOption, Outreach, OutreachInput } from '../../outreach.models';
+
+/** Initial/reset value for the city field: no pick, empty label. */
+const EMPTY_CITY: CityValue = { inseeCode: null, label: '' };
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -38,7 +45,7 @@ function toTimeInput(value: string | null): string {
 /** Create/edit modal for an outreach. Presentational — emits {@link save}. */
 @Component({
   selector: 'app-outreach-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CityAutocomplete],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   templateUrl: './outreach-form.html',
 })
@@ -61,6 +68,8 @@ export class OutreachForm implements OnInit {
     date: ['', [Validators.required]],
     startTime: ['', [Validators.required]],
     endTime: ['', [Validators.required]],
+    // Optional: a picked commune or free text; the backend accepts either or none.
+    city: [{ ...EMPTY_CITY } as CityValue],
     managedByUuid: [''],
   });
 
@@ -73,9 +82,18 @@ export class OutreachForm implements OnInit {
         date: toDateInput(o.date),
         startTime: toTimeInput(o.startTime),
         endTime: toTimeInput(o.endTime),
+        city: this.cityValueOf(o),
         managedByUuid: o.managedBy?.uuid ?? '',
       });
     }
+  }
+
+  /** City field value pre-filled when editing: a linked commune, else free text. */
+  private cityValueOf(o: Outreach): CityValue {
+    if (o.city && o.city.inseeCode != null) {
+      return { inseeCode: o.city.inseeCode, label: o.city.officialName };
+    }
+    return { inseeCode: null, label: o.cityName };
   }
 
   protected submit(): void {
@@ -90,6 +108,9 @@ export class OutreachForm implements OnInit {
       date: v.date,
       startTime: v.startTime,
       endTime: v.endTime,
+      // A picked commune carries an INSEE code; free text keeps its label.
+      cityInseeCode: v.city.inseeCode,
+      cityLabel: v.city.inseeCode == null ? v.city.label : null,
       managedByUuid: v.managedByUuid || null,
     });
   }
