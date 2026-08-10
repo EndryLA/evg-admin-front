@@ -1,0 +1,106 @@
+<a [routerLink]="['/sorties', uuid(), 'gestion']" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Gestion
+</a>
+
+@if (loading()) {
+  <div class="state">Chargement de la sortie…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (outreach(); as o) {
+  <header class="bilan-head">
+    <span class="eyebrow">Bilan de la sortie</span>
+    <h1>{{ o.name }}</h1>
+    <p class="bilan-head__sub">
+      <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+    </p>
+  </header>
+
+  <div class="bilan-body">
+    <section class="panel preview">
+      <h2 class="panel__title">Aperçu</h2>
+      <div class="preview__frame">
+        <canvas
+          #canvas
+          class="preview__canvas"
+          role="img"
+          [attr.aria-label]="
+            'Bilan de ' + (city() || 'la sortie') + ' : ' + contacts() + ' contacts, ' +
+            conversions() + ' conversions, ' + workers() + ' ouvriers mobilisés'
+          "></canvas>
+      </div>
+      @if (renderError(); as err) {
+        <p class="alert alert--error" role="alert">{{ err }}</p>
+      }
+    </section>
+
+    <section class="panel controls">
+      <h2 class="panel__title">Informations</h2>
+      <p class="controls__hint">
+        Les chiffres proviennent de ce qui a été enregistré pendant la sortie.
+        Ajustez-les si besoin avant de télécharger l'image.
+      </p>
+
+      <div class="controls__grid">
+        <label class="field controls__city">
+          <span class="field__label">Ville</span>
+          <input
+            class="field__control"
+            type="text"
+            autocomplete="off"
+            placeholder="Argenteuil"
+            [value]="city()"
+            (input)="onCity($any($event.target).value)" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Contacts</span>
+          <input
+            class="field__control"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            [value]="contacts()"
+            (input)="onFigure('contacts', $any($event.target).value)" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Conversions</span>
+          <input
+            class="field__control"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            [value]="conversions()"
+            (input)="onFigure('conversions', $any($event.target).value)" />
+        </label>
+
+        <label class="field controls__city">
+          <span class="field__label">Ouvriers mobilisés</span>
+          <input
+            class="field__control"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            [value]="workers()"
+            (input)="onFigure('workers', $any($event.target).value)" />
+        </label>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn--primary btn--block controls__download"
+        [disabled]="renderError() !== null"
+        (click)="download()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Télécharger l'image
+      </button>
+    </section>
+  </div>
+}

@@ -27,6 +27,12 @@ export const OUTREACH_ROUTES: Routes = [
       import('./pages/outreach-stats/outreach-stats').then((m) => m.OutreachStats),
   },
   {
+    path: 'sorties/:uuid/bilan',
+    title: 'Bilan de la sortie · Évangélisation',
+    loadComponent: () =>
+      import('./pages/outreach-bilan/outreach-bilan').then((m) => m.OutreachBilan),
+  },
+  {
     path: 'sorties/:uuid/contacts',
     title: 'Contacts de la sortie · Évangélisation',
     loadComponent: () =>

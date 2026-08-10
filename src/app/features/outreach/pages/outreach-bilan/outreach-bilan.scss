@@ -1,0 +1,87 @@
+/* Outreach bilan page. Field/button tokens are global (styles.scss). */
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  padding: 22px 32px 48px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.back svg { width: 16px; height: 16px; }
+.back:hover { color: var(--text-primary); }
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.bilan-head { margin: 18px 0 24px; }
+.bilan-head h1 { margin: 8px 0 0; font-size: 26px; }
+.bilan-head__sub { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; }
+
+/* Preview beside the inputs; stacks under 900px. */
+.bilan-body {
+  display: grid;
+  grid-template-columns: minmax(280px, 520px) minmax(280px, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.panel {
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.panel__title { margin: 0 0 18px; font-size: 16px; }
+
+/* The canvas renders at 1080×1080 and is scaled down to fit its column. */
+.preview__frame {
+  border: 1px solid var(--border-faint);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-inset);
+}
+.preview__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+.preview .alert { margin: 14px 0 0; }
+
+.controls__hint {
+  margin: -6px 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.controls__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+/* Full-width rows in the 2-column form grid. */
+.controls__city { grid-column: 1 / -1; }
+.controls__download { margin-top: 22px; }
+
+@media (max-width: 900px) {
+  .bilan-body { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  :host { padding: 18px 16px 40px; }
+  .bilan-head h1 { font-size: 22px; }
+  .panel { padding: 18px; }
+}
