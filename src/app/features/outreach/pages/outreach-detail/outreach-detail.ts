@@ -16,7 +16,6 @@ import {
   STATUS_TONES,
   type ContactEntry,
   type ContactType,
-  type ManagerOption,
   type Outreach,
   type OutreachAttendance,
   type OutreachInput,
@@ -53,7 +52,6 @@ export class OutreachDetail implements OnInit {
   protected readonly presencesLoading = signal(true);
   protected readonly presencesError = signal<string | null>(null);
 
-  protected readonly managers = signal<ManagerOption[]>([]);
   protected readonly formOpen = signal(false);
   protected readonly saving = signal(false);
   protected readonly confirmOpen = signal(false);
@@ -84,13 +82,6 @@ export class OutreachDetail implements OnInit {
   }
   protected contactName(entry: ContactEntry): string {
     return `${entry.firstname} ${entry.lastname}`.trim() || '—';
-  }
-
-  constructor() {
-    this.service.managers().subscribe({
-      next: (list) => this.managers.set(list),
-      error: () => this.managers.set([]),
-    });
   }
 
   ngOnInit(): void {

@@ -101,7 +101,6 @@
 
 @if (formOpen()) {
   <app-inventory-form
-    [profiles]="profiles()"
     [busy]="saving()"
     (save)="onSave($event)"
     (cancel)="closeForm()" />

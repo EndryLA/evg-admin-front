@@ -1,11 +1,20 @@
 <div class="mcal">
-  <!-- Month header: navigate months, tap the title to jump home. -->
+  <!-- Header: navigate (months in the grid, years in the weekend list) and
+       jump home. -->
   <header class="mcal__head">
-    <button type="button" class="mcal__nav" (click)="prevMonth()" aria-label="Mois précédent">
+    <button
+      type="button"
+      class="mcal__nav"
+      (click)="prev()"
+      [attr.aria-label]="mode() === 'weekends' ? 'Année précédente' : 'Mois précédent'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
     <h2 class="mcal__title" aria-live="polite">{{ title() }}</h2>
-    <button type="button" class="mcal__nav" (click)="nextMonth()" aria-label="Mois suivant">
+    <button
+      type="button"
+      class="mcal__nav"
+      (click)="next()"
+      [attr.aria-label]="mode() === 'weekends' ? 'Année suivante' : 'Mois suivant'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
     </button>
     <button type="button" class="mcal__today" (click)="goToday()">Aujourd'hui</button>
@@ -13,6 +22,40 @@
       <span class="mcal__spinner" role="status" aria-label="Chargement"></span>
     }
   </header>
+
+  <!-- Layout switch: the month grid, or the year's week-ends. -->
+  <div class="mcal__modes" role="tablist" aria-label="Changer de vue">
+    <button
+      type="button"
+      role="tab"
+      class="mcal__mode"
+      [class.mcal__mode--active]="mode() === 'month'"
+      [attr.aria-selected]="mode() === 'month'"
+      (click)="setMode('month')">
+      Mois
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="mcal__mode"
+      [class.mcal__mode--active]="mode() === 'weekends'"
+      [attr.aria-selected]="mode() === 'weekends'"
+      (click)="setMode('weekends')">
+      Week-ends
+    </button>
+  </div>
+
+  @if (mode() === 'weekends') {
+  <!-- The year's Saturdays and Sundays, month by month — the same list the
+       desktop shows, in its one-column arrangement. -->
+  <div class="mcal__year">
+    <app-calendar-weekends
+      [items]="items()"
+      [year]="year()"
+      (selectItem)="selectItem.emit($event)"
+      (createOn)="createOn.emit($event)" />
+  </div>
+  } @else {
 
   <!-- Weekday row. -->
   <div class="mcal__weekdays" aria-hidden="true">
@@ -101,4 +144,5 @@
       </ul>
     }
   </section>
+  }
 </div>

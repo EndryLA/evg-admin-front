@@ -2,7 +2,6 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
-import { isSameCity, type CityRef } from '../../../../shared/util/city.util';
 import { formatDateFr } from '../../../../shared/util/date.util';
 import { displayPhoneFr, displayYesNo } from '../../../../shared/util/text.util';
 
@@ -20,8 +19,8 @@ import {
 /** How many contacts show before the "Voir tout" toggle reveals the rest. */
 const PREVIEW_COUNT = 5;
 
-/** Font colour in the export for a contact who lives outside the outreach's commune. */
-const OUT_OF_CITY_COLOR = 'FFFF0000'; // pure red
+/** Font colour in the export for a contact who lives outside the outreach's sector. */
+const OUT_OF_SECTOR_COLOR = 'FFFF0000'; // pure red
 
 /**
  * Contacts card for an outreach — a compact list capped at {@link PREVIEW_COUNT}
@@ -112,15 +111,18 @@ export class OutreachContacts {
   }
 
   /**
-   * Export the selected rows to a styled `.xlsx` file — contacts and conversions
-   * land on their own tab, each row tagged with its colour-coded type label.
+   * Export the selected rows to a styled `.xlsx` file — a single tab listing the
+   * contacts first, then the conversions, each block numbered from 1.
    */
   protected async exportSelected(): Promise<void> {
     const chosen = this.selectedUuids();
-    const rows = this.visible().filter((c) => chosen.has(c.uuid));
-    if (rows.length === 0 || this.exporting()) {
+    const selected = this.visible().filter((c) => chosen.has(c.uuid));
+    if (selected.length === 0 || this.exporting()) {
       return;
     }
+    const contacts = selected.filter((c) => c.type === 'CONTACT');
+    const conversions = selected.filter((c) => c.type === 'CONVERSION');
+    const rows = [...contacts, ...conversions];
     // Same for every row here: they all belong to this one outreach.
     const outreach = this.outreach();
     const date = outreach?.date ? formatDateFr(outreach.date) : '';
@@ -130,7 +132,11 @@ export class OutreachContacts {
       { header: 'Type', value: (c) => CONTACT_TYPE_EXPORT_LABELS[c.type] },
       { header: 'Date', value: () => date },
       { header: 'Secteur', value: (c) => c.city?.sector ?? '' },
-      { header: 'État civil', value: (c) => this.civilStateLabel(c) },
+      // Left blank when unknown, so the sheet shows "/" rather than a label.
+      {
+        header: 'État civil',
+        value: (c) => (c.civilState === 'MISSING_INFORMATION' ? '' : this.civilStateLabel(c)),
+      },
       { header: 'Nom', value: (c) => c.lastname || '' },
       { header: 'Prénom', value: (c) => c.firstname || '' },
       { header: 'Ville', value: (c) => c.cityName || '' },
@@ -142,15 +148,21 @@ export class OutreachContacts {
       { header: 'Observations', value: (c) => c.observations || '', width: 70 },
     ];
 
-    // Flag people who don't live in the commune the outreach took place in.
-    const outreachRef: CityRef = {
-      inseeCode: outreach?.city?.inseeCode ?? null,
-      name: outreachCity,
+    // Flag people who don't live in the sector the outreach took place in. An
+    // unknown sector on either side is left alone rather than reported as a
+    // mismatch — missing data isn't a difference.
+    const outreachSector = outreach?.city?.sector ?? null;
+    const rowTextColor = (c: ContactEntry): string | undefined => {
+      const sector = c.city?.sector ?? null;
+      if (outreachSector == null || sector == null || sector === outreachSector) {
+        return undefined;
+      }
+      return OUT_OF_SECTOR_COLOR;
     };
-    const rowTextColor = (c: ContactEntry): string | undefined =>
-      isSameCity({ inseeCode: c.city?.inseeCode ?? null, name: c.cityName }, outreachRef)
-        ? undefined
-        : OUT_OF_CITY_COLOR;
+
+    // Numbering restarts at the first conversion, so each block reads 1…n.
+    const rowNumber = (_c: ContactEntry, i: number): number =>
+      i < contacts.length ? i + 1 : i - contacts.length + 1;
 
     this.exporting.set(true);
     try {
@@ -158,16 +170,10 @@ export class OutreachContacts {
         [
           {
             name: 'Contacts',
-            rows: rows.filter((c) => c.type === 'CONTACT'),
+            rows,
             columns,
             numbered: true,
-            rowTextColor,
-          },
-          {
-            name: 'Conversions',
-            rows: rows.filter((c) => c.type === 'CONVERSION'),
-            columns,
-            numbered: true,
+            rowNumber,
             rowTextColor,
           },
         ],

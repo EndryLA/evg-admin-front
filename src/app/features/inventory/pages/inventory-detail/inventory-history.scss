@@ -1,0 +1,202 @@
+/* The movements history on the inventory item detail — the table under the
+   summary and the operation launcher. Split out of `inventory-detail.scss` so
+   neither sheet runs past the 6kB component-style budget; the page shell,
+   summary, launcher and states stay there.
+
+   Same mobile-first shape as the rest of the page: the base rules are the phone
+   card layout, and the 721px block layers the real table on top. */
+
+.history { margin-top: 26px; }
+.history__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+.history__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Small directional glyph before the operation name, echoing the signed
+   quantity's colour — outbound red, inbound green. */
+.op-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -3px;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  border-radius: 6px;
+  background: var(--pill-red-bg);
+  color: var(--pill-red-text);
+}
+.op-badge--in { background: var(--pill-green-bg); color: var(--pill-green-text); }
+.op-badge svg { width: 13px; height: 13px; }
+
+.history .cell-qty { font-weight: 700; font-variant-numeric: tabular-nums; }
+.history .cell-qty--in { color: var(--pill-green-text); }
+.history .cell-qty--out { color: var(--pill-red-text); }
+
+/* Six dense columns don't fit a phone, and a sideways-scrolling table is the
+   thing this page most needed to lose. Each movement becomes a card instead:
+   operation and signed quantity on the title line, the rest as labelled rows —
+   the same idiom the list tables use (see styles.scss). */
+.history .card {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+/* The states render inside `.card`, so they keep a surface of their own. */
+.history .card:has(.state) {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.history thead { display: none; }
+.history table {
+  display: block;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.history tbody { display: flex; flex-direction: column; gap: 10px; }
+.history tbody tr {
+  display: block;
+  position: relative;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.history td { display: block; padding: 0; }
+
+/* Each row opens the operation's full detail (notes, recipient), so it reads
+   as a pressable card. */
+.history .op-row {
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.history .op-row:hover { border-color: var(--accent-soft-border); background: var(--accent-soft-bg); }
+.history .op-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* A labelled row with nothing to show (e.g. Destinataire on a non-distribution)
+   is dropped from the card rather than left blank. */
+.history td.is-empty { display: none; }
+
+.history td.cell-head {
+  /* Keep the title clear of the quantity pinned top-right. */
+  padding: 0 76px 10px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-faint);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+/* Equipment rows have no pinned quantity, so the title spans the full width. */
+.history td.cell-head--full { padding-right: 0; }
+
+.history td.cell-corner {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: auto;
+  padding: 0;
+  text-align: right;
+  font-size: 15px;
+}
+
+.history td[data-label] {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 5px 0;
+  text-align: right;
+}
+.history td[data-label]::before {
+  content: attr(data-label);
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: left;
+}
+.history .cell-muted { color: var(--text-primary); }
+
+/* ---- Desktop ---- */
+@media (min-width: 721px) {
+  .history { margin-top: 30px; }
+  .history__title { font-size: 18px; }
+
+  /* Back to a real table. */
+  .history .card {
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+  .history table { display: table; }
+  .history thead { display: table-header-group; }
+  .history thead tr { border-bottom: 1px solid var(--border-subtle); }
+  .history th {
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .history th.right { text-align: right; }
+  .history tbody { display: table-row-group; }
+  .history tbody tr {
+    display: table-row;
+    position: static;
+    padding: 0;
+    border: none;
+    border-bottom: 1px solid var(--border-faint);
+    border-radius: 0;
+  }
+  .history tbody tr:last-child { border-bottom: none; }
+  .history tbody tr.op-row:hover { background: var(--accent-soft-bg); border-color: var(--border-faint); }
+  .history .op-row:focus-visible { outline-offset: -2px; }
+  /* Empty cells hold their column in the table rather than collapsing. */
+  .history td.is-empty { display: table-cell; }
+
+  .history td {
+    display: table-cell;
+    padding: 14px 20px;
+    vertical-align: middle;
+  }
+  .history td.cell-head {
+    margin: 0;
+    padding: 14px 20px;
+    border-bottom: none;
+    font-size: 14px;
+  }
+  .history td.cell-corner {
+    position: static;
+    width: auto;
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+  .history td[data-label] { display: table-cell; text-align: left; }
+  .history td[data-label]::before { content: none; }
+  .history .right { text-align: right; }
+  .history .cell-muted { color: var(--text-secondary); white-space: nowrap; }
+}

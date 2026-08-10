@@ -8,27 +8,23 @@
 
 /* ---- Type accents ---- */
 /* One tone per event type, reusing the badge palette (design.md §1). The filter
-   chips and the event blocks both read these three vars, so a type is themed in
-   one place. */
-.agenda .type-chip--outreach,
+   chips carry the same four rules against their own class — they can't share
+   these, since that component's styles are encapsulated and these are not. */
 .agenda .evg-ev--outreach {
   --ev-bg: var(--pill-red-bg);
   --ev-text: var(--pill-red-text);
   --ev-solid: #dc2626;
 }
-.agenda .type-chip--reunion,
 .agenda .evg-ev--reunion {
   --ev-bg: var(--pill-blue-bg);
   --ev-text: var(--pill-blue-text);
   --ev-solid: #2563eb;
 }
-.agenda .type-chip--agape,
 .agenda .evg-ev--agape {
   --ev-bg: var(--pill-amber-bg);
   --ev-text: var(--pill-amber-text);
   --ev-solid: #d97706;
 }
-.agenda .type-chip--other,
 .agenda .evg-ev--other {
   --ev-bg: var(--pill-violet-bg);
   --ev-text: var(--pill-violet-text);

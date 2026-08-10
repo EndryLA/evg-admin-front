@@ -1,6 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { InventoryForm } from '../../components/inventory-form/inventory-form';
@@ -10,7 +9,6 @@ import {
   refName,
   type InventoryInput,
   type InventoryItem,
-  type Option,
 } from '../../inventory.models';
 
 type SortKey = 'name' | 'type' | 'quantity' | 'location';
@@ -25,8 +23,8 @@ function normalize(value: string): string {
 }
 
 /**
- * Inventaire — the stock table. Loads all items and the responsible picker
- * once, then does search / sort / pagination in memory. Rows link to the detail
+ * Inventaire — the stock table. Loads all items once, then does search / sort /
+ * pagination in memory. Rows link to the detail
  * page (`/inventaire/:uuid`), where operations, edit and delete live; only
  * creation happens here, via the modal.
  */
@@ -43,7 +41,6 @@ export class InventoryList {
 
   // ---- Data ----
   protected readonly items = signal<InventoryItem[]>([]);
-  protected readonly profiles = signal<Option[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
 
@@ -131,13 +128,9 @@ export class InventoryList {
   protected load(): void {
     this.loading.set(true);
     this.loadError.set(null);
-    forkJoin({
-      items: this.service.list(),
-      profiles: this.service.profiles(),
-    }).subscribe({
-      next: ({ items, profiles }) => {
+    this.service.list().subscribe({
+      next: (items) => {
         this.items.set(items);
-        this.profiles.set(profiles);
         this.loading.set(false);
       },
       error: (err) => {

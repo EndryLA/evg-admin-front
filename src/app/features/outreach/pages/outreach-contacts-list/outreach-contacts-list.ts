@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { OutreachContacts } from '../../components/outreach-contacts/outreach-contacts';
 import { OutreachService } from '../../outreach.service';
+import { formatDateFr } from '../../../../shared/util/date.util';
 import {
   CIVIL_STATE_OPTIONS,
   SECTORS,
@@ -132,10 +133,17 @@ export class OutreachContactsList implements OnInit {
     const o = this.outreach();
     return o ? STATUS_TONES[o.status] : 'grey';
   });
-  /** File name for the Excel export, e.g. "Contacts - Marché central". */
+  /** File name for the Excel export, e.g. "Lille - 09-08-2026" — the outreach's
+   *  city and date. Slashes would be stripped by the browser, so the date is
+   *  dash-separated. */
   protected readonly exportName = computed(() => {
     const o = this.outreach();
-    return o ? `Contacts - ${o.name}` : 'Contacts';
+    if (!o) {
+      return 'Contacts';
+    }
+    const city = o.city?.officialName || o.cityName || o.name;
+    const date = formatDateFr(o.date).replace(/\//g, '-');
+    return `${city} - ${date}`;
   });
 
   ngOnInit(): void {

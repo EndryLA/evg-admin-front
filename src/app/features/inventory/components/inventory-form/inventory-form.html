@@ -46,15 +46,17 @@
             placeholder="Ex. Local B, étagère 2" />
         </label>
 
-        <label class="field field--span">
-          <span class="field__label">Responsable</span>
-          <select class="field__control" formControlName="managedByUuid">
-            <option value="">Aucun</option>
-            @for (p of profiles(); track p.uuid) {
-              <option [value]="p.uuid">{{ p.label }}</option>
-            }
-          </select>
-        </label>
+        <div class="field field--span">
+          <label class="field__label" for="inventory-managed-by">Responsable</label>
+          <app-member-autocomplete
+            inputId="inventory-managed-by"
+            formControlName="managedBy"
+            placeholder="Rechercher un membre…"
+            [ariaInvalid]="form.controls.managedBy.touched && form.controls.managedBy.invalid" />
+          @if (form.controls.managedBy.touched && form.controls.managedBy.invalid) {
+            <span class="field__error">Sélectionnez un membre dans la liste, ou laissez vide.</span>
+          }
+        </div>
 
         <p class="modal__note field--span">
           Le type détermine les opérations possibles : réception, distribution et utilisation

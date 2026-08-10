@@ -45,7 +45,7 @@ import {
   ],
   host: { class: 'detail-page' },
   templateUrl: './inventory-detail.html',
-  styleUrl: './inventory-detail.scss',
+  styleUrls: ['./inventory-detail.scss', './inventory-history.scss'],
 })
 export class InventoryDetailPage implements OnInit {
   private readonly service = inject(InventoryService);

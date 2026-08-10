@@ -1,0 +1,211 @@
+/* A year of week-ends. Two arrangements of the same blocks: one column with
+   sticky month headings on a phone (`wk--stack`), newspaper columns across the
+   page on a desktop (`wk--columns`). Colours come from the design tokens. */
+
+:host {
+  display: block;
+  min-height: 0;
+}
+
+/* Per-type accent, reusing the badge palette (design.md §1) so a type reads the
+   same here as on the month grid and the filter chips. */
+.ev--outreach { --ev-solid: #dc2626; }
+.ev--reunion  { --ev-solid: #2563eb; }
+.ev--agape    { --ev-solid: #d97706; }
+.ev--other    { --ev-solid: #7c3aed; }
+
+/* ---- Month sections ---- */
+.wk__month-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding-bottom: 7px;
+  border-bottom: 2px solid var(--border);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.wk__month-name { text-transform: capitalize; }
+.wk__month-count {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.wk__month-count--free { color: var(--text-faint); font-weight: 500; }
+
+/* ---- One week-end ---- */
+/* The card is the unit of this view: a week-end is one decision, and the gap
+   between cards is what makes the year scan as a run of week-ends rather than a
+   flat list of days. Generous separation is the point — hence the gap, the
+   border and the tinted date rail rather than a single hairline. */
+.wk__end {
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+/* A free week-end is an outcome, not a gap — dashed and sunken, it reads as
+   available at a glance without competing with the booked ones. */
+.wk__end--free {
+  border-style: dashed;
+  border-color: var(--border-faint);
+  background: var(--bg-sunken);
+}
+/* The week-end today falls in. */
+.wk__end--current {
+  border-style: solid;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* One day inside the card: a fixed date rail, then its events. */
+.wk__day {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 52px;
+}
+/* Hairline between the Saturday and the Sunday of the same week-end — the card
+   edge already separates one week-end from the next. */
+.wk__day + .wk__day { border-top: 1px solid var(--border-faint); }
+
+/* The date rail: tinted full-height, so the card splits date from content and
+   every week-end lines up down the page. Also the create target. */
+.wk__date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 54px;
+  padding: 8px 0;
+  border: none;
+  border-right: 1px solid var(--border-faint);
+  background: var(--bg-inset);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.12s ease;
+
+  &:hover { background: var(--row-hover); }
+  &:active { background: var(--row-hover); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+}
+.wk__date-name {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.wk__date-num {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.wk__end--free .wk__date { background: transparent; }
+.wk__end--free .wk__date-num { color: var(--text-muted); font-weight: 600; }
+.wk__day--today .wk__date-name,
+.wk__day--today .wk__date-num { color: var(--accent); }
+
+/* ---- Events on a day ---- */
+.wk__events {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px 6px 0;
+}
+.wk__event {
+  display: flex;
+  align-items: stretch;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.12s ease;
+
+  &:hover { background: var(--bg-inset); }
+  &:active { background: var(--bg-inset); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+}
+/* Coloured spine down the event — the type cue, matching the grid dots. */
+.wk__bar {
+  flex: 0 0 auto;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--ev-solid);
+}
+.wk__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  justify-content: center;
+}
+.wk__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wk__meta {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Cancelled entries: greyed and struck, but still readable. */
+.wk__event--cancelled {
+  --ev-solid: var(--text-faint);
+
+  .wk__name { color: var(--text-muted); text-decoration: line-through; }
+}
+.wk__free {
+  padding-left: 2px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-faint);
+}
+
+/* ---- Phone: one column, headings stick as the year scrolls by ---- */
+.wk--stack .wk__month + .wk__month { margin-top: 18px; }
+.wk--stack .wk__month-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  /* The page surface, not the card one — this strip covers the scrolling list,
+     and in dark mode the two are different greys. */
+  padding-top: 10px;
+  background: var(--bg-page);
+}
+
+/* ---- Desktop: the year in newspaper columns ---- */
+/* Twelve months in one column would be a very long scroll; flowing them into
+   columns puts most of a year on one screen. Month sections may break across
+   columns, but a week-end card never splits — and a heading never sits alone at
+   the foot of a column. */
+.wk--columns .wk {
+  column-width: 330px;
+  column-gap: 26px;
+}
+.wk--columns .wk__month { break-inside: auto; margin-bottom: 22px; }
+.wk--columns .wk__month-head { break-after: avoid; }
+.wk--columns .wk__end { break-inside: avoid; }

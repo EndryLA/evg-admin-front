@@ -34,47 +34,9 @@
   }
   .topbar__sub { margin: 5px 0 0; font-size: 14px; color: var(--text-muted); }
 
-  /* ---- Filter bar ---- */
-  .filters {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 32px 18px;
-    flex-wrap: wrap;
-  }
-  .search {
-    position: relative;
-    flex: 1;
-    min-width: 240px;
-    max-width: 380px;
+  /* The filter bar carries its own styles — see `calendar-filters`. */
 
-    svg {
-      position: absolute;
-      left: 13px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      color: var(--text-faint);
-      pointer-events: none;
-    }
-    input {
-      width: 100%;
-      padding: 10px 13px 10px 38px;
-      border: 1px solid var(--border-input);
-      border-radius: 9px;
-      background: var(--bg-input);
-      font-size: 14px;
-      color: var(--text-primary);
-
-      &:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px var(--accent-ring);
-      }
-    }
-  }
-
+  /* ---- View switcher ---- */
   .tabs {
     display: inline-flex;
     background: var(--bg-inset);
@@ -93,63 +55,6 @@
     transition: background 0.12s ease, color 0.12s ease;
   }
   .tab--active { background: var(--accent); color: var(--text-on-accent); }
-
-  .filter-field { display: inline-flex; align-items: center; gap: 8px; }
-  .filter-field__label { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
-  .filter-select {
-    padding: 9px 12px;
-    border: 1px solid var(--border-input);
-    border-radius: 9px;
-    background: var(--bg-input);
-    font-size: 14px;
-    color: var(--text-primary);
-    cursor: pointer;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-ring);
-    }
-  }
-  .filter-reset { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; }
-  .new-btn { margin-left: auto; flex: 0 0 auto; }
-  .new-btn svg { width: 16px; height: 16px; }
-
-  /* ---- Type filter chips ---- */
-  .type-chips { display: inline-flex; gap: 8px; flex-wrap: wrap; }
-  .type-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 13px;
-    border: 1px solid var(--border-input);
-    border-radius: 999px;
-    background: var(--bg-input);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-
-    &:hover { background: var(--bg-sunken); }
-    &:focus-visible {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-ring);
-    }
-  }
-  .type-chip__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--ev-solid);
-    flex: 0 0 auto;
-  }
-  .type-chip--active {
-    background: var(--ev-bg);
-    border-color: transparent;
-    color: var(--ev-text);
-  }
 
   /* ---- Grid toolbar ---- */
   .cal-toolbar {
@@ -234,6 +139,15 @@
   }
   .cal-card--busy { opacity: 0.65; }
 
+  /* The week-end list is the one "grid" the page draws itself, so unlike the
+     FullCalendar card it has no library border to sit inside — it needs its own
+     padding and sits on the page surface rather than a card one. */
+  .cal-card--weekends {
+    background: transparent;
+    padding: 4px 0 8px;
+    overflow: visible;
+  }
+
   /* Week view on a phone: seven time columns can't share 360px, so the grid
      keeps a usable minimum width and the card scrolls sideways to it. The
      minimum is on the harness rather than `.fc`, so the grid still measures the
@@ -294,8 +208,6 @@
        tagline is the first thing that can go. */
     .topbar__sub { display: none; }
 
-    .filters { padding: 0 16px 12px; gap: 10px; }
-    .search { max-width: none; min-width: 0; flex: 1; }
     .tabs { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     .cal-toolbar { padding: 0 16px 10px; gap: 10px; }

@@ -212,7 +212,6 @@
 
 @if (formOpen()) {
   <app-outreach-form
-    [managers]="managers()"
     [busy]="saving()"
     (save)="onSave($event)"
     (cancel)="closeForm()" />

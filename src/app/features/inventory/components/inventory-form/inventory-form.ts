@@ -1,14 +1,37 @@
 import { Component, computed, inject, input, OnInit, output } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 
+import {
+  MemberAutocomplete,
+  type MemberValue,
+} from '../../../../shared/ui/member-autocomplete/member-autocomplete';
 import {
   ITEM_TYPE_LABELS,
   ITEM_TYPES,
   type InventoryInput,
   type InventoryItem,
   type ItemType,
-  type Option,
 } from '../../inventory.models';
+
+const EMPTY_MEMBER: MemberValue = { uuid: null, label: '' };
+
+/**
+ * The responsible is optional, but a typed name that was never picked from the
+ * suggestions has no uuid and cannot be saved — flag it rather than dropping it.
+ */
+function memberPickedOrEmpty(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as MemberValue | null;
+  if (!value || (!value.uuid && !value.label.trim())) {
+    return null;
+  }
+  return value.uuid ? null : { memberNotPicked: true };
+}
 
 /**
  * Create/edit modal for an inventory item (design.md §3 "Create/Edit modal").
@@ -17,7 +40,7 @@ import {
  */
 @Component({
   selector: 'app-inventory-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, MemberAutocomplete],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   templateUrl: './inventory-form.html',
 })
@@ -26,8 +49,6 @@ export class InventoryForm implements OnInit {
 
   /** Item to edit, or `null` to create a new one. */
   readonly item = input<InventoryItem | null>(null);
-  /** Members selectable as the item's responsible. */
-  readonly profiles = input<Option[]>([]);
   readonly busy = input(false);
 
   readonly save = output<InventoryInput>();
@@ -44,18 +65,24 @@ export class InventoryForm implements OnInit {
     type: ['FLYER' as ItemType, [Validators.required]],
     quantity: [0, [Validators.required, Validators.min(0)]],
     stockLocation: [''],
-    managedByUuid: [''],
+    managedBy: [{ ...EMPTY_MEMBER } as MemberValue, [memberPickedOrEmpty]],
   });
 
   ngOnInit(): void {
     const item = this.item();
     if (item) {
+      const managedBy = item.managedBy;
       this.form.setValue({
         name: item.name,
         type: item.type,
         quantity: item.quantity,
         stockLocation: item.stockLocation,
-        managedByUuid: item.managedBy?.uuid ?? '',
+        managedBy: managedBy
+          ? {
+              uuid: managedBy.uuid,
+              label: `${managedBy.firstname} ${managedBy.lastname}`.trim(),
+            }
+          : { ...EMPTY_MEMBER },
       });
     }
   }
@@ -71,7 +98,7 @@ export class InventoryForm implements OnInit {
       type: v.type,
       quantity: Number(v.quantity) || 0,
       stockLocation: v.stockLocation,
-      managedByUuid: v.managedByUuid || null,
+      managedByUuid: v.managedBy.uuid,
     });
   }
 }

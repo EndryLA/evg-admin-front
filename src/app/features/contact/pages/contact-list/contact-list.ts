@@ -320,7 +320,11 @@ export class ContactList implements OnDestroy {
           },
         },
         { header: 'Secteur', value: (c) => c.city?.sector ?? '' },
-        { header: 'État civil', value: (c) => this.civilStateLabel(c) },
+        // Left blank when unknown, so the sheet shows "/" rather than a label.
+        {
+          header: 'État civil',
+          value: (c) => (c.civilState === 'MISSING_INFORMATION' ? '' : this.civilStateLabel(c)),
+        },
         { header: 'Nom', value: (c) => c.lastname || '' },
         { header: 'Prénom', value: (c) => c.firstname || '' },
         { header: 'Ville', value: (c) => c.cityName || '' },

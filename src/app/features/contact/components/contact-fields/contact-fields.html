@@ -64,22 +64,30 @@
 
   <div class="field">
     <label class="field__label" for="wantsToAttendGF">Souhaite venir au GF</label>
-    <select id="wantsToAttendGF" class="field__control" formControlName="wantsToAttendGF">
+    <select id="wantsToAttendGF" class="field__control" formControlName="wantsToAttendGF"
+      [attr.aria-invalid]="form().controls.wantsToAttendGF.touched && form().controls.wantsToAttendGF.invalid">
       <option value="" disabled>— Choisir —</option>
       <option value="true">Oui</option>
       <option value="false">Non</option>
       <option value="unknown">Je ne sais pas</option>
     </select>
+    @if (form().controls.wantsToAttendGF.touched && form().controls.wantsToAttendGF.invalid) {
+      <span class="field__error">Ce champ est requis.</span>
+    }
   </div>
 
   <div class="field">
     <label class="field__label" for="wantsToAttendChurch">Souhaite venir à l'église</label>
-    <select id="wantsToAttendChurch" class="field__control" formControlName="wantsToAttendChurch">
+    <select id="wantsToAttendChurch" class="field__control" formControlName="wantsToAttendChurch"
+      [attr.aria-invalid]="form().controls.wantsToAttendChurch.touched && form().controls.wantsToAttendChurch.invalid">
       <option value="" disabled>— Choisir —</option>
       <option value="true">Oui</option>
       <option value="false">Non</option>
       <option value="unknown">Je ne sais pas</option>
     </select>
+    @if (form().controls.wantsToAttendChurch.touched && form().controls.wantsToAttendChurch.invalid) {
+      <span class="field__error">Ce champ est requis.</span>
+    }
   </div>
 
   <div class="field field--span">

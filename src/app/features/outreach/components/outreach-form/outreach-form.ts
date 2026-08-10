@@ -5,10 +5,21 @@ import {
   CityAutocomplete,
   type CityValue,
 } from '../../../../shared/ui/city-autocomplete/city-autocomplete';
-import type { ManagerOption, Outreach, OutreachInput } from '../../outreach.models';
+import {
+  MemberAutocomplete,
+  type MemberValue,
+} from '../../../../shared/ui/member-autocomplete/member-autocomplete';
+import type { Outreach, OutreachInput } from '../../outreach.models';
 
 /** Initial/reset value for the city field: no pick, empty label. */
 const EMPTY_CITY: CityValue = { inseeCode: null, label: '' };
+
+/** Initial/reset value for the supervisor field: no pick, empty label. */
+const EMPTY_MEMBER: MemberValue = { uuid: null, label: '' };
+
+/** Usual outreach schedule, pre-filled when creating. */
+const DEFAULT_START_TIME = '11:00';
+const DEFAULT_END_TIME = '13:30';
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -45,7 +56,7 @@ function toTimeInput(value: string | null): string {
 /** Create/edit modal for an outreach. Presentational — emits {@link save}. */
 @Component({
   selector: 'app-outreach-form',
-  imports: [ReactiveFormsModule, CityAutocomplete],
+  imports: [ReactiveFormsModule, CityAutocomplete, MemberAutocomplete],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   templateUrl: './outreach-form.html',
 })
@@ -53,7 +64,6 @@ export class OutreachForm implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   readonly outreach = input<Outreach | null>(null);
-  readonly managers = input<ManagerOption[]>([]);
   readonly busy = input(false);
 
   readonly save = output<OutreachInput>();
@@ -66,11 +76,12 @@ export class OutreachForm implements OnInit {
     name: ['', [Validators.required]],
     location: ['', [Validators.required]],
     date: ['', [Validators.required]],
-    startTime: ['', [Validators.required]],
-    endTime: ['', [Validators.required]],
+    startTime: [DEFAULT_START_TIME, [Validators.required]],
+    endTime: [DEFAULT_END_TIME, [Validators.required]],
     // Optional: a picked commune or free text; the backend accepts either or none.
     city: [{ ...EMPTY_CITY } as CityValue],
-    managedByUuid: [''],
+    // Optional: only an actual pick carries a uuid; free text is ignored on submit.
+    manager: [{ ...EMPTY_MEMBER } as MemberValue],
   });
 
   ngOnInit(): void {
@@ -83,7 +94,9 @@ export class OutreachForm implements OnInit {
         startTime: toTimeInput(o.startTime),
         endTime: toTimeInput(o.endTime),
         city: this.cityValueOf(o),
-        managedByUuid: o.managedBy?.uuid ?? '',
+        manager: o.managedBy
+          ? { uuid: o.managedBy.uuid, label: o.managedBy.name }
+          : { ...EMPTY_MEMBER },
       });
     }
   }
@@ -111,7 +124,8 @@ export class OutreachForm implements OnInit {
       // A picked commune carries an INSEE code; free text keeps its label.
       cityInseeCode: v.city.inseeCode,
       cityLabel: v.city.inseeCode == null ? v.city.label : null,
-      managedByUuid: v.managedByUuid || null,
+      // Only a picked member is a supervisor; unmatched free text clears it.
+      managedByUuid: v.manager.uuid,
     });
   }
 }

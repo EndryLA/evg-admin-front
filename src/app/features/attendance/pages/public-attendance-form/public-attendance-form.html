@@ -36,18 +36,44 @@
         <p class="alert alert--error" role="alert">{{ message }}</p>
       }
 
-      <!-- Step 1 — department or not -->
+      <!-- Step 1 — in which capacity the visitor is here -->
       @if (branch() === null) {
         <div class="branch">
-          <p class="branch__q">Êtes-vous du département&nbsp;?</p>
+          <p class="branch__q">Vous participez à cette sortie en tant que&nbsp;?</p>
           <div class="branch__options">
             <button type="button" class="btn btn--primary btn--block" (click)="choose('MEMBER')">
-              Oui, je suis du département
+              Je suis du département
             </button>
             <button type="button" class="btn btn--block" (click)="choose('GUEST')">
-              Non, je suis invité(e)
+              Je suis invité(e)
+            </button>
+            <button type="button" class="btn btn--block" (click)="choose('LEADER')">
+              Je suis Leader du bloc
             </button>
           </div>
+        </div>
+      }
+
+      <!-- Leader branch — nothing to record here -->
+      @if (branch() === 'LEADER') {
+        <div class="branch-note">
+          <button type="button" class="back-link" (click)="back()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Changer
+          </button>
+
+          <div class="branch-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+          </div>
+          <h2>Aucune présence à enregistrer</h2>
+          <p>
+            En tant que Leader du bloc, vous n'avez pas besoin de marquer votre présence
+            ici. Ce formulaire est réservé aux membres du département et à leurs invités.
+          </p>
+
+          <a class="btn btn--primary btn--block" [routerLink]="['/sortie', uuid()]">
+            Retour au menu
+          </a>
         </div>
       }
 

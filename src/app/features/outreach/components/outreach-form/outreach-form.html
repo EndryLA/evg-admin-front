@@ -63,15 +63,13 @@
           }
         </label>
 
-        <label class="field field--span">
-          <span class="field__label">Superviseur</span>
-          <select class="field__control" formControlName="managedByUuid">
-            <option value="">— Aucun —</option>
-            @for (m of managers(); track m.uuid) {
-              <option [value]="m.uuid">{{ m.label }}</option>
-            }
-          </select>
-        </label>
+        <div class="field field--span">
+          <label class="field__label" for="outreach-manager">Superviseur</label>
+          <app-member-autocomplete
+            inputId="outreach-manager"
+            formControlName="manager"
+            placeholder="Tapez un nom…" />
+        </div>
       </div>
 
       <footer class="modal__foot">

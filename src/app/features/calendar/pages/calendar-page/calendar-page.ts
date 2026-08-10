@@ -1,11 +1,10 @@
 import {
-  afterNextRender,
   Component,
   computed,
   DestroyRef,
+  effect,
   ElementRef,
   inject,
-  OnDestroy,
   signal,
   ViewEncapsulation,
   viewChild,
@@ -29,34 +28,37 @@ import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { CalendarEventDetail } from '../../components/calendar-event-detail/calendar-event-detail';
 import { CalendarEventForm } from '../../components/calendar-event-form/calendar-event-form';
-import { CalendarMobile } from '../../components/calendar-mobile/calendar-mobile';
-import { CalendarService } from '../../calendar.service';
 import {
-  CALENDAR_STATUS_LABELS,
-  EVENT_TYPE_LABELS,
-  EVENT_TYPE_OPTIONS,
-  type CalendarEvent,
-  type CalendarEventInput,
-  type CalendarEventType,
-  type CalendarFilter,
-  type CalendarItem,
-  type CalendarStatus,
-  type EventStatus,
-  type ManagerOption,
+  CalendarFilters,
+  emptyFilterState,
+  type CalendarFilterState,
+} from '../../components/calendar-filters/calendar-filters';
+import { CalendarMobile } from '../../components/calendar-mobile/calendar-mobile';
+import { CalendarWeekends } from '../../components/calendar-weekends/calendar-weekends';
+import { CalendarService } from '../../calendar.service';
+import type {
+  CalendarEvent,
+  CalendarEventInput,
+  CalendarFilter,
+  CalendarItem,
+  EventStatus,
+  ManagerOption,
 } from '../../calendar.models';
 
-/** The grid layouts offered by the view switcher. */
-type ViewKey = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listMonth';
+/** The FullCalendar layouts offered by the view switcher. */
+type GridViewKey = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listMonth';
+
+/** Every layout, including `weekends` — the year of week-ends, which is this
+ *  page's own list rather than a FullCalendar view (see the template). */
+type ViewKey = GridViewKey | 'weekends';
 
 const VIEW_OPTIONS: readonly { value: ViewKey; label: string }[] = [
   { value: 'dayGridMonth', label: 'Mois' },
   { value: 'timeGridWeek', label: 'Semaine' },
   { value: 'timeGridDay', label: 'Jour' },
   { value: 'listMonth', label: 'Liste' },
+  { value: 'weekends', label: 'Week-ends' },
 ];
-
-/** Debounce before the free-text search triggers a reload. */
-const SEARCH_DEBOUNCE_MS = 300;
 
 /** The app's phone breakpoint (styles.scss, design.md §6). */
 const NARROW_QUERY = '(max-width: 720px)';
@@ -91,7 +93,8 @@ function toDateTime(date: string, time: string | null): string {
  * Agenda — the FullCalendar grid over `GET /api/calendar`, the merged feed of
  * calendar events *and* outreaches. The visible view range drives the query's
  * required `from`/`to` window, so every navigation refetches; the type / status
- * / responsable / search filters narrow it server-side.
+ * / responsable / search filters narrow it server-side. The "Week-ends" view is
+ * the widest of those windows — a full year in one request (see `views` below).
  *
  * Creating and editing only ever touches standalone calendar events
  * (`/api/calendar/events`). Mirrored outreaches are read-only here — clicking
@@ -99,7 +102,15 @@ function toDateTime(date: string, time: string | null): string {
  */
 @Component({
   selector: 'app-calendar-page',
-  imports: [FullCalendarModule, CalendarMobile, CalendarEventDetail, CalendarEventForm, ConfirmDialog],
+  imports: [
+    FullCalendarModule,
+    CalendarFilters,
+    CalendarMobile,
+    CalendarWeekends,
+    CalendarEventDetail,
+    CalendarEventForm,
+    ConfirmDialog,
+  ],
   // Deliberately *not* `.data-list`: that shell styles bare `table`/`tr`/`td`,
   // and FullCalendar builds its grid out of exactly those — its month view is
   // one big `<tr>`, so the shared row hover would light up the whole calendar
@@ -115,13 +126,12 @@ function toDateTime(date: string, time: string | null): string {
   // the rest of the app just as encapsulation would.
   encapsulation: ViewEncapsulation.None,
 })
-export class CalendarPage implements OnDestroy {
+export class CalendarPage {
   private readonly service = inject(CalendarService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly calendar = viewChild<FullCalendarComponent>('calendar');
-  private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
   private readonly card = viewChild<ElementRef<HTMLElement>>('card');
 
   // ---- Data ----
@@ -134,24 +144,25 @@ export class CalendarPage implements OnDestroy {
   private range: { from: string; to: string } | null = null;
 
   // ---- Toolbar ----
-  /** FullCalendar's own range label, e.g. `juillet 2026`. */
+  /** FullCalendar's own range label, e.g. `juillet 2026` — or the year, on the
+   *  week-end list, which navigates a year at a time. */
   protected readonly viewTitle = signal('');
   protected readonly view = signal<ViewKey>('dayGridMonth');
   protected readonly viewOptions = VIEW_OPTIONS;
 
-  // ---- Filters ----
-  protected readonly query = signal('');
-  /** Types to keep; empty means every type. */
-  protected readonly types = signal<CalendarEventType[]>([]);
-  protected readonly status = signal<CalendarStatus | 'ALL'>('ALL');
-  protected readonly managedBy = signal<string>('ALL');
-  protected readonly typeOptions = EVENT_TYPE_OPTIONS;
-  protected readonly statusOptions = Object.entries(CALENDAR_STATUS_LABELS).map(
-    ([value, label]) => ({ value: value as CalendarStatus, label }),
-  );
+  /** The FullCalendar layout to return to when leaving the week-end list —
+   *  which unmounts the grid, so this is what remounts it as it was. */
+  private readonly gridView = signal<GridViewKey>('dayGridMonth');
+  /** …and the period it was showing, so it comes back where it was left. */
+  private gridDate = toIsoDate(new Date());
 
-  /** Mobile-only: the bottom filter drawer. */
-  protected readonly filterDrawerOpen = signal(false);
+  /** The year the week-end list covers. */
+  protected readonly year = signal(new Date().getFullYear());
+
+  // ---- Filters ----
+  /** What the filter bar currently narrows the feed by. The bar owns its own
+   *  controls and reports the selection whole; this is where it lands. */
+  private readonly filters = signal<CalendarFilterState>(emptyFilterState());
 
   /** True on phone-width viewports. The grid can't be sized by CSS alone —
    *  header formats, event density and the aspect ratio are library options —
@@ -162,6 +173,9 @@ export class CalendarPage implements OnDestroy {
    *  columns need more width than the viewport has, so on narrow it scrolls
    *  sideways inside the card (see `.cal-card--scroll-x`). */
   protected readonly scrollX = computed(() => this.narrow() && this.view() === 'timeGridWeek');
+
+  /** True on the week-end list — the one view FullCalendar doesn't render. */
+  protected readonly isYearView = computed(() => this.view() === 'weekends');
 
   // ---- Overlays ----
   protected readonly selected = signal<CalendarItem | null>(null);
@@ -176,23 +190,6 @@ export class CalendarPage implements OnDestroy {
   protected readonly confirmingDelete = signal<CalendarItem | null>(null);
   protected readonly deleting = signal(false);
   protected readonly actionError = signal<string | null>(null);
-
-  protected readonly hasActiveFilters = computed(
-    () =>
-      this.query().trim() !== '' ||
-      this.types().length > 0 ||
-      this.status() !== 'ALL' ||
-      this.managedBy() !== 'ALL',
-  );
-
-  /** Drawer filters currently narrowing the feed (search excluded — it stays
-   *  visible on mobile). Drives the badge on the "Filtres" button. */
-  protected readonly activeFilterCount = computed(
-    () =>
-      this.types().length +
-      (this.status() !== 'ALL' ? 1 : 0) +
-      (this.managedBy() !== 'ALL' ? 1 : 0),
-  );
 
   /** The feed mapped to FullCalendar's shape. Type and status ride along as
    *  class names so the chips can be themed from CSS (see the scss). */
@@ -215,7 +212,10 @@ export class CalendarPage implements OnDestroy {
 
   protected readonly calendarOptions = computed<CalendarOptions>(() => ({
     plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
-    initialView: 'dayGridMonth',
+    // Leaving the week-end list remounts the grid from scratch, so it opens on
+    // the layout and period it was left on rather than on this month.
+    initialView: this.gridView(),
+    initialDate: this.gridDate,
     locale: frLocale,
     // The page renders its own toolbar so it can match the admin filter bar.
     headerToolbar: false,
@@ -270,8 +270,6 @@ export class CalendarPage implements OnDestroy {
     select: (arg: DateSelectArg) => this.onSelect(arg),
   }));
 
-  private searchTimer?: ReturnType<typeof setTimeout>;
-
   constructor() {
     this.service.managers().subscribe({
       next: (list) => this.managers.set(list),
@@ -280,7 +278,7 @@ export class CalendarPage implements OnDestroy {
     this.watchBreakpoint();
     // The first load is driven by FullCalendar's initial `datesSet`, which
     // tells us the window to ask for.
-    afterNextRender(() => this.watchResize());
+    this.watchResize();
   }
 
   /** Track the phone breakpoint so the grid options can follow it. */
@@ -295,49 +293,57 @@ export class CalendarPage implements OnDestroy {
     this.destroyRef.onDestroy(() => media.removeEventListener('change', onChange));
   }
 
-  ngOnDestroy(): void {
-    clearTimeout(this.searchTimer);
-  }
-
   /**
    * Re-lay out the grid whenever its container changes size. FullCalendar only
    * watches the *window*, so collapsing the sidebar — which resizes the card
    * without resizing the window — would otherwise leave the columns at their
    * old widths until the next window resize.
+   *
+   * Reads the card through its signal so it re-attaches to whatever element is
+   * current: crossing to the week-end list and back destroys the grid's card
+   * and builds a new one, which an observer bound once would stop watching.
    */
   private watchResize(): void {
-    const card = this.card()?.nativeElement;
-    if (!card) {
+    if (typeof ResizeObserver === 'undefined') {
       return;
     }
     let frame = 0;
-    const observer = new ResizeObserver(() => {
-      // The sidebar animates, so this fires every frame of the transition —
-      // coalesce to one reflow per frame.
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => this.calendarApi()?.updateSize());
+    effect((onCleanup) => {
+      const card = this.card()?.nativeElement;
+      if (!card) {
+        return;
+      }
+      const observer = new ResizeObserver(() => {
+        // The sidebar animates, so this fires every frame of the transition —
+        // coalesce to one reflow per frame.
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => this.calendarApi()?.updateSize());
+      });
+      observer.observe(card);
+      onCleanup(() => {
+        cancelAnimationFrame(frame);
+        observer.disconnect();
+      });
     });
-    observer.observe(card);
-    this.destroyRef.onDestroy(() => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-    });
-  }
-
-  protected typeLabel(type: CalendarEventType): string {
-    return EVENT_TYPE_LABELS[type];
   }
 
   // ---- Loading ----
   private currentFilter(): CalendarFilter {
+    const filters = this.filters();
     return {
       from: this.range?.from ?? '',
       to: this.range?.to ?? '',
-      types: this.types(),
-      status: this.status(),
-      managedByUuid: this.managedBy(),
-      search: this.query(),
+      types: filters.types,
+      status: filters.status,
+      managedByUuid: filters.managedByUuid,
+      search: filters.query,
     };
+  }
+
+  /** The filter bar reported a change — refetch the visible window with it. */
+  protected onFiltersChange(next: CalendarFilterState): void {
+    this.filters.set(next);
+    this.load();
   }
 
   /** Refetch the visible window. No-op until FullCalendar has reported one. */
@@ -374,6 +380,10 @@ export class CalendarPage implements OnDestroy {
 
     this.viewTitle.set(arg.view.title);
     this.view.set(arg.view.type as ViewKey);
+    this.gridView.set(arg.view.type as GridViewKey);
+    // `currentStart` is the period itself, not the padded grid — reopening on
+    // the grid's first visible day would land a month view on the month before.
+    this.gridDate = toIsoDate(arg.view.currentStart);
 
     if (this.range?.from === next.from && this.range?.to === next.to) {
       return;
@@ -429,59 +439,67 @@ export class CalendarPage implements OnDestroy {
   }
 
   // ---- Toolbar ----
+  /** The arrows step a period on the grid and a year on the week-end list. */
   protected prev(): void {
+    if (this.isYearView()) {
+      this.year.update((y) => y - 1);
+      this.loadYear();
+      return;
+    }
     this.calendarApi()?.prev();
   }
   protected next(): void {
+    if (this.isYearView()) {
+      this.year.update((y) => y + 1);
+      this.loadYear();
+      return;
+    }
     this.calendarApi()?.next();
   }
   protected today(): void {
+    if (this.isYearView()) {
+      const current = new Date().getFullYear();
+      if (this.year() !== current) {
+        this.year.set(current);
+        this.loadYear();
+      }
+      return;
+    }
     this.calendarApi()?.today();
   }
+
+  /**
+   * Switch layout. The four FullCalendar views are a `changeView` away, but the
+   * week-end list is this page's own component — so crossing between the two
+   * mounts or unmounts the grid, and the window has to be driven from here
+   * instead of arriving through `datesSet`.
+   */
   protected setView(view: ViewKey): void {
+    if (view === this.view()) {
+      return;
+    }
+    if (view === 'weekends') {
+      this.view.set('weekends');
+      this.loadYear();
+      return;
+    }
+    this.gridView.set(view);
+    if (this.isYearView()) {
+      // Remounts the grid on `gridView` / `gridDate`; its `datesSet` then
+      // reports the window and refetches.
+      this.view.set(view);
+      return;
+    }
     this.calendarApi()?.changeView(view);
   }
 
-  // ---- Filter handlers (each refetches the visible window) ----
-  protected onSearch(value: string): void {
-    this.query.set(value);
-    clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.load(), SEARCH_DEBOUNCE_MS);
-  }
-  protected toggleType(type: CalendarEventType): void {
-    this.types.update((list) =>
-      list.includes(type) ? list.filter((t) => t !== type) : [...list, type],
-    );
+  /** Point the window at the whole displayed year and refetch — one request
+   *  covers the list, since it shows every week-end of the year at once. */
+  private loadYear(): void {
+    const year = this.year();
+    this.viewTitle.set(String(year));
+    this.range = { from: `${year}-01-01`, to: `${year}-12-31` };
     this.load();
-  }
-  protected isTypeActive(type: CalendarEventType): boolean {
-    return this.types().includes(type);
-  }
-  protected setStatus(value: string): void {
-    this.status.set(value as CalendarStatus | 'ALL');
-    this.load();
-  }
-  protected setManagedBy(value: string): void {
-    this.managedBy.set(value);
-    this.load();
-  }
-  protected resetFilters(): void {
-    clearTimeout(this.searchTimer);
-    this.query.set('');
-    this.types.set([]);
-    this.status.set('ALL');
-    this.managedBy.set('ALL');
-    const input = this.searchInput()?.nativeElement;
-    if (input) {
-      input.value = '';
-    }
-    this.load();
-  }
-  protected openFilters(): void {
-    this.filterDrawerOpen.set(true);
-  }
-  protected closeFilters(): void {
-    this.filterDrawerOpen.set(false);
   }
 
   // ---- Detail / form ----

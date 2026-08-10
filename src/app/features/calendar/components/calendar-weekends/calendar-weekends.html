@@ -1,0 +1,64 @@
+<div class="wk">
+  @for (month of months(); track month.key) {
+    <section class="wk__month" [id]="'wk-' + month.key">
+      <h3 class="wk__month-head">
+        <span class="wk__month-name">{{ month.label }}</span>
+        <span class="wk__month-count" [class.wk__month-count--free]="month.count === 0">
+          @if (month.count) {
+            {{ month.count }} événement{{ month.count > 1 ? 's' : '' }}
+          } @else {
+            Libre
+          }
+        </span>
+      </h3>
+
+      <!-- One card per week-end: the Saturday and its Sunday, together. -->
+      @for (weekend of month.weekends; track weekend.key) {
+        <div
+          class="wk__end"
+          [class.wk__end--free]="weekend.free"
+          [class.wk__end--current]="weekend.current">
+          @for (day of weekend.days; track day.iso) {
+            <div class="wk__day" [class.wk__day--today]="day.isToday">
+              <button
+                type="button"
+                class="wk__date"
+                (click)="createOn.emit(day.iso)"
+                [attr.aria-label]="'Ajouter un événement le ' + day.weekday + ' ' + day.day">
+                <span class="wk__date-name">{{ day.weekday }}</span>
+                <span class="wk__date-num">{{ day.day }}</span>
+              </button>
+
+              <div class="wk__events">
+                @for (item of day.events; track item.uuid) {
+                  <button
+                    type="button"
+                    class="wk__event {{ typeClass(item) }}"
+                    [class.wk__event--cancelled]="item.status === 'CANCELLED'"
+                    (click)="selectItem.emit(item)">
+                    <span class="wk__bar" aria-hidden="true"></span>
+                    <span class="wk__body">
+                      <span class="wk__name">{{ item.name }}</span>
+                      <span class="wk__meta">
+                        @if (item.startTime) {
+                          {{ time(item.startTime) }}
+                        } @else {
+                          Journée
+                        }
+                        @if (item.location || item.cityLabel) {
+                          · {{ item.location || item.cityLabel }}
+                        }
+                      </span>
+                    </span>
+                  </button>
+                } @empty {
+                  <span class="wk__free">Libre</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

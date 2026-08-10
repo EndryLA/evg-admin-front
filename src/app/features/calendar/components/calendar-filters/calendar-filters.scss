@@ -1,0 +1,127 @@
+/* The agenda's filter bar. Moved off the page wholesale, so these are the same
+   rules the page used to carry — minus its `.agenda` hand-scoping, which this
+   component gets from Angular instead.
+
+   The drawer chrome the phone layout uses (`.filter-controls`, `.drawer-*`,
+   `.filter-toggle`, `.drawer-backdrop`) is host-agnostic and lives in
+   styles.scss; it applies here unchanged. */
+
+:host {
+  /* A custom element is inline by default, which would collapse the bar's
+     padding against the page. */
+  display: block;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 32px 18px;
+  flex-wrap: wrap;
+}
+
+.search {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  max-width: 380px;
+
+  svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--text-faint);
+    pointer-events: none;
+  }
+  input {
+    width: 100%;
+    padding: 10px 13px 10px 38px;
+    border: 1px solid var(--border-input);
+    border-radius: 9px;
+    background: var(--bg-input);
+    font-size: 14px;
+    color: var(--text-primary);
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-ring);
+    }
+  }
+}
+
+.filter-field { display: inline-flex; align-items: center; gap: 8px; }
+.filter-field__label { font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
+.filter-select {
+  padding: 9px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--bg-input);
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+}
+.filter-reset { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; }
+.new-btn { margin-left: auto; flex: 0 0 auto; }
+.new-btn svg { width: 16px; height: 16px; }
+
+/* ---- Type filter chips ---- */
+/* One tone per event type, reusing the badge palette (design.md §1). The grid's
+   event blocks read the same three vars from `calendar-grid.scss` — a type is
+   themed against the same palette in both places. */
+.type-chip--outreach { --ev-bg: var(--pill-red-bg);    --ev-text: var(--pill-red-text);    --ev-solid: #dc2626; }
+.type-chip--reunion  { --ev-bg: var(--pill-blue-bg);   --ev-text: var(--pill-blue-text);   --ev-solid: #2563eb; }
+.type-chip--agape    { --ev-bg: var(--pill-amber-bg);  --ev-text: var(--pill-amber-text);  --ev-solid: #d97706; }
+.type-chip--other    { --ev-bg: var(--pill-violet-bg); --ev-text: var(--pill-violet-text); --ev-solid: #7c3aed; }
+
+.type-chips { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--bg-input);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+
+  &:hover { background: var(--bg-sunken); }
+  &:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+}
+.type-chip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ev-solid);
+  flex: 0 0 auto;
+}
+.type-chip--active {
+  background: var(--ev-bg);
+  border-color: transparent;
+  color: var(--ev-text);
+}
+
+/* ---- Phone ---- */
+/* Every row above the grid is height the grid doesn't get, so the bar runs
+   tighter here than on the other phone pages. */
+@media (max-width: 720px) {
+  .filters { padding: 0 16px 12px; gap: 10px; }
+  .search { max-width: none; min-width: 0; flex: 1; }
+}

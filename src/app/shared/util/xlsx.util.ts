@@ -22,6 +22,11 @@ export interface XlsxSheet<T> {
   columns: readonly XlsxColumn<T>[];
   /** Prepend an auto-incrementing "N°" column. */
   numbered?: boolean;
+  /**
+   * Overrides the "N°" cell for a row (`numbered` must be on), for sheets whose
+   * numbering restarts mid-way — e.g. contacts then conversions on one tab.
+   */
+  rowNumber?: (row: T, index: number) => number;
   /** ARGB font colour (e.g. `'FFFF0000'`) for a row's cells, or undefined for the default. */
   rowTextColor?: (row: T) => string | undefined;
 }
@@ -87,13 +92,13 @@ export async function exportSheetsToXlsx(
 
 /** Fill one worksheet with `spec`'s header band, rows, widths and borders. */
 function writeSheet<T>(sheet: Worksheet, spec: XlsxSheet<T>): void {
-  const { rows, columns, numbered, rowTextColor } = spec;
+  const { rows, columns, numbered, rowNumber, rowTextColor } = spec;
 
   sheet.addRow([...(numbered ? ['N°'] : []), ...columns.map((c) => c.header)]);
 
   rows.forEach((row, i) => {
     const cells = [
-      ...(numbered ? [i + 1] : []),
+      ...(numbered ? [rowNumber ? rowNumber(row, i) : i + 1] : []),
       ...columns.map((c) => cellValue(c.value(row))),
     ];
     const added = sheet.addRow(cells);
@@ -140,10 +145,18 @@ function writeSheet<T>(sheet: Worksheet, spec: XlsxSheet<T>): void {
   });
 }
 
-/** A column's value, with blanks rendered as {@link EMPTY_CELL}. */
+/**
+ * A column's value, with anything unknown rendered as {@link EMPTY_CELL}:
+ * null/undefined, a blank string, and the `—` placeholder the display helpers
+ * return for absent data (which belongs on screen, not in a sheet).
+ */
 function cellValue(value: string | number | null | undefined): string | number {
   if (value === null || value === undefined) {
     return EMPTY_CELL;
   }
-  return typeof value === 'string' && value.trim() === '' ? EMPTY_CELL : value;
+  if (typeof value !== 'string') {
+    return value;
+  }
+  const text = value.trim();
+  return text === '' || text === '—' ? EMPTY_CELL : value;
 }

@@ -19,6 +19,12 @@ import { toNameCase } from '../../../../shared/util/text.util';
 import { AttendanceService } from '../../attendance.service';
 import { ATTENDANCE_REASON_OPTIONS, type AttendanceReason } from '../../attendance.models';
 
+/**
+ * How the visitor takes part: department member, guest, or block leader — the
+ * last one records nothing here.
+ */
+type Branch = 'MEMBER' | 'GUEST' | 'LEADER';
+
 /** Initial/reset value for the member field: no pick, empty label. */
 const EMPTY_MEMBER: MemberValue = { uuid: null, label: '' };
 
@@ -30,10 +36,10 @@ function memberPicked(control: AbstractControl): ValidationErrors | null {
 
 /**
  * Public, unauthenticated form (`/sortie/:uuid/presence`) for recording a
- * person's presence at an outreach. First asks whether the visitor is part of
- * the department: a member picks themselves from an autocomplete (linking their
- * profile); a guest gives their name and how they came — with "invité par" shown
- * only for an invitation.
+ * person's presence at an outreach. First asks in which capacity the visitor is
+ * there: a member picks themselves from an autocomplete (linking their profile);
+ * a guest gives their name and how they came — with "invité par" shown only for
+ * an invitation; a block leader has nothing to record here and only sees a note.
  */
 @Component({
   selector: 'app-public-attendance-form',
@@ -50,8 +56,8 @@ export class PublicAttendanceForm implements OnInit {
 
   protected readonly reasonOptions = ATTENDANCE_REASON_OPTIONS;
 
-  /** Step-1 branch: null until the visitor answers "Êtes-vous du département ?". */
-  protected readonly branch = signal<'MEMBER' | 'GUEST' | null>(null);
+  /** Step-1 branch: null until the visitor answers "Vous participez en tant que… ?". */
+  protected readonly branch = signal<Branch | null>(null);
 
   protected readonly submitting = signal(false);
   protected readonly submitted = signal(false);
@@ -90,13 +96,13 @@ export class PublicAttendanceForm implements OnInit {
     this.service.outreachName(this.uuid()).subscribe((name) => this.outreachName.set(name));
   }
 
-  /** Pick the department branch and clear any stale error. */
-  protected choose(branch: 'MEMBER' | 'GUEST'): void {
+  /** Pick the capacity branch and clear any stale error. */
+  protected choose(branch: Branch): void {
     this.error.set(null);
     this.branch.set(branch);
   }
 
-  /** Return to the department question, keeping entered values. */
+  /** Return to the capacity question, keeping entered values. */
   protected back(): void {
     this.error.set(null);
     this.branch.set(null);
@@ -120,6 +126,9 @@ export class PublicAttendanceForm implements OnInit {
       return;
     }
     const branch = this.branch();
+    if (branch === null || branch === 'LEADER') {
+      return;
+    }
     const form = branch === 'MEMBER' ? this.memberForm : this.guestForm;
     if (form.invalid) {
       form.markAllAsTouched();
