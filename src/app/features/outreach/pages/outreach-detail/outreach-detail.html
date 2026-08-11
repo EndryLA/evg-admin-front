@@ -20,20 +20,6 @@
         <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
       </p>
     </div>
-    <div class="detail-head__actions">
-      <a class="btn" [href]="publicFormPath()" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Formulaire public
-      </a>
-      <button type="button" class="btn btn--primary" (click)="openEdit()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-        Modifier
-      </button>
-      <button type="button" class="btn btn--danger" (click)="askDelete()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-        Supprimer
-      </button>
-    </div>
   </header>
 
   <section class="card">
@@ -82,61 +68,17 @@
     </dl>
   </section>
 
-  <section class="contacts">
-    <h2 class="contacts__title">
-      Contacts
-      @if (!contactsLoading() && !contactsError()) {
-        <span class="contacts__count">{{ contacts().length }}</span>
-      }
-    </h2>
-
-    <div class="card">
-      @if (contactsLoading()) {
-        <div class="state">Chargement des contacts…</div>
-      } @else if (contactsError(); as err) {
-        <div class="state state--error">
-          {{ err }}
-          <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
-        </div>
-      } @else if (contacts().length === 0) {
-        <div class="state">
-          <div class="state__title">Aucun contact</div>
-          <div class="state__hint">Aucune personne n'a encore été enregistrée pour cette sortie.</div>
-        </div>
-      } @else {
-        <table>
-          <thead>
-            <tr>
-              <th>Personne</th>
-              <th>Type</th>
-              <th>État civil</th>
-              <th>Ville</th>
-              <th>Évangélisé par</th>
-              <th>Téléphone</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (c of contacts(); track c.uuid) {
-              <tr>
-                <td class="cell-main">{{ contactName(c) }}</td>
-                <td><span class="pill pill--{{ typeTone(c.type) }}">{{ typeLabel(c.type) }}</span></td>
-                <td class="cell-muted">{{ civilStateLabel(c) }}</td>
-                <td class="cell-muted">{{ c.cityName || '—' }}</td>
-                <td class="cell-muted">{{ c.evangelizedBy || '—' }}</td>
-                <td class="cell-muted">{{ c.phoneNumber | phoneFr }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-    </div>
-  </section>
-
-  <app-outreach-presences
-    [presences]="presences()"
-    [loading]="presencesLoading()"
-    [error]="presencesError()"
-    (retry)="load()" />
+  <!-- Actions sit after the record they act on: you read the sortie, then decide. -->
+  <div class="detail-actions">
+    <button type="button" class="btn btn--primary" (click)="openEdit()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      Modifier
+    </button>
+    <button type="button" class="btn btn--danger" (click)="askDelete()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+      Supprimer
+    </button>
+  </div>
 
   @if (formOpen()) {
     <app-outreach-form
