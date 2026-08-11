@@ -108,12 +108,6 @@
 }
 .roster__row:hover { background: var(--row-hover); }
 
-/* The chef heads their own roster — weighted so the row reads as the anchor. */
-.roster__row--lead .roster__name {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
 .roster__name {
   flex: 1;
   min-width: 0;

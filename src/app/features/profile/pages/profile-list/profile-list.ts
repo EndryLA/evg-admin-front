@@ -21,11 +21,15 @@ type TypeFilter = ProfileFilter['membershipType'];
 
 /** One team: its leader plus the members reporting to them. */
 interface TeamGroup {
-  /** Group key — a leader uuid, or {@link NO_TEAM} for unassigned members. */
-  leaderUuid: string;
+  /**
+   * Group key — the leader's first name, or {@link NO_TEAM}. `ProfileResponse`
+   * dropped `leaderUuid` in API v7 and exposes only `leaderFirstname`, so the
+   * name *is* the team identity we have to work with.
+   */
+  key: string;
   /** Card title, e.g. "Équipe Ephraim" or "Sans équipe". */
   title: string;
-  /** Badge tone, keyed by leader uuid so it matches the rest of the app. */
+  /** Badge tone, hashed from the key so a team keeps its colour. */
   tone: string;
   members: Profile[];
 }
@@ -111,51 +115,42 @@ export class ProfileList implements OnDestroy {
    * roster always accounts for everyone.
    */
   protected readonly teams = computed<TeamGroup[]>(() => {
-    const byLeader = new Map<string, TeamGroup>();
-
-    for (const leader of this.leaders()) {
-      byLeader.set(leader.uuid, {
-        leaderUuid: leader.uuid,
-        title: `Équipe ${leader.firstname}`,
-        tone: leaderTone(leader.uuid),
-        members: [],
-      });
-    }
-
-    for (const profile of this.rows()) {
-      // A leader reports to nobody, so they carry no `leaderUuid` — key them to
-      // their own team instead of letting them fall into "Sans équipe".
-      const key = profile.isTeamLeader ? profile.uuid : profile.leaderUuid ?? NO_TEAM;
-      let group = byLeader.get(key);
-      if (!group) {
-        // A leader referenced by a member but missing from `leaders()` (not
-        // flagged `isTeamLeader`) still gets a card — nobody goes unlisted.
-        group = {
-          leaderUuid: key,
-          title: profile.isTeamLeader
-            ? `Équipe ${profile.firstname}`
-            : profile.leaderFirstname
-              ? `Équipe ${profile.leaderFirstname}`
-              : 'Sans équipe',
+    const byTeam = new Map<string, TeamGroup>();
+    const group = (key: string): TeamGroup => {
+      let existing = byTeam.get(key);
+      if (!existing) {
+        existing = {
+          key,
+          title: key === NO_TEAM ? 'Sans équipe' : `Équipe ${key}`,
           tone: leaderTone(key === NO_TEAM ? null : key),
           members: [],
         };
-        byLeader.set(key, group);
+        byTeam.set(key, existing);
       }
-      group.members.push(profile);
+      return existing;
+    };
+
+    // Every team gets a card up front, so one stays on screen even when the
+    // current filter matches none of its members.
+    for (const leader of this.leaders()) {
+      group(leader.firstname);
     }
 
-    // The chef heads their own roster; everyone else keeps the server's order.
-    for (const group of byLeader.values()) {
-      group.members.sort(
-        (a, b) => Number(b.uuid === group.leaderUuid) - Number(a.uuid === group.leaderUuid),
-      );
+    for (const profile of this.rows()) {
+      // A leader reports to nobody, so they carry no `leaderFirstname` — key
+      // them to their own team instead of dropping them into "Sans équipe".
+      group(profile.isTeamLeader ? profile.firstname : profile.leaderFirstname ?? NO_TEAM)
+        .members.push(profile);
     }
 
-    return [...byLeader.values()].sort((a, b) => {
+    for (const team of byTeam.values()) {
+      team.members.sort((a, b) => a.firstname.localeCompare(b.firstname, 'fr'));
+    }
+
+    return [...byTeam.values()].sort((a, b) => {
       // "Sans équipe" is a leftover bucket, not a team — it stays at the bottom.
-      if ((a.leaderUuid === NO_TEAM) !== (b.leaderUuid === NO_TEAM)) {
-        return a.leaderUuid === NO_TEAM ? 1 : -1;
+      if ((a.key === NO_TEAM) !== (b.key === NO_TEAM)) {
+        return a.key === NO_TEAM ? 1 : -1;
       }
       return b.members.length - a.members.length || a.title.localeCompare(b.title, 'fr');
     });
@@ -163,7 +158,7 @@ export class ProfileList implements OnDestroy {
 
   /** Real teams, excluding the "Sans équipe" bucket — drives the subtitle. */
   protected readonly teamCount = computed(
-    () => this.teams().filter((t) => t.leaderUuid !== NO_TEAM).length,
+    () => this.teams().filter((t) => t.key !== NO_TEAM).length,
   );
 
   /** Every member currently loaded. */
@@ -174,17 +169,17 @@ export class ProfileList implements OnDestroy {
    * nothing here may force a card open. Filters seed the set on load instead
    * (see {@link syncOpenTeams}).
    */
-  protected isOpen(leaderUuid: string): boolean {
-    return this.openTeams().has(leaderUuid);
+  protected isOpen(key: string): boolean {
+    return this.openTeams().has(key);
   }
 
-  protected toggleTeam(leaderUuid: string): void {
+  protected toggleTeam(key: string): void {
     this.openTeams.update((open) => {
       const next = new Set(open);
-      if (next.has(leaderUuid)) {
-        next.delete(leaderUuid);
+      if (next.has(key)) {
+        next.delete(key);
       } else {
-        next.add(leaderUuid);
+        next.add(key);
       }
       return next;
     });
@@ -248,7 +243,7 @@ export class ProfileList implements OnDestroy {
     }
     // Same key rule as `teams()`, so a matched leader opens their own card.
     this.openTeams.set(
-      new Set(loaded.map((p) => (p.isTeamLeader ? p.uuid : p.leaderUuid ?? NO_TEAM))),
+      new Set(loaded.map((p) => (p.isTeamLeader ? p.firstname : p.leaderFirstname ?? NO_TEAM))),
     );
   }
 

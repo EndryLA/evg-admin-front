@@ -135,14 +135,14 @@
     </div>
   } @else {
     <div class="teams">
-      @for (team of teams(); track team.leaderUuid) {
-        <section class="team" [class.team--open]="isOpen(team.leaderUuid)">
+      @for (team of teams(); track team.key) {
+        <section class="team" [class.team--open]="isOpen(team.key)">
           <button
             type="button"
             class="team__head"
             [disabled]="team.members.length === 0"
-            [attr.aria-expanded]="isOpen(team.leaderUuid)"
-            (click)="toggleTeam(team.leaderUuid)">
+            [attr.aria-expanded]="isOpen(team.key)"
+            (click)="toggleTeam(team.key)">
             <span class="team__dot team__dot--{{ team.tone }}" aria-hidden="true"></span>
             <span class="team__id">
               <span class="team__name">{{ team.title }}</span>
@@ -156,19 +156,12 @@
             }
           </button>
 
-          @if (isOpen(team.leaderUuid)) {
+          @if (isOpen(team.key)) {
             <ul class="roster">
               @for (m of team.members; track m.uuid) {
                 <li>
-                  <button
-                    type="button"
-                    class="roster__row"
-                    [class.roster__row--lead]="m.uuid === team.leaderUuid"
-                    (click)="view(m)">
+                  <button type="button" class="roster__row" (click)="view(m)">
                     <span class="roster__name">{{ fullName(m) }}</span>
-                    @if (m.uuid === team.leaderUuid) {
-                      <span class="pill pill--dark">Chef</span>
-                    }
                     @if (m.membershipType === 'OUVRIER') {
                       <span class="pill pill--red">Ouvrier</span>
                     } @else if (m.membershipType === 'AIDE') {
