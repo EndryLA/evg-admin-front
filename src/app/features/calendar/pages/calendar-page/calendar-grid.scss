@@ -91,8 +91,8 @@
     text-decoration: none;
   }
   .fc-daygrid-day-frame { padding-bottom: 4px; }
-  /* Day cells are click targets — clicking or dragging one opens a prefilled
-     creation, so they have to answer the pointer. */
+  /* Day cells are click targets — a click opens what's on the day, or a
+     creation when it's empty, so they have to answer the pointer. */
   .fc-daygrid-day { cursor: pointer; transition: background 0.12s ease; }
   .fc-daygrid-day:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); }
   .fc-day-today .fc-daygrid-day-number {
@@ -103,20 +103,22 @@
      hover above still reads on them. */
   .fc-day-other .fc-daygrid-day-number { color: var(--text-faint); }
 
-  /* Time grid. */
-  .fc-timegrid-slot { height: 40px; }
-  .fc-timegrid-slot-label-cushion,
-  .fc-timegrid-axis-cushion {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-faint);
+  /* Days already gone. Sunk and faded so the eye lands on what's ahead, but
+     deliberately not disabled: a sortie is often recorded after the fact, so a
+     past day still hovers, still opens a creation, and lifts back to full
+     strength while the pointer is on it. */
+  .evg-day--past {
+    background: var(--bg-sunken);
+
+    .fc-daygrid-day-number { color: var(--text-faint); }
+    .fc-daygrid-day-events { opacity: 0.6; transition: opacity 0.12s ease; }
+    &:hover .fc-daygrid-day-events { opacity: 1; }
   }
-  /* Half-hour lines are a hint, not a rule. */
-  .fc-timegrid-slot-minor { border-top-style: dotted; }
-  /* No day disc here, so the tint is today's only cue. */
-  .fc-timegrid-col.fc-day-today { background: var(--accent-soft-bg); }
-  .fc-timegrid-col { cursor: pointer; }
-  .fc-timegrid-col:hover { background: var(--bg-sunken); }
+  /* Today is never "past", and the disc must survive the rules above. */
+  .fc-day-today.evg-day--past .fc-daygrid-day-number {
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
 
   /* Event chips: tinted fill, type-colored text, solid leading bar. */
   /* Soft tinted fill with a solid accent bar down the left. The bar is a real
@@ -156,6 +158,14 @@
     text-decoration: line-through;
   }
 
+  /* Entries that have been and gone — quiet, but back to full strength under
+     the pointer, since they stay readable and clickable. */
+  .evg-ev--past {
+    opacity: 0.65;
+
+    &:hover { opacity: 1; }
+  }
+
   /* "+2 en plus" link and its popover. */
   .fc-daygrid-more-link {
     margin: 1px 4px;
@@ -183,28 +193,10 @@
   }
   .fc-popover-body { padding: 6px 4px; }
 
-  /* List view. */
-  .fc-list { border: none; }
-  .fc-list-day-cushion {
-    padding: 9px 14px;
-    background: var(--bg-inset);
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-  .fc-list-event { cursor: pointer; }
-  .fc-list-event td { padding: 11px 14px; border-color: var(--border-faint); }
-  .fc-list-event-title { font-weight: 600; }
-  .fc-list-event-time { color: var(--text-muted); font-size: 13px; }
-  /* The dot is the list view's only type cue. */
-  .fc-list-event-dot { border-color: var(--ev-solid); }
-  .fc-list-empty { background: var(--bg-card); color: var(--text-muted); font-size: 14px; }
-
   /* Mirror shown while dragging out a new slot. */
   .fc-highlight { background: var(--accent-ring); }
 }
 
 @media (max-width: 720px) {
   .agenda .fc { font-size: 12.5px; }
-  .agenda .fc .fc-timegrid-slot { height: 34px; }
 }

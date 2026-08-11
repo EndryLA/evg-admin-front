@@ -99,18 +99,9 @@
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-ring);
   }
-  .cal-title {
-    margin: 0 0 0 6px;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    /* FullCalendar's French titles come through lowercase ("juillet 2026"). */
-    text-transform: capitalize;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  /* The range label is the period picker's trigger — it carries its own type
+     styles (see that component). */
+
   /* Quiet activity hint — the grid keeps the previous range on screen while the
      next one loads, so this is the only signal a fetch is in flight. */
   .cal-spinner {
@@ -139,24 +130,13 @@
   }
   .cal-card--busy { opacity: 0.65; }
 
-  /* The week-end list is the one "grid" the page draws itself, so unlike the
+  /* The week list is the one "grid" the page draws itself, so unlike the
      FullCalendar card it has no library border to sit inside — it needs its own
      padding and sits on the page surface rather than a card one. */
-  .cal-card--weekends {
+  .cal-card--weeks {
     background: transparent;
     padding: 4px 0 8px;
     overflow: visible;
-  }
-
-  /* Week view on a phone: seven time columns can't share 360px, so the grid
-     keeps a usable minimum width and the card scrolls sideways to it. The
-     minimum is on the harness rather than `.fc`, so the grid still measures the
-     width it actually renders at. */
-  .cal-card--scroll-x {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-
-    .fc-view-harness { min-width: 640px; }
   }
 }
 
@@ -211,7 +191,6 @@
     .tabs { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     .cal-toolbar { padding: 0 16px 10px; gap: 10px; }
-    .cal-title { font-size: 16px; }
     .cal-alert { margin: 0 16px 10px; }
     .cal-views { width: 100%; }
     .cal-views .tab { flex: 1; }

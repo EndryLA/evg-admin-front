@@ -1,0 +1,42 @@
+<div class="pp">
+  <button
+    type="button"
+    class="pp__trigger"
+    [class.pp__trigger--open]="open()"
+    [attr.aria-expanded]="open()"
+    aria-haspopup="dialog"
+    (click)="toggle()">
+    <span class="pp__label">{{ label() }}</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+
+  @if (open()) {
+    <!-- Closes the panel on any click outside it. -->
+    <button type="button" class="pp__backdrop" (click)="close()" aria-label="Fermer" tabindex="-1"></button>
+
+    <div class="pp__panel" role="dialog" aria-label="Choisir un mois">
+      <div class="pp__years">
+        <button type="button" class="pp__step" (click)="shiftYear(-1)" aria-label="Année précédente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="pp__year" aria-live="polite">{{ panelYear() }}</span>
+        <button type="button" class="pp__step" (click)="shiftYear(1)" aria-label="Année suivante">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      <div class="pp__months">
+        @for (m of months; track $index) {
+          <button
+            type="button"
+            class="pp__month"
+            [class.pp__month--current]="isCurrent($index)"
+            [attr.aria-current]="isCurrent($index) ? 'true' : null"
+            (click)="pick($index)">
+            {{ m }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>

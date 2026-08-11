@@ -14,7 +14,11 @@ import {
 
 import { formatTimeFr } from '../../../../shared/util/date.util';
 import type { CalendarEventType, CalendarItem } from '../../calendar.models';
-import { CalendarWeekends } from '../calendar-weekends/calendar-weekends';
+import {
+  CalendarPeriodPicker,
+  type Period,
+} from '../calendar-period-picker/calendar-period-picker';
+import { CalendarWeeks } from '../calendar-weeks/calendar-weeks';
 
 /** Monday-first weekday initials — the app runs `firstDay: 1` everywhere. */
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'] as const;
@@ -34,9 +38,10 @@ const LOAD_MONTHS = 12;
  *  month is prefetched while the visible months are still covered — no wait. */
 const REFETCH_AT = LOAD_MONTHS - 1;
 
-/** The two layouts the phone agenda offers. `weekends` lists a whole year of
- *  Saturdays and Sundays — the days the department actually plans on. */
-type MobileMode = 'month' | 'weekends';
+/** The two layouts the phone agenda offers, mirroring the desktop's two tabs.
+ *  `weeks` lists a whole year week by week — week-ends always, weekdays when
+ *  something falls on them — and is what the department plans in. */
+type MobileMode = 'weeks' | 'month';
 
 /** A single square in the month grid. */
 interface DayCell {
@@ -46,6 +51,8 @@ interface DayCell {
   /** False for the days that spill in from the neighbouring month. */
   inMonth: boolean;
   isToday: boolean;
+  /** Strictly before today — drawn quiet, but still tappable. */
+  isPast: boolean;
   /** Up to three distinct event types on the day, for the coloured dots. */
   dots: CalendarEventType[];
 }
@@ -77,7 +84,8 @@ function capitalize(value: string): string {
 }
 
 /**
- * The phone agenda — a native-feeling month calendar in the shape of Apple's:
+ * The phone agenda — the year's weeks by default, and behind the second tab a
+ * native-feeling month calendar in the shape of Apple's:
  * a month grid that scrolls vertically month to month and snaps ("locks") to
  * one month per gesture, over a scrollable list of the selected day's events.
  *
@@ -92,7 +100,7 @@ function capitalize(value: string): string {
  */
 @Component({
   selector: 'app-calendar-mobile',
-  imports: [CalendarWeekends],
+  imports: [CalendarWeeks, CalendarPeriodPicker],
   templateUrl: './calendar-mobile.html',
   styleUrls: ['./calendar-mobile.scss', './calendar-agenda.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -106,7 +114,7 @@ export class CalendarMobile implements OnInit, OnDestroy {
   readonly rangeChange = output<{ from: string; to: string }>();
   /** A tapped entry — the page opens its detail. */
   readonly selectItem = output<CalendarItem>();
-  /** The "+" for a day — the page opens a creation prefilled with the date. */
+  /** The "+" for a day — the page asks what to create on that date. */
   readonly createOn = output<string>();
 
   protected readonly weekdays = WEEKDAYS;
@@ -117,9 +125,9 @@ export class CalendarMobile implements OnInit, OnDestroy {
 
   /** Which layout is on screen. Switching refetches, since the two want very
    *  different windows — three months against a whole year. */
-  protected readonly mode = signal<MobileMode>('month');
+  protected readonly mode = signal<MobileMode>('weeks');
 
-  /** The year the weekend list covers. Only read in `weekends` mode. */
+  /** The year the week list covers. Only read in `weeks` mode. */
   protected readonly year = signal(new Date().getFullYear());
 
   /** First day of the centre (committed) month. */
@@ -146,12 +154,19 @@ export class CalendarMobile implements OnInit, OnDestroy {
     month: 'long',
   });
 
-  /** e.g. `Juillet 2026` — follows the grid as it's dragged. The weekend list
+  /** e.g. `Juillet 2026` — follows the grid as it's dragged. The week list
    *  spans a year, so it's titled by the year alone. */
   protected readonly title = computed(() =>
-    this.mode() === 'weekends'
+    this.mode() === 'weeks'
       ? String(this.year())
       : capitalize(this.monthFmt.format(this.displayedMonth())),
+  );
+
+  /** What the period picker opens on: the month under the cursor either way,
+   *  and the year the list covers when it's the one on screen. */
+  protected readonly pickerMonth = computed(() => this.displayedMonth().getMonth());
+  protected readonly pickerYear = computed(() =>
+    this.mode() === 'weeks' ? this.year() : this.displayedMonth().getFullYear(),
   );
 
   /** e.g. `Mardi 15 juillet`. */
@@ -229,23 +244,25 @@ export class CalendarMobile implements OnInit, OnDestroy {
   ngOnInit(): void {
     // The first fetch is ours to trigger — the page has no window until now.
     this.emitRange();
+    // The week list opens on the current month, not at the top of January.
+    this.scrollToMonth(`${this.year()}-${this.cursor().getMonth()}`);
   }
 
   ngOnDestroy(): void {
     clearTimeout(this.settleTimer);
   }
 
-  /** Arrows step a month in the grid and a year in the weekend list. In the
-   *  grid they animate the pager; the settle handler then commits the month. */
+  /** Arrows step a month in the grid and a year in the week list. In the grid
+   *  they animate the pager; the settle handler then commits the month. */
   protected prev(): void {
-    if (this.mode() === 'weekends') {
+    if (this.mode() === 'weeks') {
       this.shiftYear(-1);
       return;
     }
     this.page(-1);
   }
   protected next(): void {
-    if (this.mode() === 'weekends') {
+    if (this.mode() === 'weeks') {
       this.shiftYear(1);
       return;
     }
@@ -254,13 +271,8 @@ export class CalendarMobile implements OnInit, OnDestroy {
 
   protected goToday(): void {
     const t = new Date();
-    if (this.mode() === 'weekends') {
-      const sameYear = this.year() === t.getFullYear();
-      this.year.set(t.getFullYear());
-      if (!sameYear) {
-        this.emitRange();
-      }
-      this.scrollToMonth(`${t.getFullYear()}-${t.getMonth()}`);
+    if (this.mode() === 'weeks') {
+      this.goTo({ month: t.getMonth(), year: t.getFullYear() });
       return;
     }
     this.cursor.set(new Date(t.getFullYear(), t.getMonth(), 1));
@@ -276,13 +288,13 @@ export class CalendarMobile implements OnInit, OnDestroy {
       return;
     }
     this.mode.set(mode);
-    if (mode === 'weekends') {
+    if (mode === 'weeks') {
       // Open on the year of the month that was being browsed, so the switch
       // lands where the user already was rather than back on today.
       this.year.set(this.cursor().getFullYear());
     }
     this.emitRange();
-    if (mode === 'weekends') {
+    if (mode === 'weeks') {
       this.scrollToMonth(`${this.year()}-${this.cursor().getMonth()}`);
     }
   }
@@ -292,14 +304,48 @@ export class CalendarMobile implements OnInit, OnDestroy {
     this.emitRange();
   }
 
-  /** Bring a month's section to the top of the weekend list. Runs after the
-   *  next frame so the section it targets has been rendered. */
-  private scrollToMonth(key: string): void {
+  /**
+   * Jump straight to a month, from the period picker in the header. In the week
+   * list that's a scroll to the month's section (plus a refetch when the year
+   * changes under it); in the grid it's a move of the pager's centre month.
+   */
+  protected goTo(period: Period): void {
+    // Moved in both modes: the cursor is what the header reads, and what a
+    // switch to the other layout opens on.
+    this.cursor.set(new Date(period.year, period.month, 1));
+    this.viewOffset.set(0);
+    if (this.mode() === 'weeks') {
+      if (this.year() !== period.year) {
+        this.year.set(period.year);
+        this.emitRange();
+      }
+      this.scrollToMonth(`${period.year}-${period.month}`);
+      return;
+    }
+    this.syncSelection();
+    this.maybeFetch();
+  }
+
+  /**
+   * Bring a month's section to the top of the week list.
+   *
+   * The section may not exist yet — the list is rendered from a fetch, so on
+   * first load this runs before there is anything to scroll to. Retries for a
+   * few frames rather than assuming the DOM has caught up, then gives up.
+   */
+  private scrollToMonth(key: string, attempts = 20): void {
     if (typeof document === 'undefined' || typeof requestAnimationFrame !== 'function') {
       return;
     }
     requestAnimationFrame(() => {
-      document.getElementById(`wk-${key}`)?.scrollIntoView({ block: 'start' });
+      const section = document.getElementById(`wk-${key}`);
+      if (section) {
+        section.scrollIntoView({ block: 'start' });
+        return;
+      }
+      if (attempts > 0) {
+        this.scrollToMonth(key, attempts - 1);
+      }
     });
   }
 
@@ -407,6 +453,7 @@ export class CalendarMobile implements OnInit, OnDestroy {
           day: date.getDate(),
           inMonth: date.getMonth() === month,
           isToday: iso === this.todayIso,
+          isPast: iso < this.todayIso,
           dots,
         });
       }
@@ -416,10 +463,10 @@ export class CalendarMobile implements OnInit, OnDestroy {
   }
 
   /** Fetch a fresh window centred on the current month — `LOAD_MONTHS` either
-   *  side, in one request — and remember its centre. In the weekend list the
+   *  side, in one request — and remember its centre. In the week list the
    *  window is the displayed year exactly, since that's all it can show. */
   private emitRange(): void {
-    if (this.mode() === 'weekends') {
+    if (this.mode() === 'weeks') {
       this.rangeChange.emit({ from: `${this.year()}-01-01`, to: `${this.year()}-12-31` });
       return;
     }

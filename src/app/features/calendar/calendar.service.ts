@@ -6,6 +6,7 @@ import {
   toCalendarEvent,
   toCalendarItem,
   toRawCalendarEventRequest,
+  toRawOutreachRequest,
   type RawCalendarEvent,
   type RawCalendarItem,
 } from './calendar.adapter';
@@ -16,6 +17,7 @@ import type {
   CalendarItem,
   EventStatus,
   ManagerOption,
+  OutreachDraft,
 } from './calendar.models';
 
 interface RawPage<T> {
@@ -92,6 +94,20 @@ export class CalendarService {
     return this.http
       .patch<RawCalendarEvent>(`${BASE}/events/${uuid}/status`, { status })
       .pipe(map(toCalendarEvent));
+  }
+
+  /**
+   * Plan an outreach from the agenda. Outreaches live in the sorties feature,
+   * but they are scheduled here alongside everything else — so this posts
+   * `/api/outreaches` directly rather than importing that feature's service,
+   * the same way {@link managers} reads the profiles endpoint. The response is
+   * dropped: the agenda refetches its window, where the new sortie arrives
+   * mirrored into the merged feed.
+   */
+  createOutreach(input: OutreachDraft): Observable<void> {
+    return this.http
+      .post('/api/outreaches', toRawOutreachRequest(input))
+      .pipe(map(() => undefined));
   }
 
   removeEvent(uuid: string): Observable<void> {

@@ -1,6 +1,7 @@
-/* A year of week-ends. Two arrangements of the same blocks: one column with
-   sticky month headings on a phone (`wk--stack`), newspaper columns across the
-   page on a desktop (`wk--columns`). Colours come from the design tokens. */
+/* A year of weeks — each block its week-end plus any weekday carrying an
+   event. Two arrangements of the same blocks: one column with sticky month
+   headings on a phone (`wk--stack`), newspaper columns across the page on a
+   desktop (`wk--columns`). Colours come from the design tokens. */
 
 :host {
   display: block;
@@ -37,8 +38,8 @@
 }
 .wk__month-count--free { color: var(--text-faint); font-weight: 500; }
 
-/* ---- One week-end ---- */
-/* The card is the unit of this view: a week-end is one decision, and the gap
+/* ---- One week ---- */
+/* The card is the unit of this view: a week is one decision, and the gap
    between cards is what makes the year scan as a run of week-ends rather than a
    flat list of days. Generous separation is the point — hence the gap, the
    border and the tinted date rail rather than a single hairline. */
@@ -56,7 +57,20 @@
   border-color: var(--border-faint);
   background: var(--bg-sunken);
 }
-/* The week-end today falls in. */
+/* Weeks that are over. Faded rather than hidden or disabled: the year still
+   reads as a whole, past weeks just stop competing for attention — and they
+   stay clickable, since a sortie is often recorded after the fact. Everything
+   inside lifts back to full strength on hover, so a past week can still be
+   read and acted on comfortably. */
+.wk__end--past {
+  opacity: 0.55;
+  transition: opacity 0.12s ease;
+
+  &:hover,
+  &:focus-within { opacity: 1; }
+}
+/* The week today falls in. Outranks the past styling above — a week containing
+   today is never entirely past, but its Saturday may already be. */
 .wk__end--current {
   border-style: solid;
   border-color: var(--accent);
@@ -70,9 +84,26 @@
   gap: 10px;
   min-height: 52px;
 }
-/* Hairline between the Saturday and the Sunday of the same week-end — the card
-   edge already separates one week-end from the next. */
+/* Hairline between the days of the same week — the card edge already separates
+   one week from the next. */
 .wk__day + .wk__day { border-top: 1px solid var(--border-faint); }
+/* A weekday only appears when it carries something, so it's the exception in a
+   block of week-ends: a tinted rail marks it as the day that was added to the
+   week rather than one of its two standing slots. */
+.wk__day--weekday .wk__date {
+  background: var(--bg-sunken);
+
+  .wk__date-name { color: var(--text-faint); }
+}
+/* A past day inside a week that isn't over yet (a Saturday gone, the Sunday
+   still ahead) — dimmed on its own so the block still reads chronologically. */
+.wk__end:not(.wk__end--past) .wk__day--past {
+  opacity: 0.5;
+  transition: opacity 0.12s ease;
+
+  &:hover,
+  &:focus-within { opacity: 1; }
+}
 
 /* The date rail: tinted full-height, so the card splits date from content and
    every week-end lines up down the page. Also the create target. */
@@ -178,11 +209,26 @@
 
   .wk__name { color: var(--text-muted); text-decoration: line-through; }
 }
+/* A button, not a label: an empty day is where a plan gets made, so the whole
+   width of it opens the creation. Kept as quiet as the label it replaced —
+   it should read as "nothing here", not as a call to action. */
 .wk__free {
-  padding-left: 2px;
+  align-self: stretch;
+  padding: 6px 8px 6px 2px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+  font: inherit;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--text-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.12s ease, color 0.12s ease;
+
+  &:hover { background: var(--bg-inset); color: var(--text-muted); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
 }
 
 /* ---- Phone: one column, headings stick as the year scrolls by ---- */
@@ -200,7 +246,7 @@
 /* ---- Desktop: the year in newspaper columns ---- */
 /* Twelve months in one column would be a very long scroll; flowing them into
    columns puts most of a year on one screen. Month sections may break across
-   columns, but a week-end card never splits — and a heading never sits alone at
+   columns, but a week card never splits — and a heading never sits alone at
    the foot of a column. */
 .wk--columns .wk {
   column-width: 330px;

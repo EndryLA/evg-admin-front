@@ -35,14 +35,9 @@
   gap: 4px;
   padding: 10px 12px 8px;
 }
-.mcal__title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
+/* The title is the period picker's trigger — it brings its own type styles, so
+   this only places it in the header row. */
+.mcal__title { min-width: 0; }
 .mcal__nav {
   display: inline-flex;
   align-items: center;
@@ -117,8 +112,8 @@
   color: var(--text-on-accent);
 }
 
-/* ---- Week-ends of the year ---- */
-/* Only the scrolling pane lives here — the list itself is `app-calendar-weekends`,
+/* ---- Weeks of the year ---- */
+/* Only the scrolling pane lives here — the list itself is `app-calendar-weeks`,
    shared with the desktop page. This is the equivalent scroller to the month
    grid's agenda list on the other side of the switch. */
 .mcal__year {
@@ -206,6 +201,10 @@
   transition: background-color 0.12s ease, color 0.12s ease;
 }
 .mcal__cell--out .mcal__num { color: var(--text-faint); }
+/* Days already gone: quiet, never blocked — a sortie is often recorded after
+   the fact, so a past day still taps through to its agenda. */
+.mcal__cell--past .mcal__num { color: var(--text-faint); }
+.mcal__cell--past .mcal__dots { opacity: 0.6; }
 .mcal__cell--today .mcal__num { color: var(--accent); font-weight: 700; }
 /* Selected disc: accent for today, a neutral solid otherwise — Apple's cue. */
 .mcal__cell--selected .mcal__num {

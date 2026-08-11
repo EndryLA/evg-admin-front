@@ -117,6 +117,38 @@ export interface CalendarEventInput {
 }
 
 /**
+ * What a click on a free day can start. Outreaches are owned by the sorties
+ * feature, but they are planned on the agenda alongside everything else — so
+ * the calendar offers both and posts each to its own endpoint.
+ */
+export type CreateKind = 'EVENT' | 'OUTREACH';
+
+/**
+ * The fields the agenda sends when planning an outreach (`OutreachRequest`).
+ *
+ * Deliberately the calendar's own model rather than the sorties feature's:
+ * features never import from one another, so this slice owns the shape it
+ * posts — the same way {@link CalendarService.managers} reads `/api/profiles`
+ * directly. Only the fields needed to *plan* a sortie are here; everything else
+ * about it is managed from `/sorties/:uuid/gestion`.
+ */
+export interface OutreachDraft {
+  name: string;
+  location: string;
+  /** Calendar day, `YYYY-MM-DD`. */
+  date: string;
+  /** Wall-clock time, `HH:MM`. */
+  startTime: string;
+  /** Wall-clock time, `HH:MM`. */
+  endTime: string;
+  /** INSEE code of a picked commune, or `null` for free text / no city. */
+  cityInseeCode: number | null;
+  /** Free-text city when no commune was picked; `null` otherwise. */
+  cityLabel: string | null;
+  managedByUuid: string | null;
+}
+
+/**
  * Filters the agenda applies server-side, mapped to the backend
  * `CalendarFilter`. The date window is required — it tracks the visible view
  * range. An empty {@link types} means "no type constraint" rather than "none".

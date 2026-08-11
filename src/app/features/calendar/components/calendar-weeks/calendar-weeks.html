@@ -12,19 +12,26 @@
         </span>
       </h3>
 
-      <!-- One card per week-end: the Saturday and its Sunday, together. -->
-      @for (weekend of month.weekends; track weekend.key) {
+      <!-- One card per week: its week-end, plus any weekday carrying an event. -->
+      @for (week of month.weeks; track week.key) {
         <div
           class="wk__end"
-          [class.wk__end--free]="weekend.free"
-          [class.wk__end--current]="weekend.current">
-          @for (day of weekend.days; track day.iso) {
-            <div class="wk__day" [class.wk__day--today]="day.isToday">
+          [class.wk__end--free]="week.free"
+          [class.wk__end--past]="week.isPast"
+          [class.wk__end--current]="week.current">
+          @for (day of week.days; track day.iso) {
+            <div
+              class="wk__day"
+              [class.wk__day--today]="day.isToday"
+              [class.wk__day--past]="day.isPast"
+              [class.wk__day--weekday]="!day.isWeekend">
               <button
                 type="button"
                 class="wk__date"
-                (click)="createOn.emit(day.iso)"
-                [attr.aria-label]="'Ajouter un événement le ' + day.weekday + ' ' + day.day">
+                (click)="openDay(day)"
+                [attr.aria-label]="
+                  (day.events.length ? 'Ouvrir le ' : 'Ajouter au ') + day.weekday + ' ' + day.day
+                ">
                 <span class="wk__date-name">{{ day.weekday }}</span>
                 <span class="wk__date-num">{{ day.day }}</span>
               </button>
@@ -52,7 +59,15 @@
                     </span>
                   </button>
                 } @empty {
-                  <span class="wk__free">Libre</span>
+                  <!-- The empty day is the widest target on its row, so it
+                       opens the creation just like its date does. -->
+                  <button
+                    type="button"
+                    class="wk__free"
+                    (click)="createOn.emit(day.iso)"
+                    [attr.aria-label]="'Ajouter au ' + day.weekday + ' ' + day.day">
+                    Libre
+                  </button>
                 }
               </div>
             </div>

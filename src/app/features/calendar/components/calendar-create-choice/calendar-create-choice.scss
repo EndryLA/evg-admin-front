@@ -1,0 +1,92 @@
+/* The creation fork. Sized and layered like the confirm dialog (design.md §3)
+   — the same centered card, one step earlier in the flow. */
+
+.cc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--scrim-strong);
+  animation: evgFade 0.16s ease;
+}
+
+.cc-card {
+  width: 440px;
+  max-width: 100%;
+  padding: 24px;
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  box-shadow: var(--shadow-modal);
+  animation: evgPop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cc-head { margin-bottom: 18px; }
+.cc-title { margin: 6px 0 0; font-size: 20px; }
+
+.cc-choices { display: flex; flex-direction: column; gap: 10px; }
+
+/* Each option is a full-width row rather than a bare button: the two differ in
+   consequence, not just in label, so each carries the sentence that says so. */
+.cc-choice {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border-input);
+  border-radius: 12px;
+  background: var(--bg-card);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+
+  &:hover { border-color: var(--accent); background: var(--row-hover); }
+  &:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+}
+
+.cc-choice__icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+
+  svg { width: 20px; height: 20px; }
+}
+/* Évangélisation is the department's own work and the reason this calendar
+   exists — it leads, and it carries the accent (design.md §1). */
+.cc-choice--outreach .cc-choice__icon {
+  background: var(--accent-disc-bg);
+  color: var(--accent);
+}
+
+.cc-choice__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.cc-choice__name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.cc-choice__hint { font-size: 12.5px; line-height: 1.4; color: var(--text-muted); }
+
+.cc-choice__go {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: var(--text-faint);
+}
+
+.cc-foot { display: flex; justify-content: flex-end; margin-top: 18px; }
+.cc-cancel {
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+
+  &:not(:disabled):hover { background: var(--bg-sunken); }
+}

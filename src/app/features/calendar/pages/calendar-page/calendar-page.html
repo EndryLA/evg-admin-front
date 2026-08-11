@@ -6,8 +6,8 @@
 </header>
 
 <!-- Search, filters and the create button are desktop-only. On phones the
-     calendar carries its own month navigation and per-day "+", so this chrome
-     is redundant there. -->
+     calendar carries its own navigation and per-day "+", so this chrome is
+     redundant there. -->
 @if (!narrow()) {
   <app-calendar-filters
     [managers]="managers()"
@@ -24,7 +24,7 @@
 }
 
 @if (narrow()) {
-  <!-- Phone: a native-feeling month grid + agenda, in place of FullCalendar. -->
+  <!-- Phone: a native-feeling calendar in place of FullCalendar. -->
   <app-calendar-mobile
     [items]="items()"
     [loading]="loading()"
@@ -32,7 +32,7 @@
     (selectItem)="onSelectItem($event)"
     (createOn)="openCreateOn($event)" />
 } @else {
-  <!-- Grid toolbar: navigation + range label + view switcher. -->
+  <!-- Toolbar: navigation + the range label, which doubles as a period jump. -->
   <div class="cal-toolbar">
     <div class="cal-nav">
       <button type="button" class="cal-today" (click)="today()">Aujourd'hui</button>
@@ -42,7 +42,11 @@
       <button type="button" class="cal-arrow" (click)="next()" aria-label="Période suivante">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </button>
-      <h2 class="cal-title" aria-live="polite">{{ viewTitle() }}</h2>
+      <app-calendar-period-picker
+        [label]="viewTitle()"
+        [month]="month()"
+        [year]="year()"
+        (select)="goTo($event)" />
       @if (loading()) {
         <span class="cal-spinner" role="status" aria-label="Chargement"></span>
       }
@@ -63,11 +67,11 @@
     </div>
   </div>
 
-  @if (isYearView()) {
-    <!-- The year's Saturdays and Sundays — this page's own list, not a
-         FullCalendar view (see `setView`). Same component the phone shows. -->
-    <div class="cal-card cal-card--weekends" [class.cal-card--busy]="loading()">
-      <app-calendar-weekends
+  @if (isWeekView()) {
+    <!-- The year, week by week — this page's own list, not a FullCalendar view
+         (see `setView`). Same component the phone shows. -->
+    <div class="cal-card cal-card--weeks" [class.cal-card--busy]="loading()">
+      <app-calendar-weeks
         [items]="items()"
         [year]="year()"
         layout="columns"
@@ -75,10 +79,24 @@
         (createOn)="openCreateOn($event)" />
     </div>
   } @else {
-    <div #card class="cal-card" [class.cal-card--busy]="loading()" [class.cal-card--scroll-x]="scrollX()">
+    <div #card class="cal-card" [class.cal-card--busy]="loading()">
       <full-calendar #calendar [options]="calendarOptions()" />
     </div>
   }
+}
+
+<!-- Phone create action: the filter bar (and its "Nouveau" button) is desktop
+     only, and the week list has no per-day "+", so this is the one way in.
+     Hidden above the breakpoint by the global `.fab` rules. -->
+<button type="button" class="fab" (click)="openCreate()" aria-label="Planifier">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+@if (choosingOn(); as date) {
+  <app-calendar-create-choice
+    [date]="date"
+    (choose)="onChooseKind($event)"
+    (cancel)="cancelCreate()" />
 }
 
 @if (selected(); as item) {
@@ -97,10 +115,16 @@
     [event]="editing()"
     [managers]="managers()"
     [defaultDate]="draftDate()"
-    [defaultStartTime]="draftStart()"
-    [defaultEndTime]="draftEnd()"
     [busy]="saving()"
     (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}
+
+@if (outreachFormOpen()) {
+  <app-calendar-outreach-form
+    [defaultDate]="draftDate()"
+    [busy]="saving()"
+    (save)="onSaveOutreach($event)"
     (cancel)="closeForm()" />
 }
 

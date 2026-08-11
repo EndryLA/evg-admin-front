@@ -6,6 +6,7 @@ import type {
   CalendarStatus,
   EventManager,
   EventStatus,
+  OutreachDraft,
 } from './calendar.models';
 
 /** Nested profile as returned inside `managedBy`. */
@@ -55,6 +56,18 @@ export interface RawCalendarEventRequest {
   endTime: string;
   type: CalendarEventType;
   managedByUuid: string | null;
+}
+
+/** Raw `OutreachRequest` sent when the agenda plans a sortie. */
+export interface RawOutreachRequest {
+  name: string;
+  location: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  managedByUuid: string | null;
+  cityInseeCode?: number;
+  cityLabel?: string;
 }
 
 const TYPES: readonly CalendarEventType[] = ['OUTREACH', 'REUNION', 'AGAPE', 'OTHER'];
@@ -130,6 +143,30 @@ export function toCalendarEvent(raw: RawCalendarEvent): CalendarEvent {
     status: toEventStatus(raw.status),
     managedBy: toManager(raw.managedBy),
   };
+}
+
+/** Map an outreach draft to the raw `OutreachRequest`. */
+export function toRawOutreachRequest(input: OutreachDraft): RawOutreachRequest {
+  const request: RawOutreachRequest = {
+    name: input.name.trim(),
+    location: input.location.trim(),
+    date: input.date,
+    startTime: input.startTime,
+    endTime: input.endTime,
+    managedByUuid: input.managedByUuid || null,
+  };
+
+  // Send exactly one side: the INSEE code of a picked commune, else raw free text.
+  if (input.cityInseeCode != null) {
+    request.cityInseeCode = input.cityInseeCode;
+  } else {
+    const label = input.cityLabel?.trim();
+    if (label) {
+      request.cityLabel = label;
+    }
+  }
+
+  return request;
 }
 
 /** Map a domain input to the raw `CalendarEventRequest`. */

@@ -1,0 +1,143 @@
+/* The range title, made a trigger, plus the month grid it drops down. */
+
+:host { display: inline-block; }
+
+.pp { position: relative; }
+
+/* Reads as the toolbar's title (design.md §1 headings) until hovered — the
+   chevron is what says it can be opened. */
+.pp__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  margin-left: 6px;
+  padding: 4px 8px 4px 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover { background: var(--bg-inset); }
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+  svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--text-tertiary); }
+}
+.pp__trigger--open { background: var(--bg-inset); }
+
+.pp__label {
+  /* The range labels come through lowercase ("juillet 2026"). */
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Catches clicks anywhere else on the page; the panel sits above it. */
+.pp__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+/* Centred on the trigger rather than hung off its left edge: the trigger's
+   width changes with the label ("2026" against "septembre 2026"), so a
+   left-aligned panel drifts against a control that reads as centred. */
+.pp__panel {
+  position: absolute;
+  z-index: 41;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 268px;
+  /* Never past the viewport edge on a phone, where the trigger sits near it. */
+  max-width: calc(100vw - 24px);
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-menu);
+  /* Not the shared `evgPop`: that keyframe animates `transform` outright, which
+     drops the centring above for the length of the animation — the panel would
+     pop in off to one side and snap across. Same motion, centring kept. */
+  animation: pp-pop 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes pp-pop {
+  from { transform: translateX(-50%) translateY(6px) scale(0.99); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
+
+.pp__years {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.pp__year {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.pp__step {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+
+  &:hover { background: var(--bg-inset); }
+  &:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+  svg { width: 16px; height: 16px; }
+}
+
+.pp__months {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.pp__month {
+  padding: 9px 0;
+  border: none;
+  border-radius: 9px;
+  background: var(--bg-inset);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:hover { background: var(--row-hover); color: var(--accent); }
+  &:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
+}
+.pp__month--current {
+  background: var(--accent);
+  color: var(--text-on-accent);
+
+  &:hover { background: var(--accent-hover); color: var(--text-on-accent); }
+}
+
+/* On a phone the trigger opens the same panel from a tighter header — no room
+   for the desktop toolbar's leading gap, and the panel keeps clear of both
+   screen edges. */
+@media (max-width: 720px) {
+  .pp__trigger { margin-left: 0; }
+  .pp__panel { width: 252px; }
+}
