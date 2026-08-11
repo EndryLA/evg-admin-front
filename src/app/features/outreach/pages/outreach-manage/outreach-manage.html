@@ -91,6 +91,11 @@
       <p class="alert alert--error" role="alert">{{ saveError() }}</p>
     }
 
+    <a class="btn stats-link" [routerLink]="['/sorties', uuid()]">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+      Voir les détails
+    </a>
+
     <a class="btn stats-link" [routerLink]="['/sorties', uuid(), 'statistiques']">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="12" y="6" width="3" height="11"/><rect x="17" y="13" width="3" height="4"/></svg>
       Voir les statistiques

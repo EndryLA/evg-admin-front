@@ -1,17 +1,6 @@
-import {
-  afterNextRender,
-  Component,
-  computed,
-  DestroyRef,
-  ElementRef,
-  inject,
-  OnDestroy,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
-import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { ProfileDetail } from '../../components/profile-detail/profile-detail';
 import { ProfileForm } from '../../components/profile-form/profile-form';
@@ -19,73 +8,68 @@ import { ProfileService } from '../../profile.service';
 import {
   EMPTY_PROFILE_FILTER,
   fullName,
+  leaderTone,
   MEMBERSHIP_LABELS,
   type MembershipType,
   type Profile,
   type ProfileFilter,
   type ProfileFormResult,
 } from '../../profile.models';
-import { ageLabel } from '../../../../shared/util/date.util';
 
 /** The type-tab selection: all types, or one {@link MembershipType}. */
 type TypeFilter = ProfileFilter['membershipType'];
-type SortKey = 'name' | 'type' | 'joined';
-type SortDir = 'asc' | 'desc';
 
-const PAGE_SIZE = 20;
+/** One team: its leader plus the members reporting to them. */
+interface TeamGroup {
+  /** Group key — a leader uuid, or {@link NO_TEAM} for unassigned members. */
+  leaderUuid: string;
+  /** Card title, e.g. "Équipe Ephraim" or "Sans équipe". */
+  title: string;
+  /** Badge tone, keyed by leader uuid so it matches the rest of the app. */
+  tone: string;
+  members: Profile[];
+}
+
+/** Group key for members with no team leader — always sorted last. */
+const NO_TEAM = '__no_team__';
+
 /** Debounce before the free-text search triggers a server reload. */
 const SEARCH_DEBOUNCE_MS = 300;
 
-/** Sortable columns mapped to the backing entity field Spring sorts on. */
-const SORT_FIELDS: Record<SortKey, string> = {
-  name: 'lastname',
-  type: 'membershipType',
-  joined: 'joinedAt',
-};
-
 /**
- * Effectif — the members table. Paged server-side and loaded 20 at a time via
- * infinite scroll (`GET /api/profiles?page&size&sort` + `ProfileFilter`): an
- * IntersectionObserver on a bottom sentinel pulls the next page as it comes into
- * view. Search, type, 1ᵉʳ-département, team leader and the joined-year range are
- * all applied server-side, so any change — sorting included — reloads from the
- * first page. Also orchestrates the detail slide-over, create/edit modal and
- * delete dialog.
+ * Effectif — the members roster, grouped by team. The whole filtered set is
+ * fetched at once (`GET /api/profiles` with `ProfileFilter`, one large page):
+ * teams and their head-counts can't be built from a partial page, and the
+ * department is small enough for this to stay cheap. Members with no leader
+ * assigned still appear, under a trailing "Sans équipe" card.
+ *
+ * Each team is a collapsible card; a member row opens the detail slide-over.
+ * Search, type, 1ᵉʳ-département, team leader and the joined-year range are all
+ * applied server-side, so any change reloads the list.
  */
 @Component({
   selector: 'app-profile-list',
-  imports: [ProfileDetail, ProfileForm, ConfirmDialog, PhoneFrPipe],
+  imports: [ProfileDetail, ProfileForm, ConfirmDialog],
   host: { class: 'data-list' },
   templateUrl: './profile-list.html',
   styleUrl: './profile-list.scss',
 })
 export class ProfileList implements OnDestroy {
   private readonly service = inject(ProfileService);
-  private readonly destroyRef = inject(DestroyRef);
-
-  private readonly scrollRoot = viewChild<ElementRef<HTMLElement>>('scrollRoot');
-  private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
 
   // ---- Data ----
-  protected readonly rows = signal<Profile[]>([]);
-  protected readonly loading = signal(true); // initial page
-  protected readonly loadingMore = signal(false); // subsequent pages
+  private readonly rows = signal<Profile[]>([]);
+  protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
-  protected readonly hasMore = signal(true);
-  protected readonly totalElements = signal(0);
-  private nextPage = 0;
 
   /**
    * Team leaders — the "Chef d'équipe" options in both the filter and the form.
-   * Fetched separately from the paged list, which only ever holds the rows
-   * matching the current filter.
+   * Fetched unfiltered, unlike {@link rows}, which only holds the current match.
    */
   protected readonly leaders = signal<Profile[]>([]);
 
   // ---- Filters ----
   protected readonly filter = signal<ProfileFilter>({ ...EMPTY_PROFILE_FILTER });
-  protected readonly sortKey = signal<SortKey>('name');
-  protected readonly sortDir = signal<SortDir>('asc');
 
   /** True when any filter is narrowing the list (drives the reset button). */
   protected readonly hasActiveFilters = computed(() => {
@@ -115,6 +99,97 @@ export class ProfileList implements OnDestroy {
   /** The 1ᵉʳ-département chip is a toggle: on = `true`, off = unconstrained. */
   protected readonly deptOnly = computed(() => this.filter().firstDepartment === true);
 
+  // ---- Grouping ----
+  /** Leader uuids whose card is expanded. Everything starts collapsed. */
+  private readonly openTeams = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * The loaded members bucketed by team, biggest first. Every team leader gets a
+   * card even when the current filter matches none of their members, so the list
+   * of teams stays stable instead of appearing and vanishing as you filter.
+   * Members with no leader collect in a trailing "Sans équipe" card, so the
+   * roster always accounts for everyone.
+   */
+  protected readonly teams = computed<TeamGroup[]>(() => {
+    const byLeader = new Map<string, TeamGroup>();
+
+    for (const leader of this.leaders()) {
+      byLeader.set(leader.uuid, {
+        leaderUuid: leader.uuid,
+        title: `Équipe ${leader.firstname}`,
+        tone: leaderTone(leader.uuid),
+        members: [],
+      });
+    }
+
+    for (const profile of this.rows()) {
+      // A leader reports to nobody, so they carry no `leaderUuid` — key them to
+      // their own team instead of letting them fall into "Sans équipe".
+      const key = profile.isTeamLeader ? profile.uuid : profile.leaderUuid ?? NO_TEAM;
+      let group = byLeader.get(key);
+      if (!group) {
+        // A leader referenced by a member but missing from `leaders()` (not
+        // flagged `isTeamLeader`) still gets a card — nobody goes unlisted.
+        group = {
+          leaderUuid: key,
+          title: profile.isTeamLeader
+            ? `Équipe ${profile.firstname}`
+            : profile.leaderFirstname
+              ? `Équipe ${profile.leaderFirstname}`
+              : 'Sans équipe',
+          tone: leaderTone(key === NO_TEAM ? null : key),
+          members: [],
+        };
+        byLeader.set(key, group);
+      }
+      group.members.push(profile);
+    }
+
+    // The chef heads their own roster; everyone else keeps the server's order.
+    for (const group of byLeader.values()) {
+      group.members.sort(
+        (a, b) => Number(b.uuid === group.leaderUuid) - Number(a.uuid === group.leaderUuid),
+      );
+    }
+
+    return [...byLeader.values()].sort((a, b) => {
+      // "Sans équipe" is a leftover bucket, not a team — it stays at the bottom.
+      if ((a.leaderUuid === NO_TEAM) !== (b.leaderUuid === NO_TEAM)) {
+        return a.leaderUuid === NO_TEAM ? 1 : -1;
+      }
+      return b.members.length - a.members.length || a.title.localeCompare(b.title, 'fr');
+    });
+  });
+
+  /** Real teams, excluding the "Sans équipe" bucket — drives the subtitle. */
+  protected readonly teamCount = computed(
+    () => this.teams().filter((t) => t.leaderUuid !== NO_TEAM).length,
+  );
+
+  /** Every member currently loaded. */
+  protected readonly shownCount = computed(() => this.rows().length);
+
+  /**
+   * Open state is held solely by {@link openTeams} — a click must always win, so
+   * nothing here may force a card open. Filters seed the set on load instead
+   * (see {@link syncOpenTeams}).
+   */
+  protected isOpen(leaderUuid: string): boolean {
+    return this.openTeams().has(leaderUuid);
+  }
+
+  protected toggleTeam(leaderUuid: string): void {
+    this.openTeams.update((open) => {
+      const next = new Set(open);
+      if (next.has(leaderUuid)) {
+        next.delete(leaderUuid);
+      } else {
+        next.add(leaderUuid);
+      }
+      return next;
+    });
+  }
+
   // ---- Overlays ----
   /** Mobile-only: the bottom filter drawer. */
   protected readonly filterDrawerOpen = signal(false);
@@ -126,7 +201,6 @@ export class ProfileList implements OnDestroy {
   protected readonly deleting = signal(false);
 
   protected readonly fullName = fullName;
-  protected readonly age = ageLabel;
   protected membershipLabel(type: MembershipType | null): string {
     return type ? MEMBERSHIP_LABELS[type] : '—';
   }
@@ -136,7 +210,6 @@ export class ProfileList implements OnDestroy {
   constructor() {
     this.load();
     this.loadLeaders();
-    afterNextRender(() => this.observe());
   }
 
   ngOnDestroy(): void {
@@ -144,43 +217,39 @@ export class ProfileList implements OnDestroy {
   }
 
   // ---- Loading ----
-  /** (Re)start from the first page — used on load and whenever a filter changes. */
+  /** (Re)fetch the whole filtered set — on load and whenever a filter changes. */
   protected load(): void {
-    this.rows.set([]);
-    this.nextPage = 0;
-    this.hasMore.set(true);
     this.loadError.set(null);
     this.loading.set(true);
-    this.fetchNext(true);
-  }
-
-  /** Pull the next page — triggered by the bottom sentinel. */
-  protected loadMore(): void {
-    if (this.loading() || this.loadingMore() || !this.hasMore() || this.loadError()) {
-      return;
-    }
-    this.loadingMore.set(true);
-    this.fetchNext(false);
-  }
-
-  private fetchNext(initial: boolean): void {
-    const sort = `${SORT_FIELDS[this.sortKey()]},${this.sortDir()}`;
-    this.service.list(this.nextPage, PAGE_SIZE, this.filter(), sort).subscribe({
-      next: (page) => {
-        this.rows.update((list) => (initial ? page.items : [...list, ...page.items]));
-        this.totalElements.set(page.totalElements);
-        this.hasMore.set(!page.last && page.items.length > 0);
-        this.nextPage += 1;
+    this.service.listAll(this.filter()).subscribe({
+      next: (all) => {
+        this.rows.set(all);
         this.loading.set(false);
-        this.loadingMore.set(false);
-        this.maybeLoadMore();
+        this.syncOpenTeams(all);
       },
       error: (err) => {
+        this.rows.set([]);
         this.loadError.set(messageFromError(err, 'Chargement des profils impossible.'));
         this.loading.set(false);
-        this.loadingMore.set(false);
       },
     });
+  }
+
+  /**
+   * Seed which cards start open after a load: a filtered list would otherwise
+   * hide its own results behind collapsed cards, so it opens the teams that
+   * matched. An unfiltered list starts fully collapsed. Toggling afterwards is
+   * always the user's call — this only runs on load.
+   */
+  private syncOpenTeams(loaded: Profile[]): void {
+    if (!this.hasActiveFilters()) {
+      this.openTeams.set(new Set());
+      return;
+    }
+    // Same key rule as `teams()`, so a matched leader opens their own card.
+    this.openTeams.set(
+      new Set(loaded.map((p) => (p.isTeamLeader ? p.uuid : p.leaderUuid ?? NO_TEAM))),
+    );
   }
 
   /** Best-effort: the filter/form leader options degrade to empty on failure. */
@@ -191,40 +260,7 @@ export class ProfileList implements OnDestroy {
     });
   }
 
-  // ---- Infinite scroll ----
-  private observe(): void {
-    const sentinel = this.sentinel()?.nativeElement;
-    if (!sentinel) {
-      return;
-    }
-    const root = this.scrollRoot()?.nativeElement ?? null;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          this.loadMore();
-        }
-      },
-      { root, rootMargin: '300px' },
-    );
-    io.observe(sentinel);
-    this.destroyRef.onDestroy(() => io.disconnect());
-  }
-
-  /** If the sentinel is still visible after a load, fetch the next page. */
-  private maybeLoadMore(): void {
-    const sentinel = this.sentinel()?.nativeElement;
-    const root = this.scrollRoot()?.nativeElement;
-    if (!sentinel || !root || !this.hasMore()) {
-      return;
-    }
-    const sRect = sentinel.getBoundingClientRect();
-    const rRect = root.getBoundingClientRect();
-    if (sRect.top <= rRect.bottom + 300) {
-      queueMicrotask(() => this.loadMore());
-    }
-  }
-
-  // ---- Filter handlers (all reload from the first page) ----
+  // ---- Filter handlers (all reload the list) ----
   /** Patch one filter field and reload. */
   private applyFilter(patch: Partial<ProfileFilter>): void {
     this.filter.update((f) => ({ ...f, ...patch }));
@@ -259,23 +295,6 @@ export class ProfileList implements OnDestroy {
     clearTimeout(this.searchTimer);
     this.filter.set({ ...EMPTY_PROFILE_FILTER });
     this.load();
-  }
-
-  // ---- Sorting (server-side, so it restarts the list) ----
-  protected sortBy(key: SortKey): void {
-    if (this.sortKey() === key) {
-      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortKey.set(key);
-      this.sortDir.set('asc');
-    }
-    this.load();
-  }
-  protected sortIndicator(key: SortKey): string {
-    if (this.sortKey() !== key) {
-      return '';
-    }
-    return this.sortDir() === 'asc' ? '↑' : '↓';
   }
 
   // ---- Detail ----

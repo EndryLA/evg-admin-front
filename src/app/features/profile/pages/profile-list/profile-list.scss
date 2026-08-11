@@ -1,29 +1,138 @@
-/* Profile-specific column widths & cells. Generic table-shell styles live in
-   the global `.data-list` block (src/styles.scss). */
-.col-first { width: 13%; }
-.col-last { width: 13%; }
-.col-contact { width: 23%; }
-.col-type { width: 10%; }
-.col-leader { width: 14%; }
-.col-dept { width: 9%; }
-.col-joined { width: 12%; }
-.col-chevron { width: 44px; }
+/* Effectif — the roster grouped into collapsible team cards. Page shell (topbar,
+   filters, states) comes from the global `.data-list` block in src/styles.scss. */
 
 .new-btn svg { width: 16px; height: 16px; }
 
-.dept-yes { font-size: 13px; font-weight: 600; color: var(--accent-soft-text); }
-.dept-no { font-size: 13px; font-weight: 500; color: var(--text-faint); }
+.teams {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-/* Infinite-scroll sentinel. */
-.scroll-sentinel {
+.team {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+/* ---- Team header (the toggle) ---- */
+.team__head {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 8px;
-  padding: 14px 0 4px;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
 }
-.scroll-sentinel__spinner,
-.scroll-sentinel__end {
+.team__head:not(:disabled):hover { background: var(--row-hover); }
+/* An empty team has nothing to unfold — it reads as a label, not a control. */
+.team__head:disabled { cursor: default; opacity: 0.6; }
+
+/* The dot carries the leader's tone — same hash as the badges elsewhere. */
+.team__dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pill-grey-text);
+}
+.team__dot--red { background: var(--pill-red-text); }
+.team__dot--green { background: var(--pill-green-text); }
+.team__dot--amber { background: var(--pill-amber-text); }
+.team__dot--blue { background: var(--pill-blue-text); }
+.team__dot--violet { background: var(--pill-violet-text); }
+
+.team__id {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.team__name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.team__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
-  color: var(--text-faint);
+  color: var(--text-muted);
+}
+.team__count svg { width: 14px; height: 14px; }
+
+.team__chevron {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: var(--chevron);
+  transition: transform 0.16s ease;
+}
+.team--open .team__chevron { transform: rotate(180deg); }
+
+/* ---- Roster (expanded) ---- */
+.roster {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-subtle);
+}
+.roster li + li { border-top: 1px solid var(--border-faint); }
+
+.roster__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.roster__row:hover { background: var(--row-hover); }
+
+/* The chef heads their own roster — weighted so the row reads as the anchor. */
+.roster__row--lead .roster__name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.roster__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.roster__row .pill { flex: 0 0 auto; }
+.roster__chevron {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--chevron);
+}
+
+@media (max-width: 720px) {
+  .team__head { padding: 15px 16px; }
+  .roster__row { padding: 13px 16px; }
+  .team__name { font-size: 16px; }
 }

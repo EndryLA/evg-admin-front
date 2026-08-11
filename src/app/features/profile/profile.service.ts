@@ -42,6 +42,30 @@ export class ProfileService {
     filter: ProfileFilter = EMPTY_PROFILE_FILTER,
     sort = 'lastname,asc',
   ): Observable<Page<Profile>> {
+    const params = this.queryParams(page, size, filter, sort);
+    return this.http.get<RawPage<RawProfile>>(BASE, { params }).pipe(map(toProfilePage));
+  }
+
+  /**
+   * Fetch every profile in one shot, sorted by last name and optionally narrowed
+   * by a {@link ProfileFilter}. Used where the whole set has to be in memory at
+   * once — team leader options, and the grouped-by-team roster, which can't be
+   * built from a partial page.
+   */
+  listAll(filter: ProfileFilter = EMPTY_PROFILE_FILTER, sort = 'lastname,asc'): Observable<Profile[]> {
+    const params = this.queryParams(0, ALL_SIZE, filter, sort);
+    return this.http
+      .get<RawPage<RawProfile>>(BASE, { params })
+      .pipe(map((page) => (page.content ?? []).map(toProfile)));
+  }
+
+  /** Paging + sort + the constrained filter fields; `'ALL'`/`null`/empty are omitted. */
+  private queryParams(
+    page: number,
+    size: number,
+    filter: ProfileFilter,
+    sort: string,
+  ): HttpParams {
     let params = new HttpParams().set('page', page).set('size', size).set('sort', sort);
 
     const search = filter.search.trim();
@@ -63,19 +87,7 @@ export class ProfileService {
     if (filter.maxJoinedAt !== null) {
       params = params.set('maxJoinedAt', filter.maxJoinedAt);
     }
-
-    return this.http.get<RawPage<RawProfile>>(BASE, { params }).pipe(map(toProfilePage));
-  }
-
-  /** Fetch every profile, sorted by last name. */
-  listAll(): Observable<Profile[]> {
-    const params = new HttpParams()
-      .set('page', '0')
-      .set('size', ALL_SIZE)
-      .set('sort', 'lastname,asc');
-    return this.http
-      .get<RawPage<RawProfile>>(BASE, { params })
-      .pipe(map((page) => (page.content ?? []).map(toProfile)));
+    return params;
   }
 
   get(uuid: string): Observable<Profile> {
