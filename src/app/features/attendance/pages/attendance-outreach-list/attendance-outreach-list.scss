@@ -1,0 +1,13 @@
+/* Présences par sortie — shell. Generic topbar styles live in the global
+   `.data-list` block (src/styles.scss). */
+
+app-attendance-outreach-overview {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 32px 40px;
+}
+
+@media (max-width: 720px) {
+  app-attendance-outreach-overview { padding: 4px 16px 32px; }
+}

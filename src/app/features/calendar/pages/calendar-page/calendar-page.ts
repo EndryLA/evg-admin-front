@@ -107,7 +107,7 @@ function toDateTime(date: string, time: string | null): string {
 }
 
 /**
- * Agenda — the merged feed of calendar events *and* outreaches over
+ * Planning — the merged feed of calendar events *and* outreaches over
  * `GET /api/calendar`. The visible range drives the query's required `from`/`to`
  * window, so every navigation refetches; the type / status / responsable /
  * search filters narrow it server-side. The week list is the widest of those
@@ -387,7 +387,7 @@ export class CalendarPage {
       },
       error: (err) => {
         this.items.set([]);
-        this.loadError.set(messageFromError(err, "Chargement de l'agenda impossible."));
+        this.loadError.set(messageFromError(err, "Chargement du planning impossible."));
         this.loading.set(false);
       },
     });

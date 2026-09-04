@@ -188,12 +188,35 @@
   flex: 1;
   justify-content: center;
 }
+/* Name and state on one line: the name gives way first, so a long title is
+   clipped rather than pushing the badge off the card. */
+.wk__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
 .wk__name {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
+  /* Flex items floor at their content width — without this the name pushes the
+     badge out instead of ellipsing. */
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Pinned to the trailing edge rather than trailing the name: the badges then
+   line up down the card whatever the titles are, which is what makes a column
+   of states scannable at all.
+   A hair smaller than the table pills — this sits inside a list row, not in a
+   column of its own (design.md §1: 12.5px/600 pills). */
+.wk__status {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: 11px;
   white-space: nowrap;
 }
 .wk__meta {

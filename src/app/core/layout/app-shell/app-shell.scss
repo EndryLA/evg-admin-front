@@ -141,7 +141,8 @@
 }
 .nav__item svg { width: 17px; height: 17px; flex: 0 0 auto; }
 
-a.nav__item:hover { background: var(--sidebar-item-hover-bg); color: var(--sidebar-active-text); }
+a.nav__item:hover,
+.nav__item--group:hover { background: var(--sidebar-item-hover-bg); color: var(--sidebar-active-text); }
 
 .nav__item--active,
 a.nav__item--active:hover {
@@ -165,6 +166,41 @@ a.nav__item--active:hover {
   cursor: not-allowed;
   opacity: 0.55;
 }
+
+/* ---- Expandable nav group ("Statistiques") ---- */
+.nav__group { display: flex; flex-direction: column; }
+
+.nav__item--group {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+}
+
+.nav__chevron {
+  margin-left: auto;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  opacity: 0.6;
+  transform: rotate(135deg);
+  transition: transform 0.14s ease;
+}
+.nav__item--group[aria-expanded='true'] .nav__chevron { transform: rotate(315deg); }
+
+.nav__children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 2px 17px;
+  padding-left: 11px;
+  border-left: 1px solid var(--sidebar-border);
+}
+.nav__item--child { padding: 8px 12px; }
+.nav__item--child.nav__item--active::before { left: -12px; }
 
 /* ---- User card ---- */
 .user {
@@ -307,6 +343,10 @@ a.nav__item--active:hover {
   .shell--collapsed .sidebar__caption,
   .shell--collapsed .nav__label,
   .shell--collapsed .user__meta {
+    display: none;
+  }
+  .shell--collapsed .nav__chevron,
+  .shell--collapsed .nav__children {
     display: none;
   }
 

@@ -6,8 +6,8 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { filter } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import { ACCESS } from '../../auth/access';
 import { primaryRole, ROLE_LABELS } from '../../auth/auth.models';
@@ -55,7 +55,28 @@ export class AppShell {
   /** Whether the desktop sidebar is collapsed to an icon rail. Persisted; ignored on mobile. */
   protected readonly collapsed = signal(this.readCollapsed());
 
+  /** Current route URL, kept live for the "Statistiques" group's active/open state. */
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  /** Whether the "Statistiques" group's children are shown. */
+  protected readonly statsOpen = signal(this.url().startsWith('/statistiques'));
+  /** Whether a Statistiques child route is active — highlights the group header. */
+  protected readonly statsActive = computed(() => this.url().startsWith('/statistiques'));
+
   constructor() {
+    // Keep the group open while any of its children is the active route.
+    effect(() => {
+      if (this.statsActive()) {
+        this.statsOpen.set(true);
+      }
+    });
+
     // Close the mobile overlay whenever navigation completes.
     this.router.events
       .pipe(
@@ -78,6 +99,10 @@ export class AppShell {
 
   protected toggleCollapsed(): void {
     this.collapsed.update((value) => !value);
+  }
+
+  protected toggleStats(): void {
+    this.statsOpen.update((open) => !open);
   }
 
   private readCollapsed(): boolean {

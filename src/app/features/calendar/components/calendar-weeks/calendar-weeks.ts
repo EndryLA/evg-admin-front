@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 import { formatTimeFr } from '../../../../shared/util/date.util';
+import { CALENDAR_STATUS_LABELS, CALENDAR_STATUS_TONES } from '../../calendar.models';
 import type { CalendarItem } from '../../calendar.models';
 
 /** How the twelve month sections are arranged. */
@@ -250,6 +251,16 @@ export class CalendarWeeks {
 
   protected typeClass(item: CalendarItem): string {
     return `ev--${item.type.toLowerCase()}`;
+  }
+
+  /** `Planifié` / `En cours` / `Terminé` / `Annulé`. */
+  protected statusLabel(item: CalendarItem): string {
+    return CALENDAR_STATUS_LABELS[item.status];
+  }
+
+  /** The badge tone for that status (design.md §1), shared with the sorties list. */
+  protected statusTone(item: CalendarItem): string {
+    return CALENDAR_STATUS_TONES[item.status];
   }
 
   protected time(value: string | null): string {

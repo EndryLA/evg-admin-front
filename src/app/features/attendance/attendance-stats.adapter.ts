@@ -1,8 +1,12 @@
 import type {
   AttendanceSummary,
+  AttendeeName,
   OutreachAttendance,
+  OutreachAttendanceOverview,
+  OutreachStatsSummary,
   OutreachStatus,
   ProfilePresence,
+  TeamAttendance,
   TeamStats,
 } from './attendance-stats.models';
 
@@ -46,6 +50,37 @@ export interface RawTeamStats {
   totalPresences?: number;
   avgPresencesPerMember?: number;
   presenceRate?: number;
+}
+
+export interface RawOutreachStatsSummary {
+  uuid?: string;
+  name?: string;
+  location?: string;
+  date?: string;
+  cityLabel?: string;
+  status?: string;
+  totalPresences?: number;
+}
+
+export interface RawAttendeeName {
+  profileUuid?: string;
+  firstname?: string;
+  lastname?: string;
+}
+
+export interface RawTeamAttendance {
+  teamLeaderUuid?: string;
+  teamLeaderFirstname?: string;
+  teamLeaderLastname?: string;
+  members?: RawAttendeeName[];
+}
+
+export interface RawOutreachAttendanceOverview {
+  outreach?: RawOutreachStatsSummary;
+  trackedAttendances?: number;
+  teams?: RawTeamAttendance[];
+  guests?: RawAttendeeName[];
+  leaders?: number;
 }
 
 const num = (value: number | undefined): number => value ?? 0;
@@ -96,6 +131,47 @@ export function toProfilePresence(raw: RawProfilePresence): ProfilePresence {
     lastname: raw.lastname ?? '',
     presences: num(raw.presences),
     presenceRate: num(raw.presenceRate),
+  };
+}
+
+export function toOutreachStatsSummary(raw: RawOutreachStatsSummary): OutreachStatsSummary {
+  return {
+    uuid: raw.uuid ?? '',
+    name: raw.name ?? '',
+    location: raw.location ?? '',
+    date: raw.date ?? '',
+    cityLabel: raw.cityLabel ?? '',
+    status: toStatus(raw.status),
+    totalPresences: num(raw.totalPresences),
+  };
+}
+
+export function toAttendeeName(raw: RawAttendeeName): AttendeeName {
+  return {
+    profileUuid: raw.profileUuid ?? '',
+    firstname: raw.firstname ?? '',
+    lastname: raw.lastname ?? '',
+  };
+}
+
+export function toTeamAttendance(raw: RawTeamAttendance): TeamAttendance {
+  return {
+    teamLeaderUuid: raw.teamLeaderUuid ?? '',
+    teamLeaderFirstname: raw.teamLeaderFirstname ?? '',
+    teamLeaderLastname: raw.teamLeaderLastname ?? '',
+    members: (raw.members ?? []).map(toAttendeeName),
+  };
+}
+
+export function toOutreachAttendanceOverview(
+  raw: RawOutreachAttendanceOverview,
+): OutreachAttendanceOverview {
+  return {
+    outreach: toOutreachStatsSummary(raw.outreach ?? {}),
+    trackedAttendances: num(raw.trackedAttendances),
+    teams: (raw.teams ?? []).map(toTeamAttendance),
+    guests: (raw.guests ?? []).map(toAttendeeName),
+    leaders: num(raw.leaders),
   };
 }
 

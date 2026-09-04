@@ -1,0 +1,211 @@
+/* Présences par sortie, grouped by month. Tokens are global (styles.scss);
+   mirrors AttendanceStats' range/state language. */
+:host {
+  display: block;
+}
+
+/* ---- Year navigator: chevron, year, chevron — centered ---- */
+.year-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.year-nav__arrow {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.year-nav__arrow:not(:disabled):hover { background: var(--accent-soft-bg); }
+.year-nav__arrow:disabled { opacity: 0.4; cursor: default; }
+.year-nav__arrow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.year-nav__arrow svg { width: 18px; height: 18px; }
+.year-nav__label {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Header figure ---- */
+.overview-head { margin: 0 0 24px; }
+.overview-head__figure { margin: 0; font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.overview-head__hint { margin: 4px 0 0; font-size: 12.5px; color: var(--text-faint); }
+
+/* ---- Month groups ---- */
+.month { margin-bottom: 26px; }
+.month:last-child { margin-bottom: 0; }
+.month__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.month__label {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+.month__rule { flex: 1; height: 1px; background: var(--border-subtle); }
+.month__count { flex: none; font-size: 12.5px; color: var(--text-faint); }
+
+.month__cards { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- Outreach card ---- */
+.card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.card__head:hover { background: var(--row-hover); }
+.card__head:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--accent-ring);
+}
+
+.card__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.card__line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.card__name { font-weight: 700; font-size: 15px; color: var(--text-primary); }
+.card__date { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+.card__total { font-size: 13.5px; font-weight: 600; color: var(--text-secondary); }
+
+.card__chevron {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--text-faint);
+  border-right: 2px solid var(--text-faint);
+  transform: rotate(135deg);
+  transition: transform 0.14s ease;
+}
+.card--open .card__chevron { transform: rotate(315deg); }
+
+.card__body {
+  border-top: 1px solid var(--border-faint);
+}
+
+/* ---- Team / guest rows — each collapsible into its roster (real data, no fetch) ---- */
+.team:last-child > .team-row { border-bottom: none; }
+
+.team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  border: none;
+  border-bottom: 1px solid var(--border-faint);
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.team-row:not(:disabled):hover { background: var(--row-hover); }
+.team-row:disabled { cursor: default; }
+.team-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--accent-ring);
+}
+.team-row__label { font-size: 14.5px; font-weight: 600; color: var(--text-primary); }
+
+.team-row__chevron {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid var(--text-faint);
+  border-right: 2px solid var(--text-faint);
+  transform: rotate(135deg);
+  transition: transform 0.14s ease;
+}
+.team-row[aria-expanded='true'] .team-row__chevron { transform: rotate(315deg); }
+
+.team-row--leaders {
+  background: var(--accent-soft-bg);
+  cursor: default;
+}
+.team-row--leaders .team-row__label { color: var(--accent-soft-text); font-weight: 700; }
+
+/* ---- Roster (expanded team/guest row) ---- */
+.roster {
+  list-style: none;
+  margin: 0;
+  padding: 8px 18px 12px 34px;
+  border-bottom: 1px solid var(--border-faint);
+  background: var(--bg-sunken);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.team:last-child .roster { border-bottom: none; }
+.roster li { font-size: 13.5px; color: var(--text-secondary); }
+.roster__index {
+  display: inline-block;
+  min-width: 20px;
+  margin-right: 4px;
+  color: var(--text-faint);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- States ---- */
+.state {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
+.state__hint { margin-top: 6px; }
+.state--error { color: var(--accent-soft-text); }
+.state__retry {
+  display: block;
+  margin: 14px auto 0;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+
+@media (max-width: 720px) {
+  .range { justify-content: flex-start; }
+}

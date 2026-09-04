@@ -1,0 +1,115 @@
+<div class="year-nav">
+  <button type="button" class="year-nav__arrow" (click)="prevYear()" aria-label="Année précédente">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <span class="year-nav__label">{{ year() }}</span>
+  <button type="button" class="year-nav__arrow" (click)="nextYear()" [disabled]="isCurrentYear()" aria-label="Année suivante">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</div>
+
+@if (loading()) {
+  <div class="state">Chargement des présences…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (rows().length === 0) {
+  <div class="state">
+    <div class="state__title">Aucune donnée</div>
+    <div class="state__hint">Aucune sortie sur cette période. Ajustez les dates ci-dessus.</div>
+  </div>
+} @else {
+  <header class="overview-head">
+    <p class="overview-head__figure">{{ totalMobilized() }} personne{{ totalMobilized() > 1 ? 's' : '' }} mobilisée{{ totalMobilized() > 1 ? 's' : '' }} · {{ rows().length }} sortie{{ rows().length > 1 ? 's' : '' }}</p>
+    <p class="overview-head__hint">Total cumulé sur les sorties affichées, leaders inclus.</p>
+  </header>
+
+  @for (group of groups(); track group.key) {
+    <section class="month">
+      <div class="month__head">
+        <span class="month__label">{{ group.label }}</span>
+        <span class="month__rule" aria-hidden="true"></span>
+        <span class="month__count">{{ group.rows.length }} sortie{{ group.rows.length > 1 ? 's' : '' }}</span>
+      </div>
+
+      <div class="month__cards">
+        @for (row of group.rows; track row.outreach.uuid) {
+          <div class="card" [class.card--open]="isOpen(row.outreach.uuid)">
+            <button
+              type="button"
+              class="card__head"
+              (click)="toggle(row.outreach.uuid)"
+              [attr.aria-expanded]="isOpen(row.outreach.uuid)"
+            >
+              <span class="card__title">
+                <span class="card__line">
+                  <span class="card__name">{{ row.outreach.name }}</span>
+                  <span class="card__date">{{ dateLabel(row.outreach.date) }}</span>
+                </span>
+                <span class="card__total">Total {{ row.outreach.totalPresences }} ({{ row.trackedAttendances }} dpt, {{ row.leaders }} leader{{ row.leaders > 1 ? 's' : '' }})</span>
+              </span>
+              <span class="card__chevron" aria-hidden="true"></span>
+            </button>
+
+            @if (isOpen(row.outreach.uuid)) {
+              <div class="card__body">
+                @for (team of sortedTeams(row); track team.teamLeaderUuid) {
+                  <div class="team">
+                    <button
+                      type="button"
+                      class="team-row"
+                      (click)="toggleRoster(row.outreach.uuid, team.teamLeaderUuid)"
+                      [attr.aria-expanded]="isRosterOpen(row.outreach.uuid, team.teamLeaderUuid)"
+                      [disabled]="team.members.length === 0"
+                    >
+                      <span class="team-row__label">Équipe {{ team.teamLeaderFirstname }} : {{ team.members.length }}</span>
+                      @if (team.members.length) {
+                        <span class="team-row__chevron" aria-hidden="true"></span>
+                      }
+                    </button>
+                    @if (isRosterOpen(row.outreach.uuid, team.teamLeaderUuid) && team.members.length) {
+                      <ul class="roster">
+                        @for (m of team.members; track m.profileUuid; let i = $index) {
+                          <li><span class="roster__index">{{ i + 1 }}.</span>{{ attendeeName(m) }}</li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                }
+
+                <div class="team">
+                  <div class="team-row team-row--leaders">
+                    <span class="team-row__label">Leaders : {{ row.leaders }}</span>
+                  </div>
+                </div>
+
+                @if (row.guests.length) {
+                  <div class="team">
+                    <button
+                      type="button"
+                      class="team-row"
+                      (click)="toggleRoster(row.outreach.uuid, '')"
+                      [attr.aria-expanded]="isRosterOpen(row.outreach.uuid, '')"
+                    >
+                      <span class="team-row__label">Invités : {{ row.guests.length }}</span>
+                      <span class="team-row__chevron" aria-hidden="true"></span>
+                    </button>
+                    @if (isRosterOpen(row.outreach.uuid, '')) {
+                      <ul class="roster">
+                        @for (g of row.guests; track g.profileUuid; let i = $index) {
+                          <li><span class="roster__index">{{ i + 1 }}.</span>{{ attendeeName(g) }}</li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+}

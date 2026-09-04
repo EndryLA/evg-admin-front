@@ -5,16 +5,19 @@ import { map, type Observable } from 'rxjs';
 import {
   toAttendanceSummary,
   toOutreachAttendance,
+  toOutreachAttendanceOverview,
   toProfilePresence,
   toTeamStats,
   type RawAttendanceSummary,
   type RawOutreachAttendance,
+  type RawOutreachAttendanceOverview,
   type RawProfilePresence,
   type RawTeamStats,
 } from './attendance-stats.adapter';
 import type {
   AttendanceSummary,
   OutreachAttendance,
+  OutreachAttendanceOverview,
   ProfilePresence,
   StatsQuery,
   TeamStats,
@@ -68,6 +71,15 @@ export class AttendanceStatsService {
     return this.http
       .get<RawOutreachAttendance[]>(`${BASE}/outreaches`, { params: this.queryParams(query) })
       .pipe(map((list) => (list ?? []).map(toOutreachAttendance)));
+  }
+
+  /** Per-outreach attendance, broken down by team leader (chronological). */
+  attendanceOverview(query: StatsQuery): Observable<OutreachAttendanceOverview[]> {
+    return this.http
+      .get<RawOutreachAttendanceOverview[]>(`${BASE}/outreaches/attendance-overview`, {
+        params: this.queryParams(query),
+      })
+      .pipe(map((list) => (list ?? []).map(toOutreachAttendanceOverview)));
   }
 
   /** Top members by number of attendances (capped at `limit`). */

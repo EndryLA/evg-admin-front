@@ -3,10 +3,18 @@ import type { Routes } from '@angular/router';
 /** Attendance feature routes, mounted under the authenticated shell. */
 export const ATTENDANCE_ROUTES: Routes = [
   {
-    path: 'presences',
-    title: 'Présences · Évangélisation',
+    path: 'statistiques/presences',
+    title: 'Statistiques · Présences · Évangélisation',
     loadComponent: () =>
       import('./pages/attendance-list/attendance-list').then((m) => m.AttendanceList),
+  },
+  {
+    path: 'presences',
+    title: 'Présences par sortie · Évangélisation',
+    loadComponent: () =>
+      import('./pages/attendance-outreach-list/attendance-outreach-list').then(
+        (m) => m.AttendanceOutreachList,
+      ),
   },
 ];
 

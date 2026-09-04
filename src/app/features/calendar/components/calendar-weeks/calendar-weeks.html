@@ -45,7 +45,12 @@
                     (click)="selectItem.emit(item)">
                     <span class="wk__bar" aria-hidden="true"></span>
                     <span class="wk__body">
-                      <span class="wk__name">{{ item.name }}</span>
+                      <span class="wk__head">
+                        <span class="wk__name">{{ item.name }}</span>
+                        <span class="pill wk__status pill--{{ statusTone(item) }}">
+                          {{ statusLabel(item) }}
+                        </span>
+                      </span>
                       <span class="wk__meta">
                         @if (item.startTime) {
                           {{ time(item.startTime) }}

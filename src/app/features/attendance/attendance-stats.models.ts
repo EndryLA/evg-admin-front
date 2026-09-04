@@ -76,6 +76,47 @@ export interface TeamStats {
   presenceRate: number;
 }
 
+/** An outreach's identity/scheduling fields, as embedded in an attendance overview row. */
+export interface OutreachStatsSummary {
+  uuid: string;
+  name: string;
+  location: string;
+  /** Outreach date, `YYYY-MM-DD`. */
+  date: string;
+  cityLabel: string;
+  status: OutreachStatus;
+  /** `trackedAttendances + leaders` — everyone counted for that outreach. */
+  totalPresences: number;
+}
+
+/** A present member or guest's identity, with no attendance metadata (`AttendeeName`). */
+export interface AttendeeName {
+  profileUuid: string;
+  firstname: string;
+  lastname: string;
+}
+
+/** One team leader's roster at a given outreach (`TeamAttendance`). */
+export interface TeamAttendance {
+  teamLeaderUuid: string;
+  teamLeaderFirstname: string;
+  teamLeaderLastname: string;
+  members: AttendeeName[];
+}
+
+/**
+ * Per-outreach attendance overview, broken down by team leader
+ * (`OutreachAttendanceStats`, `/api/stats/outreaches/attendance-overview`).
+ */
+export interface OutreachAttendanceOverview {
+  outreach: OutreachStatsSummary;
+  /** Département members tracked under a team leader ("dpt" on the card). */
+  trackedAttendances: number;
+  teams: TeamAttendance[];
+  guests: AttendeeName[];
+  leaders: number;
+}
+
 /** French short month labels, indexed 1–12. */
 export const MONTH_LABELS: Record<number, string> = {
   1: 'janv.',
