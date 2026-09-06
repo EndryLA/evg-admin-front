@@ -66,4 +66,14 @@ export class CityService {
   assignSector(uuid: string, sector: number): Observable<City> {
     return this.http.patch<RawCity>(`${BASE}/${uuid}/sector`, { sector }).pipe(map(toCity));
   }
+
+  /** Soft-delete a commune — recoverable, hidden from the default listing. */
+  delete(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/${uuid}`);
+  }
+
+  /** Permanently delete a commune. Irreversible. */
+  deletePermanent(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/${uuid}/permanent`);
+  }
 }

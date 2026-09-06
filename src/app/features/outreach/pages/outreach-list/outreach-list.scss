@@ -8,19 +8,75 @@
 
 .new-btn svg { width: 16px; height: 16px; }
 
-/* Infinite-scroll sentinel. */
-.scroll-sentinel {
+/* ---- Year navigator: chevron, year, chevron — centered ---- */
+.year-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 8px;
-  padding: 14px 0 4px;
+  gap: 10px;
+  padding: 0 32px 16px;
 }
-.scroll-sentinel__spinner,
-.scroll-sentinel__end {
-  font-size: 13px;
-  color: var(--text-faint);
+.year-nav__arrow {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.12s ease;
 }
+.year-nav__arrow:hover { background: var(--accent-soft-bg); }
+.year-nav__arrow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.year-nav__arrow svg { width: 18px; height: 18px; }
+.year-nav__label {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 52px;
+  text-align: center;
+}
+.year-nav__today {
+  margin-left: 4px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--bg-card);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.year-nav__today:hover { background: var(--bg-sunken); }
+
+/* ---- Month sections: each month gets its own header + table card ---- */
+.month-section { margin-bottom: 26px; }
+.month-section:last-child { margin-bottom: 0; }
+.month-section__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.month-section__label {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.month-section__rule { flex: 1; height: 1px; background: var(--border-subtle); }
+.month-section__count { flex: none; font-size: 12.5px; color: var(--text-faint); }
 
 /* ---- Row actions (kebab menu) ---- */
 .actions { text-align: right; }
@@ -88,4 +144,7 @@
 @media (max-width: 720px) {
   tbody tr { padding-right: 16px; }
   tbody td.cell-head { padding-right: 44px; }
+
+  .year-nav { padding: 0 16px 14px; }
+  .month-section__label { font-size: 14px; }
 }

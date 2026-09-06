@@ -117,6 +117,18 @@ export function formatTimeFr(value?: string | null): string {
   return `${hh}:${min}`;
 }
 
+/** `Août 2026` — full month name and year, capitalized, for month-group
+ *  headers in chronologically-sorted lists. Falls back to the raw `YYYY-MM`
+ *  key when the value can't be parsed. */
+export function monthYearLabel(value: string): string {
+  const date = parseDate(value);
+  if (!date) {
+    return value;
+  }
+  const month = MONTHS_FR[date.getMonth()];
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${date.getFullYear()}`;
+}
+
 /** Four-digit year, or `—`. */
 export function yearOf(value?: string | null): string {
   if (!value) {

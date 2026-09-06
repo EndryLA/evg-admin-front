@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -11,7 +12,11 @@ import {
   type Contact,
 } from '../../contact.models';
 
-/** Full-page, read-only detail for one contact (`/contacts/:uuid`). */
+/**
+ * Full-page, read-only detail for one contact (`/contacts/:uuid`). Reached
+ * from several places (the contacts list, an outreach's contacts list, …), so
+ * the back link replays browser history instead of a fixed route.
+ */
 @Component({
   selector: 'app-contact-detail',
   imports: [RouterLink, PhoneFrPipe],
@@ -21,6 +26,7 @@ import {
 })
 export class ContactDetail implements OnInit {
   private readonly service = inject(ContactService);
+  private readonly location = inject(Location);
 
   /** Route param, bound via `withComponentInputBinding`. */
   readonly uuid = input.required<string>();
@@ -52,6 +58,10 @@ export class ContactDetail implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  protected goBack(): void {
+    this.location.back();
   }
 
   protected load(): void {

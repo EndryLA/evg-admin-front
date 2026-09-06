@@ -1,10 +1,27 @@
 /* City-specific column widths. Generic table-shell styles live in the global
    `.data-list` block (src/styles.scss). */
-.col-name { width: 34%; }
-.col-postal { width: 16%; }
-.col-department { width: 30%; }
-.col-sector { width: 20%; }
+.col-name { width: 32%; }
+.col-postal { width: 15%; }
+.col-department { width: 28%; }
+.col-sector { width: 19%; }
+.col-actions { width: 44px; }
 .col-chevron { width: 44px; }
+
+/* Row-level permanent-delete trigger. */
+.row-delete {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.row-delete svg { width: 16px; height: 16px; }
+.row-delete:hover { background: var(--alert-error-bg); color: var(--alert-error-text); }
 
 /* Sector filter select in the filter bar. */
 .sector-filter {

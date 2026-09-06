@@ -12,8 +12,8 @@ import {
   NG_VALUE_ACCESSOR,
   type ControlValueAccessor,
 } from '@angular/forms';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { catchError, debounceTime, of, switchMap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, debounceTime, of, Subject, switchMap } from 'rxjs';
 
 /**
  * The value a city field carries. Exactly one side is meaningful at a time:
@@ -76,8 +76,13 @@ export class CityAutocomplete implements ControlValueAccessor {
   private onChange: (value: CityValue) => void = () => {};
   private onTouched: () => void = () => {};
 
+  /** Emits only on real user typing (`onInput`) — never on programmatic `query`
+   *  writes from `pick`/`writeValue`, which would otherwise re-trigger the
+   *  debounced search and reopen the panel right after a selection. */
+  private readonly search$ = new Subject<string>();
+
   constructor() {
-    toObservable(this.query)
+    this.search$
       .pipe(
         debounceTime(280),
         switchMap((q) => {
@@ -137,6 +142,7 @@ export class CityAutocomplete implements ControlValueAccessor {
       this.open.set(false);
       this.active.set(-1);
     }
+    this.search$.next(text);
   }
 
   protected pick(s: CitySuggestion): void {

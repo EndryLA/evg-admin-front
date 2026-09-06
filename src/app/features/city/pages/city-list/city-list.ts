@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { CitySearch } from '../../components/city-search/city-search';
 import { CitySectorForm } from '../../components/city-sector-form/city-sector-form';
 import { CityService } from '../../city.service';
@@ -38,7 +39,7 @@ function normalize(value: string): string {
  */
 @Component({
   selector: 'app-city-list',
-  imports: [CitySearch, CitySectorForm],
+  imports: [CitySearch, CitySectorForm, ConfirmDialog],
   host: { class: 'data-list' },
   templateUrl: './city-list.html',
   styleUrl: './city-list.scss',
@@ -84,6 +85,11 @@ export class CityList {
   protected readonly assignTarget = signal<City | null>(null);
   protected readonly assigning = signal(false);
   protected readonly searchOpen = signal(false);
+
+  // ---- Deletion (permanent) ----
+  protected readonly deleteTarget = signal<City | null>(null);
+  protected readonly deleting = signal(false);
+  protected readonly deleteError = signal<string | null>(null);
 
   constructor() {
     this.load();
@@ -292,6 +298,35 @@ export class CityList {
         );
       },
       error: () => this.assigning.set(false),
+    });
+  }
+
+  // ---- Deletion (permanent) ----
+  protected openDelete(city: City, event: Event): void {
+    event.stopPropagation();
+    this.deleteError.set(null);
+    this.deleteTarget.set(city);
+  }
+  protected cancelDelete(): void {
+    this.deleteTarget.set(null);
+  }
+  protected confirmDelete(): void {
+    const target = this.deleteTarget();
+    if (!target || this.deleting()) {
+      return;
+    }
+    this.deleting.set(true);
+    this.service.deletePermanent(target.uuid).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+        this.cities.update((list) => list.filter((c) => c.uuid !== target.uuid));
+        this.totalElements.update((n) => Math.max(0, n - 1));
+      },
+      error: (err) => {
+        this.deleting.set(false);
+        this.deleteError.set(messageFromError(err, 'Suppression de la ville impossible.'));
+      },
     });
   }
 

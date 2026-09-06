@@ -85,6 +85,7 @@
           <th class="col-postal sortable" (click)="sortBy('postal')">Code postal <span class="ind">{{ sortIndicator('postal') }}</span></th>
           <th class="col-department sortable" (click)="sortBy('department')">Département <span class="ind">{{ sortIndicator('department') }}</span></th>
           <th class="col-sector sortable" (click)="sortBy('sector')">Secteur <span class="ind">{{ sortIndicator('sector') }}</span></th>
+          <th class="col-actions"></th>
           <th class="col-chevron"></th>
         </tr>
       </thead>
@@ -103,6 +104,15 @@
               } @else {
                 <span class="pill pill--grey">Non affectée</span>
               }
+            </td>
+            <td class="col-actions">
+              <button
+                type="button"
+                class="btn btn--icon row-delete"
+                aria-label="Supprimer définitivement cette ville"
+                (click)="openDelete(r, $event)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+              </button>
             </td>
             <td class="chevron">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
@@ -147,4 +157,21 @@
 
 @if (searchOpen()) {
   <app-city-search (close)="closeSearch()" (registered)="onRegistered()" />
+}
+
+@if (deleteTarget(); as target) {
+  <app-confirm-dialog
+    title="Supprimer définitivement cette ville ?"
+    confirmLabel="Supprimer définitivement"
+    busyLabel="Suppression…"
+    [busy]="deleting()"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()">
+    <strong>{{ target.officialName }}</strong> sera supprimée définitivement de la base. Cette
+    action est irréversible.
+    @if (deleteError(); as err) {
+      <br />
+      <span class="field__error">{{ err }}</span>
+    }
+  </app-confirm-dialog>
 }

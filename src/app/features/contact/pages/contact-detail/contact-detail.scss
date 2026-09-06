@@ -10,10 +10,15 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  border: none;
+  padding: 0;
+  background: none;
+  font: inherit;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
   text-decoration: none;
+  cursor: pointer;
 }
 .back svg { width: 16px; height: 16px; }
 .back:hover { color: var(--text-primary); }

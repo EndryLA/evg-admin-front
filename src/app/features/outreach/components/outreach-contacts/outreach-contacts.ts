@@ -1,5 +1,5 @@
-import { Component, computed, input, output, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
 import { formatDateFr } from '../../../../shared/util/date.util';
@@ -39,6 +39,8 @@ const OUT_OF_SECTOR_COLOR = 'FFFF0000'; // pure red
   styleUrl: './outreach-contacts.scss',
 })
 export class OutreachContacts {
+  private readonly router = inject(Router);
+
   readonly contacts = input<ContactEntry[]>([]);
   readonly loading = input(false);
   readonly error = input<string | null>(null);
@@ -199,5 +201,17 @@ export class OutreachContacts {
 
   protected toggle(): void {
     this.showAll.update((v) => !v);
+  }
+
+  protected yesNo(value: boolean | null): string {
+    return displayYesNo(value);
+  }
+
+  /** Rows link to the contact's detail page only on the full-list page. */
+  protected view(contact: ContactEntry): void {
+    if (!this.expanded()) {
+      return;
+    }
+    this.router.navigate(['/contacts', contact.uuid]);
   }
 }

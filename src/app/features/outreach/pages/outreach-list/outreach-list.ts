@@ -1,14 +1,4 @@
-import {
-  afterNextRender,
-  Component,
-  computed,
-  DestroyRef,
-  ElementRef,
-  inject,
-  OnDestroy,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, ElementRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
@@ -16,6 +6,7 @@ import {
   formatDateFr,
   formatDateTimeShortFr,
   formatTimeFr,
+  monthYearLabel,
 } from '../../../../shared/util/date.util';
 import { OutreachForm } from '../../components/outreach-form/outreach-form';
 import { OutreachService } from '../../outreach.service';
@@ -32,20 +23,31 @@ import {
 } from '../../outreach.models';
 
 type Tab = 'ALL' | OutreachStatus;
-type SortKey = 'name' | 'start' | 'status';
-type SortDir = 'asc' | 'desc';
 
-const PAGE_SIZE = 20;
-/** Debounce before the free-text search triggers a server reload. */
-const SEARCH_DEBOUNCE_MS = 300;
+/** Page size used while paging through a whole year server-side. */
+const YEAR_PAGE_SIZE = 200;
+
+/** `YYYY-MM` for today, local time — avoids `toISOString()`'s UTC shift. */
+function currentMonthKey(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/** One calendar month's worth of outreach rows, in display order. */
+interface MonthGroup {
+  key: string;
+  label: string;
+  rows: Outreach[];
+}
 
 /**
- * Sorties — the outreach events table. Paged server-side and loaded 20 at a time
- * via infinite scroll (`GET /api/outreaches?page&size&sort` + filter): an
- * IntersectionObserver on a bottom sentinel pulls the next page as it scrolls
- * into view. Filtering and sorting are applied server-side, so any change
- * reloads from the first page. Rows link to the detail page (`/sorties/:uuid`);
- * only creation happens here, via the modal.
+ * Sorties — the outreach events, browsed one calendar year at a time (see
+ * {@link year}) and rendered as one table per month that actually has
+ * outreaches (empty months are skipped). All pages for the selected year are
+ * fetched up front (`GET /api/outreaches?minDate&maxDate&page&size`, looping
+ * until the last page) and grouped client-side by `date`'s `YYYY-MM` prefix.
+ * Rows link to the detail page (`/sorties/:uuid`); only creation happens here,
+ * via the modal.
  */
 @Component({
   selector: 'app-outreach-list',
@@ -54,37 +56,34 @@ const SEARCH_DEBOUNCE_MS = 300;
   templateUrl: './outreach-list.html',
   styleUrl: './outreach-list.scss',
 })
-export class OutreachList implements OnDestroy {
+export class OutreachList {
   private readonly service = inject(OutreachService);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
-
-  private readonly scrollRoot = viewChild<ElementRef<HTMLElement>>('scrollRoot');
-  private readonly sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
+  private readonly hostRef: ElementRef<HTMLElement> = inject(ElementRef);
 
   // ---- Data ----
   protected readonly rows = signal<Outreach[]>([]);
-  protected readonly loading = signal(true); // initial page
-  protected readonly loadingMore = signal(false); // subsequent pages
+  protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
-  protected readonly hasMore = signal(true);
   protected readonly totalElements = signal(0);
-  private nextPage = 0;
+
+  // ---- Year ----
+  private readonly currentYear = new Date().getFullYear();
+  protected readonly year = signal(this.currentYear);
+  protected readonly isCurrentYear = computed(() => this.year() === this.currentYear);
+  /** `YYYY-MM` of today (local time) — drives the auto-scroll to the current
+   *  month on load. */
+  protected readonly currentMonthKey = currentMonthKey();
 
   protected readonly managers = signal<ManagerOption[]>([]);
 
-  // ---- Filters / sort ----
+  // ---- Filters ----
   protected readonly query = signal('');
   protected readonly tab = signal<Tab>('ALL');
   protected readonly sector = signal<SectorFilter>('ALL');
   protected readonly sectors = SECTORS;
   /** Selected responsible person's uuid, or `'ALL'`. */
   protected readonly managedBy = signal<string>('ALL');
-  /** Outreach date bounds, `YYYY-MM-DD`, or '' for none. */
-  protected readonly minDate = signal('');
-  protected readonly maxDate = signal('');
-  protected readonly sortKey = signal<SortKey>('start');
-  protected readonly sortDir = signal<SortDir>('desc');
 
   // ---- Overlays ----
   /** Mobile-only: the bottom filter drawer. */
@@ -107,9 +106,7 @@ export class OutreachList implements OnDestroy {
       this.query().trim() !== '' ||
       this.tab() !== 'ALL' ||
       this.sector() !== 'ALL' ||
-      this.managedBy() !== 'ALL' ||
-      this.minDate() !== '' ||
-      this.maxDate() !== '',
+      this.managedBy() !== 'ALL',
   );
 
   /** Number of drawer filters currently narrowing the list (search excluded — it
@@ -118,10 +115,24 @@ export class OutreachList implements OnDestroy {
     () =>
       (this.tab() !== 'ALL' ? 1 : 0) +
       (this.sector() !== 'ALL' ? 1 : 0) +
-      (this.managedBy() !== 'ALL' ? 1 : 0) +
-      (this.minDate() !== '' ? 1 : 0) +
-      (this.maxDate() !== '' ? 1 : 0),
+      (this.managedBy() !== 'ALL' ? 1 : 0),
   );
+
+  /** Month groups for the selected year, most recent month first (rows within
+   *  each group are already server-sorted the same way), skipping empty months. */
+  protected readonly groups = computed<MonthGroup[]>(() => {
+    const byKey = new Map<string, MonthGroup>();
+    for (const row of this.rows()) {
+      const key = row.date ? row.date.slice(0, 7) : ''; // YYYY-MM, or '' when undated
+      let group = byKey.get(key);
+      if (!group) {
+        group = { key, label: row.date ? monthYearLabel(row.date) : 'SANS DATE', rows: [] };
+        byKey.set(key, group);
+      }
+      group.rows.push(row);
+    }
+    return [...byKey.values()];
+  });
 
   private searchTimer?: ReturnType<typeof setTimeout>;
 
@@ -131,11 +142,6 @@ export class OutreachList implements OnDestroy {
       next: (list) => this.managers.set(list),
       error: () => this.managers.set([]),
     });
-    afterNextRender(() => this.observe());
-  }
-
-  ngOnDestroy(): void {
-    clearTimeout(this.searchTimer);
   }
 
   protected statusLabel(status: OutreachStatus): string {
@@ -146,100 +152,85 @@ export class OutreachList implements OnDestroy {
   }
 
   // ---- Loading ----
-  /** Assemble the current filter to send to the backend. */
+  /** Assemble the current filter — the selected year bounds plus the usual
+   *  narrowing filters — to send to the backend. */
   private currentFilter(): OutreachFilter {
+    const y = this.year();
     return {
       search: this.query(),
       status: this.tab(),
       sector: this.sector(),
       managedByUuid: this.managedBy(),
-      minDate: this.minDate(),
-      maxDate: this.maxDate(),
+      minDate: `${y}-01-01`,
+      maxDate: `${y}-12-31`,
     };
   }
-  /** Backend `sort` param, e.g. `startTime,desc`. */
-  private currentSort(): string {
-    const field = this.sortKey() === 'start' ? 'startTime' : this.sortKey();
-    return `${field},${this.sortDir()}`;
-  }
 
-  /** (Re)start from the first page — used on load and on any filter/sort change. */
+  /** (Re)load the whole selected year — used on load and on any filter/year
+   *  change. Pages through the backend until the last page, since the table
+   *  needs every row of the year at once to group it by month. */
   protected load(): void {
     this.rows.set([]);
-    this.nextPage = 0;
-    this.hasMore.set(true);
     this.loadError.set(null);
     this.loading.set(true);
-    this.fetchNext(true);
+    this.fetchAll(0, []);
   }
 
-  /** Pull the next page — triggered by the bottom sentinel. */
-  protected loadMore(): void {
-    if (this.loading() || this.loadingMore() || !this.hasMore() || this.loadError()) {
-      return;
-    }
-    this.loadingMore.set(true);
-    this.fetchNext(false);
-  }
-
-  private fetchNext(initial: boolean): void {
-    this.service.list(this.nextPage, PAGE_SIZE, this.currentFilter(), this.currentSort()).subscribe({
-      next: (page) => {
-        this.rows.update((list) => (initial ? page.items : [...list, ...page.items]));
-        this.totalElements.set(page.totalElements);
-        this.hasMore.set(!page.last && page.items.length > 0);
-        this.nextPage += 1;
+  private fetchAll(page: number, acc: Outreach[]): void {
+    this.service.list(page, YEAR_PAGE_SIZE, this.currentFilter(), 'date,desc').subscribe({
+      next: (result) => {
+        const combined = [...acc, ...result.items];
+        if (!result.last && result.items.length > 0) {
+          this.fetchAll(page + 1, combined);
+          return;
+        }
+        this.rows.set(combined);
+        this.totalElements.set(combined.length);
         this.loading.set(false);
-        this.loadingMore.set(false);
-        this.maybeLoadMore();
+        if (this.isCurrentYear()) {
+          // Wait for the month tables to actually render before scrolling.
+          setTimeout(() => this.scrollToCurrentMonth(), 0);
+        }
       },
       error: (err) => {
         this.loadError.set(messageFromError(err, 'Chargement des sorties impossible.'));
         this.loading.set(false);
-        this.loadingMore.set(false);
       },
     });
   }
 
-  // ---- Infinite scroll ----
-  private observe(): void {
-    const sentinel = this.sentinel()?.nativeElement;
-    if (!sentinel) {
-      return;
-    }
-    const root = this.scrollRoot()?.nativeElement ?? null;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          this.loadMore();
-        }
-      },
-      { root, rootMargin: '300px' },
+  /** Land the viewport on the current month's table, when it's present in the
+   *  currently loaded (current) year. */
+  private scrollToCurrentMonth(): void {
+    const target = this.hostRef.nativeElement.querySelector<HTMLElement>(
+      '[data-month-anchor]',
     );
-    io.observe(sentinel);
-    this.destroyRef.onDestroy(() => io.disconnect());
+    target?.scrollIntoView({ block: 'start', behavior: 'auto' });
   }
 
-  /** If the sentinel is still visible after a load, fetch the next page. */
-  private maybeLoadMore(): void {
-    const sentinel = this.sentinel()?.nativeElement;
-    const root = this.scrollRoot()?.nativeElement;
-    if (!sentinel || !root || !this.hasMore()) {
+  // ---- Year navigation ----
+  protected prevYear(): void {
+    this.year.update((y) => y - 1);
+    this.load();
+  }
+  protected nextYear(): void {
+    this.year.update((y) => y + 1);
+    this.load();
+  }
+  protected goToCurrentYear(): void {
+    if (this.isCurrentYear()) {
       return;
     }
-    const sRect = sentinel.getBoundingClientRect();
-    const rRect = root.getBoundingClientRect();
-    if (sRect.top <= rRect.bottom + 300) {
-      queueMicrotask(() => this.loadMore());
-    }
+    this.year.set(this.currentYear);
+    this.load();
   }
 
-  // ---- Filter / sort handlers (each reloads from the first page) ----
+  // ---- Filter handlers (each reloads the year from scratch) ----
   /** Free-text search — debounced so typing doesn't fire a request per key. */
   protected onSearch(value: string): void {
     this.query.set(value);
     clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.load(), SEARCH_DEBOUNCE_MS);
+    this.searchTimer = setTimeout(() => this.load(), 300);
   }
   protected setTab(tab: Tab): void {
     this.tab.set(tab);
@@ -253,39 +244,13 @@ export class OutreachList implements OnDestroy {
     this.managedBy.set(value);
     this.load();
   }
-  protected setMinDate(value: string): void {
-    this.minDate.set(value);
-    this.load();
-  }
-  protected setMaxDate(value: string): void {
-    this.maxDate.set(value);
-    this.load();
-  }
   protected resetFilters(): void {
     clearTimeout(this.searchTimer);
     this.query.set('');
     this.tab.set('ALL');
     this.sector.set('ALL');
     this.managedBy.set('ALL');
-    this.minDate.set('');
-    this.maxDate.set('');
     this.load();
-  }
-
-  protected sortBy(key: SortKey): void {
-    if (this.sortKey() === key) {
-      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortKey.set(key);
-      this.sortDir.set('asc');
-    }
-    this.load();
-  }
-  protected sortIndicator(key: SortKey): string {
-    if (this.sortKey() !== key) {
-      return '';
-    }
-    return this.sortDir() === 'asc' ? '↑' : '↓';
   }
 
   // ---- Row actions ----

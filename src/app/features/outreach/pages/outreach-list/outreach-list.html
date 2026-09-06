@@ -1,9 +1,22 @@
 <header class="topbar">
   <div>
     <h1>Sorties</h1>
-    <p class="topbar__sub">{{ totalElements() }} sorties d'évangélisation · {{ rows().length }} chargées.</p>
+    <p class="topbar__sub">{{ totalElements() }} sortie{{ totalElements() > 1 ? 's' : '' }} d'évangélisation en {{ year() }}.</p>
   </div>
 </header>
+
+<div class="year-nav">
+  <button type="button" class="year-nav__arrow" (click)="prevYear()" aria-label="Année précédente">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <span class="year-nav__label">{{ year() }}</span>
+  <button type="button" class="year-nav__arrow" (click)="nextYear()" aria-label="Année suivante">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  @if (!isCurrentYear()) {
+    <button type="button" class="year-nav__today" (click)="goToCurrentYear()">Aujourd'hui</button>
+  }
+</div>
 
 <div class="filters">
   <div class="search">
@@ -72,28 +85,6 @@
         </select>
       </label>
 
-      <label class="filter-field">
-        <span class="filter-field__label">Du</span>
-        <input
-          type="date"
-          class="filter-input"
-          [value]="minDate()"
-          [max]="maxDate() || null"
-          (change)="setMinDate($any($event.target).value)"
-          aria-label="Date minimale" />
-      </label>
-
-      <label class="filter-field">
-        <span class="filter-field__label">Au</span>
-        <input
-          type="date"
-          class="filter-input"
-          [value]="maxDate()"
-          [min]="minDate() || null"
-          (change)="setMaxDate($any($event.target).value)"
-          aria-label="Date maximale" />
-      </label>
-
       @if (hasActiveFilters()) {
         <button type="button" class="btn filter-reset" (click)="resetFilters()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
@@ -125,79 +116,80 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
-<div class="table-region" #scrollRoot>
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th class="col-name sortable" (click)="sortBy('name')">Sortie <span class="ind">{{ sortIndicator('name') }}</span></th>
-          <th class="col-time">Date</th>
-          <th class="col-time sortable" (click)="sortBy('start')">Début <span class="ind">{{ sortIndicator('start') }}</span></th>
-          <th class="col-time">Fin</th>
-          <th class="col-status sortable" (click)="sortBy('status')">Statut <span class="ind">{{ sortIndicator('status') }}</span></th>
-          <th class="col-manager">Superviseur</th>
-          <th class="col-chevron"></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (o of rows(); track o.uuid) {
-          <tr (click)="openManage(o)">
-            <td class="cell-head">
-              <div class="cell-main">{{ o.name }}</div>
-              <div class="cell-sub">{{ o.location }}</div>
-            </td>
-            <!-- Wide table: date, start and end each in their own column. -->
-            <td class="cell-contact cell-plain hide-sm" data-label="Date">{{ fmtDate(o.date) }}</td>
-            <td class="cell-contact cell-plain hide-sm" data-label="Début">{{ fmtTime(o.startTime) }}</td>
-            <td class="cell-contact hide-sm" data-label="Fin">{{ fmtTime(o.endTime) }}</td>
-            <!-- Compact card: date + start time on one side, status on the other. -->
-            <td class="cell-plain show-sm card-split">
-              <span class="cell-contact">{{ fmtDateTimeShort(o.date, o.startTime) }}</span>
-              <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
-            </td>
-            <td class="cell-plain hide-sm">
-              <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
-            </td>
-            <td class="cell-contact" data-label="Superviseur">{{ o.managedBy?.name || '—' }}</td>
-            <td class="actions">
-              <button
-                type="button"
-                class="kebab"
-                (click)="toggleMenu(o, $event)"
-                [attr.aria-expanded]="menuOutreach()?.uuid === o.uuid"
-                aria-haspopup="menu"
-                aria-label="Actions">
-                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
-              </button>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+<div class="table-region">
+  @if (loading()) {
+    <div class="state">Chargement des sorties…</div>
+  } @else if (loadError(); as err) {
+    <div class="state state--error">
+      {{ err }}
+      <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+    </div>
+  } @else if (groups().length === 0) {
+    <div class="state">
+      <div class="state__title">Aucune sortie trouvée</div>
+      <div class="state__hint">Ajustez votre recherche, vos filtres, ou changez d'année.</div>
+    </div>
+  } @else {
+    @for (group of groups(); track group.key) {
+      <section class="month-section" [attr.data-month-anchor]="group.key === currentMonthKey ? '' : null">
+        <div class="month-section__head">
+          <span class="month-section__label">{{ group.label }}</span>
+          <span class="month-section__rule" aria-hidden="true"></span>
+          <span class="month-section__count">{{ group.rows.length }} sortie{{ group.rows.length > 1 ? 's' : '' }}</span>
+        </div>
 
-    @if (loading()) {
-      <div class="state">Chargement des sorties…</div>
-    } @else if (loadError(); as err) {
-      <div class="state state--error">
-        {{ err }}
-        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
-      </div>
-    } @else if (rows().length === 0) {
-      <div class="state">
-        <div class="state__title">Aucune sortie trouvée</div>
-        <div class="state__hint">Ajustez votre recherche ou vos filtres.</div>
-      </div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-name">Sortie</th>
+                <th class="col-time">Date</th>
+                <th class="col-time">Début</th>
+                <th class="col-time">Fin</th>
+                <th class="col-status">Statut</th>
+                <th class="col-manager">Superviseur</th>
+                <th class="col-chevron"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of group.rows; track o.uuid) {
+                <tr (click)="openManage(o)">
+                  <td class="cell-head">
+                    <div class="cell-main">{{ o.name }}</div>
+                    <div class="cell-sub">{{ o.location }}</div>
+                  </td>
+                  <!-- Wide table: date, start and end each in their own column. -->
+                  <td class="cell-contact cell-plain hide-sm" data-label="Date">{{ fmtDate(o.date) }}</td>
+                  <td class="cell-contact cell-plain hide-sm" data-label="Début">{{ fmtTime(o.startTime) }}</td>
+                  <td class="cell-contact hide-sm" data-label="Fin">{{ fmtTime(o.endTime) }}</td>
+                  <!-- Compact card: date + start time on one side, status on the other. -->
+                  <td class="cell-plain show-sm card-split">
+                    <span class="cell-contact">{{ fmtDateTimeShort(o.date, o.startTime) }}</span>
+                    <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+                  </td>
+                  <td class="cell-plain hide-sm">
+                    <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+                  </td>
+                  <td class="cell-contact" data-label="Superviseur">{{ o.managedBy?.name || '—' }}</td>
+                  <td class="actions">
+                    <button
+                      type="button"
+                      class="kebab"
+                      (click)="toggleMenu(o, $event)"
+                      [attr.aria-expanded]="menuOutreach()?.uuid === o.uuid"
+                      aria-haspopup="menu"
+                      aria-label="Actions">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
     }
-  </div>
-
-  <!-- Infinite-scroll sentinel: pulls the next page when it enters view. -->
-  <div class="scroll-sentinel" #sentinel aria-hidden="true">
-    @if (loadingMore()) {
-      <span class="scroll-sentinel__spinner">Chargement…</span>
-    } @else if (!loading() && !hasMore() && !loadError() && rows().length > 0) {
-      <span class="scroll-sentinel__end">Fin de la liste</span>
-    }
-  </div>
+  }
 </div>
 
 @if (menuOutreach(); as o) {
