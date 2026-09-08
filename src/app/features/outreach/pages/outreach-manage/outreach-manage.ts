@@ -163,8 +163,8 @@ export class OutreachManage implements OnInit {
     this.closeOpen.set(false);
   }
 
-  /** Mark the sortie as finished. */
-  protected confirmClose(): void {
+  /** Mark the sortie as finished, recording the head count entered in the dialog. */
+  protected confirmClose(totalPresences: number): void {
     const current = this.outreach();
     if (!current || this.saving()) {
       return;
@@ -172,7 +172,7 @@ export class OutreachManage implements OnInit {
 
     this.saving.set(true);
     this.saveError.set(null);
-    this.service.setStatus(this.uuid(), 'FINISHED').subscribe({
+    this.service.setStatus(this.uuid(), 'FINISHED', totalPresences).subscribe({
       next: (o) => {
         this.saving.set(false);
         this.closeOpen.set(false);

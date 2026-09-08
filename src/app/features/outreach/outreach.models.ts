@@ -103,6 +103,9 @@ export interface Outreach {
   /** Read-only, computed by the backend from the schedule. */
   status: OutreachStatus;
   managedBy: OutreachManager | null;
+  /** Head count recorded when the sortie was closed, or `null` while it has
+   *  none — set once, through the clôture dialog. */
+  totalPresences: number | null;
 }
 
 /**

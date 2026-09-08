@@ -3,6 +3,12 @@ import type { Routes } from '@angular/router';
 /** Outreach feature routes, mounted under the authenticated shell. */
 export const OUTREACH_ROUTES: Routes = [
   {
+    path: 'statistiques/terrain',
+    title: 'Statistiques · Terrain · Évangélisation',
+    loadComponent: () =>
+      import('./pages/terrain-stats/terrain-stats').then((m) => m.TerrainStats),
+  },
+  {
     path: 'sorties',
     title: 'Sorties · Évangélisation',
     loadComponent: () =>

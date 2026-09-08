@@ -38,6 +38,7 @@ export interface RawOutreach {
   endTime?: string | null;
   status?: string | null;
   managedBy?: RawManager | null;
+  totalPresences?: number | null;
 }
 
 /** Raw `OutreachRequest` sent to the backend. */
@@ -180,6 +181,7 @@ export function toOutreach(raw: RawOutreach): Outreach {
             name: `${manager.firstname ?? ''} ${manager.lastname ?? ''}`.trim(),
           }
         : null,
+    totalPresences: raw.totalPresences ?? null,
   };
 }
 

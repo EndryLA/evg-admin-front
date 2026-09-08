@@ -121,10 +121,22 @@ export class OutreachService {
       .pipe(map(toOutreach));
   }
 
-  /** Manage-page operation: set the lifecycle status. */
-  setStatus(uuid: string, status: OutreachStatus): Observable<Outreach> {
+  /**
+   * Manage-page operation: set the lifecycle status. Closing a sortie also
+   * records the head count — `totalPresences` is sent only when given, so the
+   * other transitions leave it untouched.
+   */
+  setStatus(
+    uuid: string,
+    status: OutreachStatus,
+    totalPresences: number | null = null,
+  ): Observable<Outreach> {
+    const body: { status: OutreachStatus; totalPresences?: number } = { status };
+    if (totalPresences !== null) {
+      body.totalPresences = totalPresences;
+    }
     return this.http
-      .patch<RawOutreach>(`${BASE}/${uuid}/status`, { status })
+      .patch<RawOutreach>(`${BASE}/${uuid}/status`, body)
       .pipe(map(toOutreach));
   }
 

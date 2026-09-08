@@ -68,7 +68,8 @@ export class AttendanceOutreachOverview implements OnInit {
     this.rows().reduce((sum, r) => sum + r.outreach.totalPresences, 0),
   );
 
-  /** Month groups, most recent first; each group's outreaches most recent first too. */
+  /** Month groups in calendar order, January first; each group's outreaches
+   *  likewise — scrolling down moves forward through the year. */
   protected readonly groups = computed<MonthGroup[]>(() => {
     const byKey = new Map<string, MonthGroup>();
     for (const row of this.rows()) {
@@ -83,9 +84,9 @@ export class AttendanceOutreachOverview implements OnInit {
       group.rows.push(row);
     }
     for (const group of byKey.values()) {
-      group.rows.sort((a, b) => b.outreach.date.localeCompare(a.outreach.date));
+      group.rows.sort((a, b) => a.outreach.date.localeCompare(b.outreach.date));
     }
-    return [...byKey.values()].sort((a, b) => b.key.localeCompare(a.key));
+    return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
   });
 
   ngOnInit(): void {

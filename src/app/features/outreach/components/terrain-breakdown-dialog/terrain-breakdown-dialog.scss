@@ -1,0 +1,96 @@
+/* Breakdown dialog. Reuses the global `.modal-form` shell (overlay/head/foot);
+   the body scrolls on its own so the header and footer stay put on long lists.
+   The table language mirrors the Terrain page's panels. */
+
+/* Doubled class beats the global `.modal-form .modal` width/height/overflow rules.
+   Wider than the form modal so the six columns fit without sideways scrolling. */
+.modal.modal--list {
+  width: min(860px, 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal__sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 26px 16px;
+}
+.modal__state {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.modal .breakdown {
+  width: 100%;
+  min-width: max-content;
+  table-layout: auto;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+.modal .breakdown th,
+.modal .breakdown td {
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+/* The header sticks so the columns stay readable while the list scrolls. */
+.modal .breakdown thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-card);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.modal .breakdown tbody tr { cursor: default; border-bottom: 1px solid var(--border-subtle); }
+.modal .breakdown tbody tr:last-child { border-bottom: none; }
+.modal .breakdown tbody tr:hover { background: var(--row-hover); }
+
+.modal .breakdown .breakdown__label { font-weight: 600; color: var(--text-primary); }
+.modal .breakdown .breakdown__sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.modal .breakdown .num { text-align: right; font-variant-numeric: tabular-nums; }
+.modal .breakdown .num--accent { color: var(--accent-soft-text); font-weight: 600; }
+.modal .breakdown .num--muted { color: var(--text-muted); }
+
+/* The dialog renders inside the page's `.data-list` host, so the global mobile
+   card transform reaches this table too — same opt-out as the page's tables. */
+@media (max-width: 720px) {
+  .modal .breakdown { display: table; min-width: max-content; table-layout: auto; }
+  .modal .breakdown thead { display: table-header-group; }
+  .modal .breakdown tbody { display: table-row-group; gap: 0; }
+  .modal .breakdown tbody tr {
+    display: table-row;
+    position: static;
+    padding: 0;
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .modal .breakdown th,
+  .modal .breakdown td { display: table-cell; padding: 9px 10px; text-align: left; }
+  .modal .breakdown .num { text-align: right; }
+  .modal__body { padding: 8px 16px 16px; }
+  .modal.modal--list .modal__head { padding: 18px 16px 12px; }
+}

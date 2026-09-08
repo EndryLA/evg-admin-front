@@ -1,0 +1,275 @@
+<header class="topbar">
+  <div>
+    <h1>Terrain</h1>
+    <p class="topbar__sub">Bilan des sorties : contacts, conversions et effectif mobilisé.</p>
+  </div>
+</header>
+
+<div class="bilan">
+  <div class="range">
+    <div class="range__presets" role="group" aria-label="Période">
+      <button type="button" class="range__preset" [class.range__preset--active]="preset() === 'all'" (click)="applyPreset('all')">Tout</button>
+      <button type="button" class="range__preset" [class.range__preset--active]="preset() === 'CURRENT_MONTH'" (click)="applyPreset('CURRENT_MONTH')">Ce mois</button>
+      <button type="button" class="range__preset" [class.range__preset--active]="preset() === 'CURRENT_YEAR'" (click)="applyPreset('CURRENT_YEAR')">Cette année</button>
+      <button type="button" class="range__preset" [class.range__preset--active]="preset() === 'LAST_3_MONTHS'" (click)="applyPreset('LAST_3_MONTHS')">3 derniers mois</button>
+    </div>
+    <div class="range__custom">
+      <label class="range__field">
+        <span class="range__label">Du</span>
+        <input type="date" class="range__input" [value]="query().from ?? ''" [max]="query().to ?? ''"
+          (change)="setBound('from', $any($event.target).value)" />
+      </label>
+      <label class="range__field">
+        <span class="range__label">Au</span>
+        <input type="date" class="range__input" [value]="query().to ?? ''" [min]="query().from ?? ''"
+          (change)="setBound('to', $any($event.target).value)" />
+      </label>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="state">Chargement du bilan…</div>
+  } @else if (loadError(); as err) {
+    <div class="state state--error">
+      {{ err }}
+      <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+    </div>
+  } @else if (summary(); as s) {
+    <section class="tiles" aria-label="Récapitulatif">
+      <div class="tile">
+        <span class="tile__value tile__value--accent">{{ s.conversions }}</span>
+        <span class="tile__label">Conversions</span>
+      </div>
+      <div class="tile">
+        <span class="tile__value">{{ s.contacts }}</span>
+        <span class="tile__label">Contacts</span>
+      </div>
+      <div class="tile">
+        <span class="tile__value">{{ totalAttendances() }}</span>
+        <span class="tile__label">Personnes mobilisées</span>
+      </div>
+      <div class="tile">
+        <span class="tile__value">{{ totalMembers() }}</span>
+        <span class="tile__label">Dont département</span>
+      </div>
+      <div class="tile">
+        <span class="tile__value">{{ cityCount() }}</span>
+        <span class="tile__label">Villes évangélisées</span>
+      </div>
+      <div class="tile">
+        <span class="tile__value">{{ s.outreaches }}</span>
+        <span class="tile__label">Sorties</span>
+      </div>
+      <div class="tile">
+        <span class="tile__value">{{ decimal(s.avgEntriesPerOutreach) }}</span>
+        <span class="tile__label">Moy. personnes / sortie</span>
+      </div>
+    </section>
+
+    @if (empty()) {
+      <div class="state">
+        <div class="state__title">Aucune donnée</div>
+        <div class="state__hint">Aucune sortie sur cette période. Ajustez les dates ci-dessus.</div>
+      </div>
+    } @else {
+      <section class="panel">
+        <div class="panel__head">
+          <h2 class="panel__title">Récapitulatif mensuel</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="grid">
+            <caption class="sr-only">Totaux par mois sur la période sélectionnée</caption>
+            <thead>
+              <tr>
+                <th scope="col">Mois</th>
+                <th scope="col" class="num">Sorties</th>
+                <th scope="col" class="num">Conversions</th>
+                <th scope="col" class="num">Contacts</th>
+                <th scope="col" class="num">Effectif</th>
+                <th scope="col" class="num">Dépt</th>
+                <th scope="col" class="num">Leaders</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of monthlyRows(); track m.key) {
+                <tr>
+                  <th scope="row" class="grid__label">{{ m.label }}</th>
+                  <td class="num">{{ m.outreaches }}</td>
+                  <td class="num num--accent">{{ m.conversions }}</td>
+                  <td class="num">{{ m.contacts }}</td>
+                  <td class="num">{{ m.attendances }}</td>
+                  <td class="num num--muted">{{ m.members }}</td>
+                  <td class="num num--muted">{{ m.leaders }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row" class="grid__label">Totaux</th>
+                <td class="num">{{ s.outreaches }}</td>
+                <td class="num num--accent">{{ s.conversions }}</td>
+                <td class="num">{{ s.contacts }}</td>
+                <td class="num">{{ totalAttendances() }}</td>
+                <td class="num num--muted">{{ totalMembers() }}</td>
+                <td class="num num--muted">{{ totalLeaders() }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      @for (month of months(); track month.key) {
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">{{ month.label }}</h2>
+            <span class="panel__count">{{ month.rows.length }} sortie{{ month.rows.length > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="table-wrap">
+            <table class="grid">
+              <caption class="sr-only">Sorties de {{ month.label }}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Sortie</th>
+                  @if (showCity()) {
+                    <th scope="col">Ville</th>
+                  }
+                  <th scope="col" class="num">Conversions</th>
+                  <th scope="col" class="num">Contacts</th>
+                  <th scope="col" class="num">Effectif</th>
+                  <th scope="col" class="num">Dépt</th>
+                  <th scope="col" class="num">Leaders</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of month.rows; track row.uuid) {
+                  <tr>
+                    <th scope="row" class="grid__label">{{ row.dateLabel }}</th>
+                    <td>
+                      <a class="grid__link" [routerLink]="['/sorties', row.uuid, 'statistiques']">{{ row.name }}</a>
+                      @if (row.location) {
+                        <span class="grid__sub">{{ row.location }}</span>
+                      }
+                    </td>
+                    @if (showCity()) {
+                      <td>
+                        {{ row.cityLabel }}
+                        @if (row.cityCode) {
+                          <span class="grid__sub">{{ row.cityCode }}</span>
+                        }
+                      </td>
+                    }
+                    <td class="num num--accent">{{ row.conversions }}</td>
+                    <td class="num">{{ row.contacts }}</td>
+                    <td class="num">{{ row.attendances ?? '—' }}</td>
+                    <td class="num num--muted">{{ row.members ?? '—' }}</td>
+                    <td class="num num--muted">{{ row.leaders ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" class="grid__label">Total</th>
+                  <td></td>
+                  @if (showCity()) {
+                    <td class="num--muted">{{ month.totals.cities }} ville{{ month.totals.cities > 1 ? 's' : '' }}</td>
+                  }
+                  <td class="num num--accent">{{ month.totals.conversions }}</td>
+                  <td class="num">{{ month.totals.contacts }}</td>
+                  <td class="num">{{ month.totals.attendances }}</td>
+                  <td class="num num--muted">{{ month.totals.members }}</td>
+                  <td class="num num--muted">{{ month.totals.leaders }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+      }
+
+      <div class="panels">
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">Par ville</h2>
+            <span class="panel__count">{{ cityCount() }} ville{{ cityCount() > 1 ? 's' : '' }}</span>
+          </div>
+          @if (topCities().length) {
+            <div class="table-wrap">
+              <table class="grid">
+                <caption class="sr-only">Villes les plus fructueuses sur la période</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Ville</th>
+                    <th scope="col" class="num">Conversions</th>
+                    <th scope="col" class="num">Contacts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (city of topCities(); track city.key) {
+                    <tr>
+                      <th scope="row" class="grid__label">
+                        {{ city.label }}
+                        @if (city.sub) {
+                          <span class="grid__sub">{{ city.sub }}</span>
+                        }
+                      </th>
+                      <td class="num num--accent">{{ city.conversions }}</td>
+                      <td class="num">{{ city.contacts }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <button type="button" class="btn panel__more" (click)="openBreakdown.set('cities')">
+              Voir les {{ cityCount() }} villes
+            </button>
+          } @else {
+            <p class="panel__empty">Aucune ville sur cette période.</p>
+          }
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">Par secteur</h2>
+            <span class="panel__count">{{ sectorCount() }} secteur{{ sectorCount() > 1 ? 's' : '' }}</span>
+          </div>
+          @if (topSectors().length) {
+            <div class="table-wrap">
+              <table class="grid">
+                <caption class="sr-only">Secteurs les plus fructueux sur la période</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Secteur</th>
+                    <th scope="col" class="num">Conversions</th>
+                    <th scope="col" class="num">Contacts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (sector of topSectors(); track sector.key) {
+                    <tr>
+                      <th scope="row" class="grid__label">{{ sector.label }}</th>
+                      <td class="num num--accent">{{ sector.conversions }}</td>
+                      <td class="num">{{ sector.contacts }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <button type="button" class="btn panel__more" (click)="openBreakdown.set('sectors')">
+              Voir les {{ sectorCount() }} secteurs
+            </button>
+          } @else {
+            <p class="panel__empty">Aucun secteur sur cette période.</p>
+          }
+        </section>
+      </div>
+
+      @if (openBreakdown(); as breakdown) {
+        <app-terrain-breakdown-dialog
+          [title]="breakdown === 'cities' ? 'Toutes les villes' : 'Tous les secteurs'"
+          [extraLabel]="breakdown === 'cities' ? 'Secteur' : 'Villes'"
+          [rows]="dialogRows()"
+          (close)="openBreakdown.set(null)" />
+      }
+    }
+  }
+</div>

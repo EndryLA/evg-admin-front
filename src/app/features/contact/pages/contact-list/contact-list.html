@@ -1,9 +1,25 @@
 <header class="topbar">
   <div>
     <h1>Contacts</h1>
-    <p class="topbar__sub">{{ totalElements() }} personnes rencontrées · {{ rows().length }} chargées.</p>
+    <p class="topbar__sub">
+      {{ totalElements() }} personne{{ totalElements() > 1 ? 's' : '' }} rencontrée{{ totalElements() > 1 ? 's' : '' }}
+      · {{ groups().length }} sortie{{ groups().length > 1 ? 's' : '' }} en {{ year() }}.
+    </p>
   </div>
 </header>
+
+<div class="year-nav">
+  <button type="button" class="year-nav__arrow" (click)="prevYear()" aria-label="Année précédente">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <span class="year-nav__label">{{ year() }}</span>
+  <button type="button" class="year-nav__arrow" (click)="nextYear()" aria-label="Année suivante">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  @if (!isCurrentYear()) {
+    <button type="button" class="year-nav__today" (click)="goToCurrentYear()">Aujourd'hui</button>
+  }
+</div>
 
 <div class="filters">
   <div class="search">
@@ -42,20 +58,6 @@
       </div>
 
       <label class="filter-field">
-        <span class="filter-field__label">État civil</span>
-        <select
-          class="filter-select"
-          [value]="filter().civilState"
-          (change)="setCivilState($any($event.target).value)"
-          aria-label="Filtrer par état civil">
-          <option value="ALL">Tous</option>
-          @for (opt of civilStateOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-      </label>
-
-      <label class="filter-field">
         <span class="filter-field__label">Secteur</span>
         <select
           class="filter-select"
@@ -68,39 +70,6 @@
           }
           <option value="UNASSIGNED">Non renseigné</option>
         </select>
-      </label>
-
-      <label class="filter-field">
-        <span class="filter-field__label">Du</span>
-        <input
-          type="date"
-          class="filter-input"
-          [value]="filter().minDate"
-          [max]="filter().maxDate || null"
-          (change)="setMinDate($any($event.target).value)"
-          aria-label="Date de sortie minimale" />
-      </label>
-
-      <label class="filter-field">
-        <span class="filter-field__label">Au</span>
-        <input
-          type="date"
-          class="filter-input"
-          [value]="filter().maxDate"
-          [min]="filter().minDate || null"
-          (change)="setMaxDate($any($event.target).value)"
-          aria-label="Date de sortie maximale" />
-      </label>
-
-      <label class="filter-field">
-        <span class="filter-field__label">Évangélisé par</span>
-        <input
-          type="text"
-          class="filter-input"
-          [value]="filter().evangelizedBy"
-          (change)="setEvangelizedBy($any($event.target).value)"
-          placeholder="Nom…"
-          aria-label="Filtrer par évangéliste" />
       </label>
 
       @if (hasActiveFilters()) {
@@ -117,6 +86,34 @@
       </button>
     </div>
   </div>
+  <!-- Selection + export, sharing the filter row rather than a bar of its own.
+       Only meaningful once there is something loaded to select. -->
+  @if (!loading() && !loadError() && groups().length > 0) {
+    <div class="select-bar">
+      <label class="select-bar__all">
+        <input
+          type="checkbox"
+          [checked]="allSelected()"
+          [indeterminate]="someSelected()"
+          (change)="toggleAll()" />
+        @if (selectedCount() > 0) {
+          <span class="select-bar__count">
+            {{ selectedCount() }} sélectionné{{ selectedCount() > 1 ? 's' : '' }}
+          </span>
+        } @else {
+          Tout sélectionner
+        }
+      </label>
+      <button
+        type="button"
+        class="btn btn--primary select-bar__export"
+        [disabled]="selectedCount() === 0 || exporting()"
+        (click)="exportSelected()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        {{ exporting() ? 'Export…' : 'Exporter' }}
+      </button>
+    </div>
+  }
 </div>
 
 <!-- Backdrop behind the mobile filter drawer. -->
@@ -124,103 +121,133 @@
   <button type="button" class="drawer-backdrop" (click)="closeFilters()" aria-label="Fermer les filtres" tabindex="-1"></button>
 }
 
-<div class="table-region" #scrollRoot>
-  <div class="table-card">
-    @if (!loading() && !loadError() && rows().length > 0) {
-      <div class="toolbar">
-        <!-- The table header carries this on desktop, but it is hidden on the
-             mobile card layout, so the toolbar takes over. -->
-        <label class="toolbar__all">
-          <input
-            type="checkbox"
-            [checked]="allSelected()"
-            [indeterminate]="someSelected()"
-            (change)="toggleAll()" />
-          Tout sélectionner
-        </label>
-        <span class="toolbar__count">
-          @if (selectedCount() > 0) {
-            {{ selectedCount() }} sélectionné{{ selectedCount() > 1 ? 's' : '' }}
-          } @else {
-            Aucune sélection
-          }
-        </span>
-        <button
-          type="button"
-          class="btn btn--primary"
-          [disabled]="selectedCount() === 0 || exporting()"
-          (click)="exportSelected()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-          {{ exporting() ? 'Export…' : 'Exporter Excel' }}
-        </button>
-      </div>
-    }
+<div class="table-region">
+  @if (loading()) {
+    <div class="state">Chargement des contacts…</div>
+  } @else if (loadError(); as err) {
+    <div class="state state--error">
+      {{ err }}
+      <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+    </div>
+  } @else if (groups().length === 0) {
+    <div class="state">
+      <div class="state__title">Aucun contact</div>
+      <div class="state__hint">Ajustez votre recherche, vos filtres, ou changez d'année.</div>
+    </div>
+  } @else {
+    @for (section of sections(); track section.key) {
+      <section class="month-section" [attr.data-month-anchor]="section.key === currentMonthKey ? '' : null">
+        <div class="month-section__head">
+          <span class="month-section__label">{{ section.label }}</span>
+          <span class="month-section__rule" aria-hidden="true"></span>
+          <span class="month-section__count">{{ section.total }} contact{{ section.total > 1 ? 's' : '' }}</span>
+        </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th class="cell-select">
-            <input
-              type="checkbox"
-              aria-label="Tout sélectionner"
-              [checked]="allSelected()"
-              [indeterminate]="someSelected()"
-              (change)="toggleAll()" />
-          </th>
-          <th class="col-name">Personne</th>
-          <th class="col-type">Type</th>
-          <th class="col-civil">État civil</th>
-          <th class="col-city">Ville</th>
-          <th class="col-by">Évangélisé par</th>
-          <th class="col-phone">Téléphone</th>
-          <th class="col-chevron"></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (c of rows(); track c.uuid) {
-          <tr (click)="view(c)" [class.row--selected]="isSelected(c.uuid)">
-            <td class="cell-select" (click)="$event.stopPropagation()">
-              <input
-                type="checkbox"
-                [attr.aria-label]="'Sélectionner ' + contactName(c)"
-                [checked]="isSelected(c.uuid)"
-                (change)="toggleRow(c.uuid)" />
-            </td>
-            <td class="cell-main cell-head">{{ contactName(c) }}</td>
-            <td data-label="Type"><span class="pill pill--{{ typeTone(c.type) }}">{{ typeLabel(c.type) }}</span></td>
-            <td class="cell-contact hide-sm" data-label="État civil">{{ civilStateLabel(c) }}</td>
-            <td class="cell-contact" data-label="Ville">{{ c.cityName || '—' }}</td>
-            <td class="cell-contact" data-label="Évangélisé par">{{ c.evangelizedBy || '—' }}</td>
-            <td class="cell-contact hide-sm" data-label="Téléphone">{{ c.phoneNumber | phoneFr }}</td>
-            <td class="chevron">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-            </td>
-          </tr>
+        @for (group of section.groups; track group.outreach.uuid) {
+          <div class="table-card outreach-group" [class.outreach-group--open]="isExpanded(group)">
+            <div class="group-head">
+              <label class="group-head__select">
+                <input
+                  type="checkbox"
+                  [attr.aria-label]="'Sélectionner les contacts de ' + group.outreach.name"
+                  [checked]="groupSelected(group)"
+                  [indeterminate]="groupPartiallySelected(group)"
+                  (change)="toggleGroup(group)" />
+              </label>
+
+              <!-- The header is the disclosure control: it opens the sortie's
+                   contacts, which are not rendered until then. -->
+              <button
+                type="button"
+                class="group-head__main"
+                [disabled]="group.entries.length === 0"
+                [attr.aria-expanded]="isExpanded(group)"
+                [attr.aria-controls]="'group-' + group.outreach.uuid"
+                (click)="toggleExpanded(group)">
+                <svg class="group-head__caret" [class.group-head__caret--open]="isExpanded(group)"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                <span class="group-head__text">
+                  <span class="group-head__name">{{ group.outreach.name || 'Sortie' }}</span>
+                  <span class="group-head__sub">
+                    {{ fmtDateTimeShort(group.outreach.date, group.outreach.startTime) }}
+                    @if (group.outreach.cityName) { · {{ group.outreach.cityName }} }
+                    @if (group.outreach.location) { · {{ group.outreach.location }} }
+                  </span>
+                </span>
+              </button>
+
+              <div class="group-head__stats">
+                <span class="pill pill--{{ statusTone(group.outreach.status) }}">
+                  {{ statusLabel(group.outreach.status) }}
+                </span>
+                <span class="stat" [title]="group.contacts + ' contact(s)'">
+                  <span class="stat__dot stat__dot--contact" aria-hidden="true"></span>
+                  {{ group.contacts }}
+                  <span class="visually-hidden">contact(s)</span>
+                </span>
+                <span class="stat" [title]="group.conversions + ' conversion(s)'">
+                  <span class="stat__dot stat__dot--conversion" aria-hidden="true"></span>
+                  {{ group.conversions }}
+                  <span class="visually-hidden">conversion(s)</span>
+                </span>
+                @if (group.outreach.totalPresences !== null) {
+                  <span class="stat stat--muted" [title]="group.outreach.totalPresences + ' présence(s)'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                    {{ group.outreach.totalPresences }}
+                    <span class="visually-hidden">présence(s)</span>
+                  </span>
+                }
+                <a
+                  class="group-head__link"
+                  [routerLink]="['/sorties', group.outreach.uuid]"
+                  [attr.aria-label]="'Ouvrir la sortie ' + group.outreach.name"
+                  (click)="$event.stopPropagation()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+                </a>
+              </div>
+            </div>
+
+            @if (isExpanded(group)) {
+              <table [id]="'group-' + group.outreach.uuid">
+                <thead>
+                  <tr>
+                    <th class="cell-select"><span class="visually-hidden">Sélection</span></th>
+                    <th class="col-name">Personne</th>
+                    <th class="col-type">Type</th>
+                    <th class="col-civil">État civil</th>
+                    <th class="col-city">Ville</th>
+                    <th class="col-by">Évangélisé par</th>
+                    <th class="col-phone">Téléphone</th>
+                    <th class="col-chevron"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of group.entries; track c.uuid) {
+                    <tr (click)="view(c)" [class.row--selected]="isSelected(c.uuid)">
+                      <td class="cell-select" (click)="$event.stopPropagation()">
+                        <input
+                          type="checkbox"
+                          [attr.aria-label]="'Sélectionner ' + contactName(c)"
+                          [checked]="isSelected(c.uuid)"
+                          (change)="toggleRow(c.uuid)" />
+                      </td>
+                      <td class="cell-main cell-head">{{ contactName(c) }}</td>
+                      <td data-label="Type"><span class="pill pill--{{ typeTone(c.type) }}">{{ typeLabel(c.type) }}</span></td>
+                      <td class="cell-contact hide-sm" data-label="État civil">{{ civilStateLabel(c) }}</td>
+                      <td class="cell-contact" data-label="Ville">{{ c.cityName || '—' }}</td>
+                      <td class="cell-contact" data-label="Évangélisé par">{{ c.evangelizedBy || '—' }}</td>
+                      <td class="cell-contact hide-sm" data-label="Téléphone">{{ c.phoneNumber | phoneFr }}</td>
+                      <td class="chevron">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
         }
-      </tbody>
-    </table>
-
-    @if (loading()) {
-      <div class="state">Chargement des contacts…</div>
-    } @else if (loadError(); as err) {
-      <div class="state state--error">
-        {{ err }}
-        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
-      </div>
-    } @else if (rows().length === 0) {
-      <div class="state">
-        <div class="state__title">Aucun contact</div>
-        <div class="state__hint">Les personnes rencontrées apparaîtront ici.</div>
-      </div>
+      </section>
     }
-  </div>
-
-  <!-- Infinite-scroll sentinel: pulls the next page when it enters view. -->
-  <div class="scroll-sentinel" #sentinel aria-hidden="true">
-    @if (loadingMore()) {
-      <span class="scroll-sentinel__spinner">Chargement…</span>
-    } @else if (!loading() && !hasMore() && !loadError() && rows().length > 0) {
-      <span class="scroll-sentinel__end">Fin de la liste</span>
-    }
-  </div>
+  }
 </div>

@@ -84,12 +84,11 @@ export interface ContactFilter {
   /** Free-text search across name, phone, city… (`search`). */
   search: string;
   type: ContactType | 'ALL';
-  civilState: CivilState | 'ALL';
   sector: SectorFilter;
-  evangelizedBy: string;
-  /** Outreach date lower bound, `YYYY-MM-DD`, or '' for none. */
+  /** Outreach date lower bound, `YYYY-MM-DD`, or '' for none. Set from the
+   *  list's year navigator rather than by the user. */
   minDate: string;
-  /** Outreach date upper bound, `YYYY-MM-DD`, or '' for none. */
+  /** Outreach date upper bound, `YYYY-MM-DD`, or '' for none. See {@link minDate}. */
   maxDate: string;
 }
 
@@ -97,9 +96,7 @@ export interface ContactFilter {
 export const EMPTY_CONTACT_FILTER: ContactFilter = {
   search: '',
   type: 'ALL',
-  civilState: 'ALL',
   sector: 'ALL',
-  evangelizedBy: '',
   minDate: '',
   maxDate: '',
 };
@@ -127,17 +124,40 @@ export interface Contact {
 }
 
 /**
- * The outreach details a contact export needs — when and where the outreach
- * happened. `ContactEntryResponse` carries only an `outreachUuid`, so these are
- * resolved separately (see `ContactService.outreachContexts`).
+ * The outreach a group of contacts belongs to — the subset of `OutreachResponse`
+ * the grouped list and the Excel export need. Read straight off the grouped
+ * endpoint, so no separate lookup is required.
  */
-export interface OutreachContext {
+export interface GroupOutreach {
+  uuid: string;
+  name: string;
+  location: string;
   /** Calendar day of the outreach, `YYYY-MM-DD`, or `null` when unknown. */
   date: string | null;
+  /** Wall-clock start, `HH:mm:ss`, or `null`. */
+  startTime: string | null;
+  status: OutreachStatus;
   /** The outreach's commune: official name, else free-text label, else empty. */
   cityName: string;
   /** INSEE code of that commune, or `null` when it is only free text. */
   cityInseeCode: number | null;
+  /** Head count recorded at clôture, or `null` when the sortie has none. */
+  totalPresences: number | null;
+}
+
+/**
+ * One outreach and the people met during it, mapped from the backend's
+ * `OutreachContactEntries`. The counts are server-side totals for the applied
+ * filter — they match `entries`, which the endpoint returns in full (it does
+ * not paginate).
+ */
+export interface ContactGroup {
+  outreach: GroupOutreach;
+  /** Entries in this group — `contacts` + `conversions`. */
+  total: number;
+  contacts: number;
+  conversions: number;
+  entries: Contact[];
 }
 
 /** Fields a member of the public submits for an outreach (`PublicContactEntryRequest`). */
@@ -162,6 +182,22 @@ export interface PublicContactInput {
 /** Lifecycle status of an outreach (mirrors the backend `OutreachStatus`). */
 export type OutreachStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
 
+/** French labels for {@link OutreachStatus}. */
+export const OUTREACH_STATUS_LABELS: Record<OutreachStatus, string> = {
+  SCHEDULED: 'Planifiée',
+  IN_PROGRESS: 'En cours',
+  FINISHED: 'Terminée',
+  CANCELLED: 'Annulée',
+};
+
+/** Badge tone (see global `.pill--*`) per outreach status. */
+export const OUTREACH_STATUS_TONES: Record<OutreachStatus, string> = {
+  SCHEDULED: 'blue',
+  IN_PROGRESS: 'amber',
+  FINISHED: 'green',
+  CANCELLED: 'grey',
+};
+
 /**
  * Result of the anonymous "my contacts" lookup: the outreach status (so the
  * front can drop the token once it is no longer open) and the submitter's own
@@ -172,14 +208,3 @@ export interface MyContacts {
   contacts: Contact[];
 }
 
-/** A page of results, mapped from a Spring `Page<T>` wrapper. */
-export interface Page<T> {
-  items: T[];
-  /** Zero-based page index. */
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  last: boolean;
-}

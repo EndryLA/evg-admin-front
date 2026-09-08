@@ -118,8 +118,9 @@ export class OutreachList {
       (this.managedBy() !== 'ALL' ? 1 : 0),
   );
 
-  /** Month groups for the selected year, most recent month first (rows within
-   *  each group are already server-sorted the same way), skipping empty months. */
+  /** Month groups for the selected year in calendar order, January first (rows
+   *  within each group are already server-sorted the same way, so scrolling down
+   *  moves forward through the year), skipping empty months. */
   protected readonly groups = computed<MonthGroup[]>(() => {
     const byKey = new Map<string, MonthGroup>();
     for (const row of this.rows()) {
@@ -177,7 +178,7 @@ export class OutreachList {
   }
 
   private fetchAll(page: number, acc: Outreach[]): void {
-    this.service.list(page, YEAR_PAGE_SIZE, this.currentFilter(), 'date,desc').subscribe({
+    this.service.list(page, YEAR_PAGE_SIZE, this.currentFilter(), 'date,asc').subscribe({
       next: (result) => {
         const combined = [...acc, ...result.items];
         if (!result.last && result.items.length > 0) {

@@ -1,0 +1,305 @@
+/* Bilan terrain. Generic topbar styles live in the global `.data-list` block
+   (src/styles.scss); tokens are global. Mirrors the Présences dashboard's
+   range/tile/panel language, with a table-first body instead of charts. */
+
+/* Scrollable body under the fixed topbar, matching the other dashboards.
+   Positioned so the absolutely-positioned `.sr-only` captions resolve against
+   it: with no positioned ancestor they fall back to the initial containing
+   block, escape this scroller and stretch the document itself — which is what
+   put a second scrollbar on the page. */
+.bilan {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 32px 40px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Date range ---- */
+.range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.range__presets {
+  display: inline-flex;
+  background: var(--bg-inset);
+  border-radius: 9px;
+  padding: 3px;
+}
+.range__preset {
+  border: none;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.range__preset--active { background: var(--accent); color: var(--text-on-accent); }
+
+.range__custom { display: flex; gap: 10px; }
+.range__field { display: flex; flex-direction: column; gap: 4px; }
+.range__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.range__input {
+  padding: 8px 10px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--bg-input);
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+.range__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---- Headline recap ---- */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.tile__value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
+.tile__value--accent { color: var(--accent-soft-text); }
+.tile__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---- Panels, one per table ---- */
+/* Positioned for the same reason as `.bilan` — each table's caption belongs to
+   its own panel. */
+.panel {
+  position: relative;
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.panel + .panel { margin-top: 18px; }
+.panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.panel__title { margin: 0; font-size: 16px; }
+.panel__count {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---- Tables ---- */
+/* Wide tables scroll inside their panel rather than the page — the table keeps
+   its natural column widths (`min-width: max-content`) instead of squeezing them
+   into an overlap when the viewport is narrow. */
+.table-wrap { overflow-x: auto; }
+.table-wrap + .table-wrap { margin-top: 18px; }
+
+/* Scoped under `.bilan` so these beat the global `.data-list table` rules the
+   host class brings in — notably `table-layout: fixed`, which would squeeze the
+   columns into an overlap, and the clickable-row cursor these tables don't want. */
+.bilan .grid {
+  width: 100%;
+  min-width: max-content;
+  table-layout: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.bilan .grid th,
+.bilan .grid td {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.bilan .grid thead th {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.bilan .grid tbody tr {
+  cursor: default;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.bilan .grid tbody tr:last-child { border-bottom: none; }
+.bilan .grid tbody tr:hover { background: var(--row-hover); }
+
+.bilan .grid .grid__label { font-weight: 600; color: var(--text-primary); }
+/* Secondary line under a cell's main value (lieu, département code). */
+.bilan .grid .grid__sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.bilan .grid .grid__link {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.bilan .grid .grid__link:hover { color: var(--accent-soft-text); text-decoration: underline; }
+
+.bilan .grid .num { text-align: right; font-variant-numeric: tabular-nums; }
+.bilan .grid .num--accent { color: var(--accent-soft-text); font-weight: 600; }
+.bilan .grid .num--muted { color: var(--text-muted); }
+
+/* Totals row — reads as a summary band, not another data row. */
+.bilan .grid tfoot tr { border-top: 2px solid var(--border-subtle); }
+.bilan .grid tfoot th,
+.bilan .grid tfoot td {
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-inset);
+}
+.bilan .grid tfoot td.num--muted,
+.bilan .grid tfoot th.num--muted { color: var(--text-tertiary); }
+
+/* The two breakdown previews sit side by side on a wide screen. */
+.panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+.panels .panel { margin-top: 0; }
+.panel__empty { margin: 0; font-size: 13.5px; color: var(--text-muted); }
+
+/* Quiet, full-width affordance under a capped table. */
+.panel__more {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+.panel__more:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+/* ---- States ---- */
+.state {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
+.state__hint { margin-top: 6px; }
+.state--error { color: var(--accent-soft-text); }
+.state__retry {
+  display: block;
+  margin: 14px auto 0;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 720px) {
+  .bilan { padding: 4px 16px 32px; }
+
+  /* Range bar: the presets keep one scrollable row, the dates take the next. */
+  .range { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 18px; }
+  .range__presets {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .range__preset { flex: 0 0 auto; }
+  .range__custom { gap: 8px; }
+  .range__field { flex: 1 1 0; min-width: 0; }
+  .range__input { width: 100%; }
+
+  .tiles { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .tile { padding: 14px 16px; }
+  .tile__value { font-size: 24px; }
+
+  .panel { padding: 16px 14px; }
+  .panel + .panel { margin-top: 14px; }
+  .panels { gap: 14px; margin-top: 14px; }
+  .panel__head { flex-wrap: wrap; gap: 4px 10px; }
+
+  /* The global `.data-list` mobile rules fold every table into one card per row.
+     That works for a record list, but it strips these tables of their headers and
+     their Total rows, which is most of what a bilan is — so they stay real tables
+     here and scroll sideways inside their panel instead. */
+  .bilan .grid {
+    display: table;
+    min-width: max-content;
+    table-layout: auto;
+  }
+  .bilan .grid thead { display: table-header-group; }
+  .bilan .grid tbody { display: table-row-group; gap: 0; }
+  .bilan .grid tfoot { display: table-footer-group; }
+  .bilan .grid tbody tr,
+  .bilan .grid tfoot tr {
+    display: table-row;
+    position: static;
+    padding: 0;
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .bilan .grid th,
+  .bilan .grid td {
+    display: table-cell;
+    padding: 9px 10px;
+    text-align: left;
+  }
+  .bilan .grid .num { text-align: right; }
+}
+
+/* Below ~430px two tiles per row leave no room for the label. */
+@media (max-width: 430px) {
+  .tiles { grid-template-columns: 1fr; }
+}

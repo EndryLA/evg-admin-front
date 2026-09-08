@@ -2,10 +2,11 @@ import type {
   City,
   CivilState,
   Contact,
+  ContactGroup,
   ContactType,
+  GroupOutreach,
   MyContacts,
   OutreachStatus,
-  Page,
   PublicContactInput,
 } from './contact.models';
 
@@ -47,15 +48,26 @@ export interface RawMyContacts {
   contacts?: RawContactEntry[];
 }
 
-/** Raw Spring `Page<T>` wrapper. */
-export interface RawPage<T> {
-  content?: T[];
-  number?: number;
-  size?: number;
-  totalElements?: number;
-  totalPages?: number;
-  first?: boolean;
-  last?: boolean;
+/** Raw `OutreachResponse`, as nested in `OutreachContactEntries.outreach`. */
+export interface RawGroupOutreach {
+  uuid?: string;
+  name?: string;
+  location?: string;
+  date?: string | null;
+  startTime?: string | null;
+  status?: string | null;
+  city?: RawCity | null;
+  cityLabel?: string | null;
+  totalPresences?: number | null;
+}
+
+/** Raw `OutreachContactEntries` from `GET /api/contact-entries/grouped`. */
+export interface RawContactGroup {
+  outreach?: RawGroupOutreach | null;
+  total?: number;
+  contacts?: number;
+  conversions?: number;
+  entries?: RawContactEntry[];
 }
 
 /** Raw `PublicContactEntryRequest` sent to the backend. */
@@ -157,16 +169,33 @@ export function toMyContacts(raw: RawMyContacts): MyContacts {
   };
 }
 
-/** Map a raw Spring page of contact entries to a clean {@link Page}. */
-export function toContactPage(raw: RawPage<RawContactEntry>): Page<Contact> {
+/** Map the nested outreach of a group to the clean {@link GroupOutreach}. */
+function toGroupOutreach(raw: RawGroupOutreach | null | undefined): GroupOutreach {
+  const city = toCity(raw?.city);
   return {
-    items: (raw.content ?? []).map(toContact),
-    page: raw.number ?? 0,
-    size: raw.size ?? 0,
-    totalElements: raw.totalElements ?? 0,
-    totalPages: raw.totalPages ?? 0,
-    first: raw.first ?? true,
-    last: raw.last ?? true,
+    uuid: raw?.uuid ?? '',
+    name: raw?.name ?? '',
+    location: raw?.location ?? '',
+    date: raw?.date ?? null,
+    startTime: raw?.startTime ?? null,
+    status: toOutreachStatus(raw?.status),
+    cityName: city?.officialName ?? raw?.cityLabel ?? '',
+    cityInseeCode: city?.inseeCode ?? null,
+    totalPresences: raw?.totalPresences ?? null,
+  };
+}
+
+/** Map one raw `OutreachContactEntries` to the clean {@link ContactGroup}. */
+export function toContactGroup(raw: RawContactGroup): ContactGroup {
+  const entries = (raw.entries ?? []).map(toContact);
+  return {
+    outreach: toGroupOutreach(raw.outreach),
+    // The counts are server-side, but fall back to the entries so a group still
+    // reads correctly if the backend omits them.
+    total: raw.total ?? entries.length,
+    contacts: raw.contacts ?? entries.filter((c) => c.type === 'CONTACT').length,
+    conversions: raw.conversions ?? entries.filter((c) => c.type === 'CONVERSION').length,
+    entries,
   };
 }
 

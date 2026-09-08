@@ -17,15 +17,43 @@
       }
 
       <p class="modal__lead field--span">
-        La sortie sera marquée comme terminée.
+        La sortie sera marquée comme terminée. Indiquez d'abord le nombre total
+        de personnes présentes sur le terrain.
       </p>
+
+      <label class="field field--span">
+        <span class="field__label">Nombre total de présences</span>
+        <input
+          class="field__control"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          step="1"
+          autocomplete="off"
+          placeholder="Ex. 24"
+          [value]="total()"
+          (input)="setTotal($any($event.target).value)"
+          (blur)="markTouched()"
+          [attr.aria-invalid]="touched() && invalid()"
+          [attr.aria-describedby]="touched() && invalid() ? null : 'close-total-hint'" />
+        @if (touched() && invalid()) {
+          <span class="field__error">
+            Renseignez un nombre entier de présences (0 ou plus).
+          </span>
+        } @else {
+          <span class="field__hint" id="close-total-hint">
+            {{ tracked() }} présence{{ tracked() > 1 ? 's' : '' }} enregistrée{{ tracked() > 1 ? 's' : '' }}
+            via le formulaire — indiquez ici le comptage réel.
+          </span>
+        }
+      </label>
     </div>
 
     <footer class="modal__foot">
       <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
         Annuler
       </button>
-      <button type="button" class="btn btn--primary" (click)="confirm.emit()" [disabled]="busy()">
+      <button type="button" class="btn btn--primary" (click)="submit()" [disabled]="busy() || invalid()">
         {{ busy() ? 'Clôture…' : 'Clôturer la sortie' }}
       </button>
     </footer>

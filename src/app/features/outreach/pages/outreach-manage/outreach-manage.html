@@ -135,7 +135,8 @@
     <app-outreach-close-dialog
       [busy]="saving()"
       [error]="saveError()"
-      (confirm)="confirmClose()"
+      [tracked]="presences().length"
+      (confirm)="confirmClose($event)"
       (cancel)="cancelClose()" />
   }
 

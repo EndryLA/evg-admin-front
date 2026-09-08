@@ -1,56 +1,51 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, forkJoin, map, of, type Observable } from 'rxjs';
+import { catchError, map, of, type Observable } from 'rxjs';
 
 import {
   toContact,
-  toContactPage,
+  toContactGroup,
   toMyContacts,
   toRawPublicContactRequest,
   type RawContactEntry,
+  type RawContactGroup,
   type RawMyContacts,
-  type RawPage,
 } from './contact.adapter';
 import {
   EMPTY_CONTACT_FILTER,
   type Contact,
   type ContactFilter,
+  type ContactGroup,
   type MyContacts,
-  type OutreachContext,
-  type Page,
   type PublicContactInput,
 } from './contact.models';
 
 /** The slice of `OutreachResponse` this feature reads directly (see below). */
 interface RawOutreachLite {
   name?: string;
-  date?: string | null;
-  city?: { officialName?: string; inseeCode?: number | null } | null;
-  cityLabel?: string | null;
 }
 
 const BASE = '/api/contact-entries';
 
 /**
- * Gateway to the contact-entry API. Unlike the profile/outreach lists — which
- * pull the whole set and page in memory — contacts are paged server-side
- * through the `Page<T>` wrapper, since they can grow without bound.
+ * Gateway to the contact-entry API. The list is read through the grouped
+ * endpoint, which buckets every matching entry under its outreach — it does not
+ * paginate, so the caller is responsible for bounding the query (the list does
+ * it with a one-year date window).
  */
 @Injectable({ providedIn: 'root' })
 export class ContactService {
   private readonly http = inject(HttpClient);
 
   /**
-   * One server-side page of contacts (zero-based `page`), narrowed by the given
-   * {@link ContactFilter}. Only constrained fields are sent as query params;
-   * `'ALL'`/empty values are omitted.
+   * Every contact matching the given {@link ContactFilter}, bucketed under the
+   * outreach it was collected at (`GET /api/contact-entries/grouped`). Only
+   * constrained filter fields are sent as query params; `'ALL'`/empty values are
+   * omitted. The endpoint returns the full result set — always narrow it by a
+   * date window.
    */
-  list(
-    page: number,
-    size: number,
-    filter: ContactFilter = EMPTY_CONTACT_FILTER,
-  ): Observable<Page<Contact>> {
-    let params = new HttpParams().set('page', page).set('size', size);
+  grouped(filter: ContactFilter = EMPTY_CONTACT_FILTER): Observable<ContactGroup[]> {
+    let params = new HttpParams();
 
     const search = filter.search.trim();
     if (search) {
@@ -59,19 +54,12 @@ export class ContactService {
     if (filter.type !== 'ALL') {
       params = params.set('type', filter.type);
     }
-    if (filter.civilState !== 'ALL') {
-      params = params.set('civilState', filter.civilState);
-    }
     // A specific sector filters by number; "Non renseigné" asks the backend for
     // contacts not routable to any sector via the dedicated `hasSector` flag.
     if (typeof filter.sector === 'number') {
       params = params.set('sector', filter.sector);
     } else if (filter.sector === 'UNASSIGNED') {
       params = params.set('hasSector', false);
-    }
-    const evangelizedBy = filter.evangelizedBy.trim();
-    if (evangelizedBy) {
-      params = params.set('evangelizedBy', evangelizedBy);
     }
     if (filter.minDate) {
       params = params.set('minOutreachDate', filter.minDate);
@@ -81,8 +69,8 @@ export class ContactService {
     }
 
     return this.http
-      .get<RawPage<RawContactEntry>>(BASE, { params })
-      .pipe(map(toContactPage));
+      .get<RawContactGroup[]>(`${BASE}/grouped`, { params })
+      .pipe(map((groups) => (groups ?? []).map(toContactGroup)));
   }
 
   /** A single contact by id — backs the detail page. */
@@ -99,35 +87,6 @@ export class ContactService {
     return this.http.get<RawOutreachLite>(`/api/outreaches/${uuid}`).pipe(
       map((o) => o.name ?? ''),
       catchError(() => of('')),
-    );
-  }
-
-  /**
-   * Date and city of each given outreach, keyed by uuid — the outreach columns of
-   * the Excel export, which `ContactEntryResponse` doesn't carry. Duplicated uuids
-   * are fetched once. Best-effort per outreach: one failing lookup leaves that key
-   * absent rather than failing the whole export.
-   */
-  outreachContexts(uuids: readonly string[]): Observable<Map<string, OutreachContext>> {
-    const unique = [...new Set(uuids.filter(Boolean))];
-    if (unique.length === 0) {
-      return of(new Map());
-    }
-    const lookups = unique.map((uuid) =>
-      this.http.get<RawOutreachLite>(`/api/outreaches/${uuid}`).pipe(
-        map((o): [string, OutreachContext] | null => [
-          uuid,
-          {
-            date: o.date ?? null,
-            cityName: o.city?.officialName ?? o.cityLabel ?? '',
-            cityInseeCode: o.city?.inseeCode ?? null,
-          },
-        ]),
-        catchError(() => of(null)),
-      ),
-    );
-    return forkJoin(lookups).pipe(
-      map((entries) => new Map(entries.filter((e) => e !== null))),
     );
   }
 
