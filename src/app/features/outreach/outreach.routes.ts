@@ -10,7 +10,7 @@ export const OUTREACH_ROUTES: Routes = [
   },
   {
     path: 'sorties',
-    title: 'Sorties · Évangélisation',
+    title: 'Sorties évangélisation',
     loadComponent: () =>
       import('./pages/outreach-list/outreach-list').then((m) => m.OutreachList),
   },

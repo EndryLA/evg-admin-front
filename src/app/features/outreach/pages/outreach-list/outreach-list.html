@@ -1,6 +1,6 @@
 <header class="topbar">
   <div>
-    <h1>Sorties</h1>
+    <h1>Sorties évangélisation</h1>
     <p class="topbar__sub">{{ totalElements() }} sortie{{ totalElements() > 1 ? 's' : '' }} d'évangélisation en {{ year() }}.</p>
   </div>
 </header>
@@ -143,9 +143,8 @@
             <thead>
               <tr>
                 <th class="col-name">Sortie</th>
-                <th class="col-time">Date</th>
-                <th class="col-time">Début</th>
-                <th class="col-time">Fin</th>
+                <th class="col-date">Date</th>
+                <th class="col-time">Horaire</th>
                 <th class="col-status">Statut</th>
                 <th class="col-manager">Superviseur</th>
                 <th class="col-chevron"></th>
@@ -158,10 +157,9 @@
                     <div class="cell-main">{{ o.name }}</div>
                     <div class="cell-sub">{{ o.location }}</div>
                   </td>
-                  <!-- Wide table: date, start and end each in their own column. -->
+                  <!-- Wide table: the date, then the start–end range as one column. -->
                   <td class="cell-contact cell-plain hide-sm" data-label="Date">{{ fmtDate(o.date) }}</td>
-                  <td class="cell-contact cell-plain hide-sm" data-label="Début">{{ fmtTime(o.startTime) }}</td>
-                  <td class="cell-contact hide-sm" data-label="Fin">{{ fmtTime(o.endTime) }}</td>
+                  <td class="cell-contact hide-sm" data-label="Horaire">{{ timeRange(o.startTime, o.endTime) }}</td>
                   <!-- Compact card: date + start time on one side, status on the other. -->
                   <td class="cell-plain show-sm card-split">
                     <span class="cell-contact">{{ fmtDateTimeShort(o.date, o.startTime) }}</span>

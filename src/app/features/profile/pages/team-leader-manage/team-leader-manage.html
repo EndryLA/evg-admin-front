@@ -1,12 +1,14 @@
 <a routerLink="/profils" class="back">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-  Profils
+  Effectif
 </a>
 
-<header class="head">
-  <span class="eyebrow">Organisation</span>
-  <h1>Chefs d'équipe</h1>
-  <p class="head__sub">{{ leaders().length }} chef(s) d'équipe · promouvez ou retirez un membre.</p>
+<header class="page-head">
+  <div class="page-head__main">
+    <span class="eyebrow">Organisation</span>
+    <h1>Chefs d'équipe</h1>
+    <p class="page-head__sub">{{ leaders().length }} chef(s) d'équipe · promouvez ou retirez un membre.</p>
+  </div>
 </header>
 
 @if (loading()) {

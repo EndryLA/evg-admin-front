@@ -1,7 +1,9 @@
 <header class="page-head">
-  <span class="eyebrow">Tableau de bord</span>
-  <h1>{{ greeting() }}</h1>
-  <p class="page-head__sub">{{ todayLabel }}</p>
+  <div class="page-head__main">
+    <span class="eyebrow">Tableau de bord</span>
+    <h1>{{ greeting() }}</h1>
+    <p class="page-head__sub">{{ todayLabel }}</p>
+  </div>
 </header>
 
 @if (loading()) {

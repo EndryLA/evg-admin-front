@@ -6,21 +6,11 @@
   padding: 22px 32px 48px;
 }
 
-.eyebrow {
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.page-head { margin: 0 0 24px; }
-.page-head h1 { margin: 8px 0 0; font-size: 26px; }
+.page-head { margin: 0 0 22px; }
+/* `::first-letter` doesn't apply to a flex container, so this sub-line stays a
+   block: the French weekday/month names are lowercase and need capitalising. */
 .page-head__sub {
-  margin: 6px 0 0;
-  font-size: 13.5px;
-  color: var(--text-muted);
-  /* The weekday/month names are lowercase in French; capitalise the leading one. */
+  display: block;
   &::first-letter { text-transform: uppercase; }
 }
 
@@ -86,26 +76,9 @@
 .roster__split { font-size: 13px; color: var(--text-muted); }
 .roster .btn { flex: none; text-decoration: none; }
 
-/* ---- States ---- */
-.state {
-  padding: 40px 24px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-.state--error { color: var(--accent-soft-text); }
-.state__retry {
-  display: block;
-  margin: 14px auto 0;
-  background: var(--bg-card);
-  color: var(--text-tertiary);
-  border: 1px solid var(--border-input);
-}
-
 /* ---- Mobile ---- */
 @media (max-width: 720px) {
   :host { padding: 18px 16px 40px; }
-  .page-head h1 { font-size: 22px; }
   .hero { padding: 18px 16px; }
   .hero__title { font-size: 19px; }
   .hero__actions .btn { flex: 1; justify-content: center; }

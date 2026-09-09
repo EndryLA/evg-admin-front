@@ -11,11 +11,11 @@
     <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
   </div>
 } @else if (contact(); as c) {
-  <header class="detail-head">
-    <div class="detail-head__main">
+  <header class="page-head">
+    <div class="page-head__main">
       <span class="eyebrow">Contact</span>
       <h1>{{ fullName() }}</h1>
-      <p class="detail-head__sub">
+      <p class="page-head__sub">
         <span class="pill pill--{{ typeTone() }}">{{ typeLabel() }}</span>
         @if (c.cityName) { · {{ c.cityName }} }
       </p>

@@ -4,10 +4,6 @@ import { forkJoin } from 'rxjs';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { formatDateFr } from '../../../../shared/util/date.util';
-import {
-  TerrainBreakdownDialog,
-  type BreakdownRow,
-} from '../../components/terrain-breakdown-dialog/terrain-breakdown-dialog';
 import { TerrainStatsService } from '../../terrain-stats.service';
 import {
   EMPTY_STATS_QUERY,
@@ -15,7 +11,6 @@ import {
   type CityContacts,
   type ContactSummary,
   type MonthlyContacts,
-  type SectorContacts,
   type StatsPeriod,
   type StatsQuery,
   type TerrainReport,
@@ -80,12 +75,6 @@ interface MonthBlock {
   totals: RowTotals;
 }
 
-/** Rows each breakdown panel previews before its "voir tout" dialog takes over. */
-const PREVIEW_ROWS = 5;
-
-/** Which breakdown the dialog is showing, or `null` when it is closed. */
-type Breakdown = 'cities' | 'sectors';
-
 /** `YYYY-MM` → `Janvier 2026`; falls back to the raw key on an unexpected shape. */
 function monthLabel(key: string): string {
   const match = /^(\d{4})-(\d{2})$/.exec(key);
@@ -109,7 +98,7 @@ function monthLabel(key: string): string {
 @Component({
   selector: 'app-terrain-stats',
   host: { class: 'data-list' },
-  imports: [RouterLink, TerrainBreakdownDialog],
+  imports: [RouterLink],
   templateUrl: './terrain-stats.html',
   styleUrl: './terrain-stats.scss',
 })
@@ -124,14 +113,10 @@ export class TerrainStats implements OnInit {
 
   protected readonly stats = signal<TerrainReport | null>(null);
   protected readonly cities = signal<CityContacts[]>([]);
-  protected readonly sectors = signal<SectorContacts[]>([]);
   /** Presence counts keyed by outreach uuid, joined onto the sortie rows. */
   private readonly presences = signal<Record<string, { attendances: number; members: number }>>(
     {},
   );
-
-  /** The breakdown whose "voir tout" dialog is open, or `null` when closed. */
-  protected readonly openBreakdown = signal<Breakdown | null>(null);
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
@@ -222,57 +207,29 @@ export class TerrainStats implements OnInit {
       });
   });
 
-  /** Cities, most conversions first. */
-  private readonly rankedCities = computed(() =>
-    [...this.cities()].sort((a, b) => b.conversions - a.conversions || b.entries - a.entries),
-  );
-
-  /** Sectors, most conversions first; the unassigned bucket sinks to the bottom. */
-  private readonly rankedSectors = computed(() =>
-    [...this.sectors()].sort(
-      (a, b) =>
-        Number(a.sector == null) - Number(b.sector == null) ||
-        b.conversions - a.conversions ||
-        b.entries - a.entries,
-    ),
-  );
-
-  /** Distinct cities evangelised over the range — the recap tile. */
-  protected readonly cityCount = computed(() => this.cities().length);
-  protected readonly sectorCount = computed(() => this.sectors().length);
-
-  /** Flattened city rows, shared by the preview panel and the dialog. */
-  private readonly cityRows = computed<BreakdownRow[]>(() =>
-    this.rankedCities().map((c) => ({
-      key: c.cityUuid,
-      label: c.name,
-      sub: c.departmentCode,
-      extra: c.sector == null ? '—' : String(c.sector),
-      conversions: c.conversions,
-      contacts: c.contacts,
-    })),
-  );
-
-  /** Flattened sector rows, shared by the preview panel and the dialog. */
-  private readonly sectorRows = computed<BreakdownRow[]>(() =>
-    this.rankedSectors().map((s) => ({
-      key: s.sector == null ? 'unassigned' : String(s.sector),
-      label: s.sector == null ? 'Non assigné' : `Secteur ${s.sector}`,
-      sub: '',
-      extra: String(s.cities),
-      conversions: s.conversions,
-      contacts: s.contacts,
-    })),
-  );
-
-  /** The leading few of each breakdown — what the page itself shows. */
-  protected readonly topCities = computed(() => this.cityRows().slice(0, PREVIEW_ROWS));
-  protected readonly topSectors = computed(() => this.sectorRows().slice(0, PREVIEW_ROWS));
-
-  /** The rows behind the open dialog. */
-  protected readonly dialogRows = computed<BreakdownRow[]>(() =>
-    this.openBreakdown() === 'cities' ? this.cityRows() : this.sectorRows(),
-  );
+  /**
+   * Distinct cities the sorties were held in over the range — the recap tile.
+   * Counted on the outreaches themselves, not on where the contacts live: a
+   * sortie in one commune routinely meets people from several others.
+   *
+   * A linked commune groups on its uuid; a sortie carrying only a free-text
+   * label groups on that label, lowercased and trimmed, so two spellings of the
+   * same place don't count twice. Sorties with no city at all are not counted.
+   */
+  protected readonly cityCount = computed(() => {
+    const keys = new Set<string>();
+    for (const o of this.stats()?.perOutreach ?? []) {
+      if (o.city) {
+        keys.add(o.city.uuid);
+      } else {
+        const label = o.cityLabel?.trim().toLowerCase();
+        if (label) {
+          keys.add(label);
+        }
+      }
+    }
+    return keys.size;
+  });
 
   /**
    * Whether any sortie in the range carries a city — a column of blanks reads as
@@ -289,19 +246,16 @@ export class TerrainStats implements OnInit {
   protected load(): void {
     this.loading.set(true);
     this.loadError.set(null);
-    this.openBreakdown.set(null);
     const query = this.query();
 
     forkJoin({
       stats: this.service.terrain(query),
       presences: this.service.presences(query),
       cities: this.service.cities(query),
-      sectors: this.service.sectors(query),
     }).subscribe({
-      next: ({ stats, presences, cities, sectors }) => {
+      next: ({ stats, presences, cities }) => {
         this.stats.set(stats);
         this.cities.set(cities);
-        this.sectors.set(sectors);
         this.presences.set(
           Object.fromEntries(
             presences.map((p) => [

@@ -11,12 +11,14 @@
     <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
   </div>
 } @else if (outreach(); as o) {
-  <header class="bilan-head">
-    <span class="eyebrow">Bilan de la sortie</span>
-    <h1>{{ o.name }}</h1>
-    <p class="bilan-head__sub">
-      <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
-    </p>
+  <header class="page-head">
+    <div class="page-head__main">
+      <span class="eyebrow">Bilan de la sortie</span>
+      <h1>{{ o.name }}</h1>
+      <p class="page-head__sub">
+        <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+      </p>
+    </div>
   </header>
 
   <div class="bilan-body">

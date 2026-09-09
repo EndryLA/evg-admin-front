@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { PhoneFrPipe } from '../../../../shared/pipes/phone.pipe';
 import { isSameCity } from '../../../../shared/util/city.util';
-import { formatDateFr, formatDateTimeShortFr, monthYearLabel } from '../../../../shared/util/date.util';
+import { formatDateFr, formatDateTimeFr, monthYearLabel } from '../../../../shared/util/date.util';
 import { displayPhoneFr, displayYesNo } from '../../../../shared/util/text.util';
 import { exportSheetsToXlsx, type XlsxColumn } from '../../../../shared/util/xlsx.util';
 import { ContactService } from '../../contact.service';
@@ -45,8 +45,11 @@ interface MonthSection {
   key: string;
   label: string;
   groups: ContactGroup[];
-  /** Entries across the section's groups — the month's header count. */
+  /** Entries across the section's groups — `contacts` + `conversions`. */
   total: number;
+  /** Split of that total, shown as the month's header counts. */
+  contacts: number;
+  conversions: number;
 }
 
 /** A contact paired with the outreach it was collected at, for the export. */
@@ -104,7 +107,7 @@ export class ContactList implements OnDestroy {
   protected readonly filter = signal<ContactFilter>({ ...EMPTY_CONTACT_FILTER });
   protected readonly sectors = SECTORS;
 
-  protected readonly fmtDateTimeShort = formatDateTimeShortFr;
+  protected readonly fmtDateTime = formatDateTimeFr;
 
   /** True when any filter is narrowing the list (drives the reset button). */
   protected readonly hasActiveFilters = computed(() => {
@@ -133,11 +136,15 @@ export class ContactList implements OnDestroy {
           label: date ? monthYearLabel(date) : 'SANS DATE',
           groups: [],
           total: 0,
+          contacts: 0,
+          conversions: 0,
         };
         byKey.set(key, section);
       }
       section.groups.push(group);
       section.total += group.total;
+      section.contacts += group.contacts;
+      section.conversions += group.conversions;
     }
     return [...byKey.values()];
   });

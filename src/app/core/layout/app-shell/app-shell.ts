@@ -19,7 +19,7 @@ import { BrandLogo } from '../../../shared/ui/brand-logo/brand-logo';
  * Authenticated layout: a dark sidebar (brand, grouped nav, user card) plus a
  * scrollable main region hosting the routed feature page. On desktop the sidebar
  * is a fixed column; on mobile it collapses behind a top bar and slides in as an
- * overlay, toggled by the hamburger button. Nav entries beyond Profils are
+ * overlay, toggled by the hamburger button. Nav entries beyond Effectif are
  * placeholders until their features land.
  */
 @Component({

@@ -6,6 +6,9 @@
   <button type="button" class="year-nav__arrow" (click)="nextYear()" [disabled]="isCurrentYear()" aria-label="Année suivante">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
   </button>
+  @if (!isCurrentYear()) {
+    <button type="button" class="year-nav__today" (click)="goToCurrentYear()">Aujourd'hui</button>
+  }
 </div>
 
 @if (loading()) {
@@ -27,14 +30,14 @@
   </header>
 
   @for (group of groups(); track group.key) {
-    <section class="month">
-      <div class="month__head">
-        <span class="month__label">{{ group.label }}</span>
-        <span class="month__rule" aria-hidden="true"></span>
-        <span class="month__count">{{ group.rows.length }} sortie{{ group.rows.length > 1 ? 's' : '' }}</span>
+    <section class="month-section">
+      <div class="month-section__head">
+        <span class="month-section__label">{{ group.label }}</span>
+        <span class="month-section__rule" aria-hidden="true"></span>
+        <span class="month-section__count">{{ group.rows.length }} sortie{{ group.rows.length > 1 ? 's' : '' }}</span>
       </div>
 
-      <div class="month__cards">
+      <div class="month-section__cards">
         @for (row of group.rows; track row.outreach.uuid) {
           <div class="card" [class.card--open]="isOpen(row.outreach.uuid)">
             <button
@@ -44,11 +47,21 @@
               [attr.aria-expanded]="isOpen(row.outreach.uuid)"
             >
               <span class="card__title">
-                <span class="card__line">
-                  <span class="card__name">{{ row.outreach.name }}</span>
-                  <span class="card__date">{{ dateLabel(row.outreach.date) }}</span>
+                <span class="card__name">{{ row.outreach.name }}</span>
+                <span class="card__sub">
+                  {{ dateLabel(row.outreach.date) }}
+                  @if (row.outreach.cityLabel) { · {{ row.outreach.cityLabel }} }
+                  @if (row.outreach.location) { · {{ row.outreach.location }} }
                 </span>
-                <span class="card__total">Total {{ row.outreach.totalPresences }} ({{ row.trackedAttendances }} dpt, {{ row.leaders }} leader{{ row.leaders > 1 ? 's' : '' }})</span>
+              </span>
+              <span class="card__stats">
+                <span class="stat" [title]="row.outreach.totalPresences + ' présence(s)'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                  {{ row.outreach.totalPresences }}
+                  <span class="visually-hidden">présence(s)</span>
+                </span>
+                <span class="stat stat--muted" [title]="row.trackedAttendances + ' membre(s) du département'">{{ row.trackedAttendances }} dpt</span>
+                <span class="stat stat--muted" [title]="row.leaders + ' leader(s)'">{{ row.leaders }} leader{{ row.leaders > 1 ? 's' : '' }}</span>
               </span>
               <span class="card__chevron" aria-hidden="true"></span>
             </button>

@@ -287,6 +287,215 @@ input, select, button, textarea { font-family: inherit; }
 .pill--violet { background: var(--pill-violet-bg); color: var(--pill-violet-text); }
 .pill--dark { background: var(--pill-dark-bg); color: var(--pill-dark-text); }
 
+/* ---- Shared list chrome ------------------------------------------------
+   Loading / empty / error states, the year navigator, month group headings,
+   count chips and the screen-reader-only helper. Every list and dashboard
+   renders these, so they live here once rather than being restated (and
+   drifting) per feature. Component styles still win over these — Angular's
+   emulated encapsulation adds an attribute to each selector — so a page can
+   still override a value locally when it genuinely needs to. */
+
+/* Screen-reader-only text. Absolutely positioned, so it needs a positioned
+   ancestor: without one its containing block is the initial containing block,
+   it escapes the list's `overflow: auto`, and it stretches the document into a
+   second scrollbar. Position the cell/chip that carries it. */
+.visually-hidden,
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Page header furniture: the eyebrow above an h1, and the back link
+   above that. Every detail/manage page repeats this pair. ---- */
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.back svg { width: 16px; height: 16px; }
+.back:hover { color: var(--text-primary); }
+
+/* ---- Page header: eyebrow, title, sub-line, and optional actions on the
+   right. Shared by every page outside the `.data-list` shell (which has its
+   own `.topbar`), so detail, manage, stats and bilan pages all sit on the same
+   rhythm: 26px title, 14px muted sub-line, 22px of air beneath. ---- */
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 18px 0 22px;
+}
+.page-head__main { min-width: 0; }
+.page-head h1 { margin: 8px 0 0; font-size: 26px; }
+.page-head__sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.page-head__actions { display: flex; gap: 10px; flex: 0 0 auto; }
+
+/* ---- Loading / empty / error state ---- */
+.state {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
+.state__hint { margin-top: 6px; }
+.state--error { color: var(--accent-soft-text); }
+.state__retry {
+  display: block;
+  margin: 14px auto 0;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-input);
+}
+
+/* ---- Year navigator: chevron, year, chevron — centered ---- */
+.year-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+/* Page-level navigators carry the content gutter; ones nested in a child
+   component sit inside that component's own padding and must not double it. */
+.data-list > .year-nav { padding: 0 32px 16px; }
+.year-nav__arrow {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.year-nav__arrow:not(:disabled):hover { background: var(--accent-soft-bg); }
+.year-nav__arrow:disabled { opacity: 0.4; cursor: default; }
+.year-nav__arrow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.year-nav__arrow svg { width: 18px; height: 18px; }
+.year-nav__label {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 52px;
+  text-align: center;
+}
+.year-nav__today {
+  margin-left: 4px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--bg-card);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.year-nav__today:hover { background: var(--bg-sunken); }
+
+/* ---- Month group heading: label, rule, count — pinned while its month scrolls ---- */
+.month-section { margin-bottom: 26px; }
+.month-section:last-child { margin-bottom: 0; }
+.month-section__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* One `.stat` chip tall, so the strip keeps the same height whether its count
+     is plain text or count chips — sticky headers below pin to a fixed offset. */
+  min-height: 23px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  background: var(--bg-page);
+}
+.month-section__label {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.month-section__rule { flex: 1; height: 1px; background: var(--border-subtle); }
+.month-section__count {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+/* ---- Count chip: an optional coloured dot or icon, then the number ----
+   `relative` contains the chip's `.visually-hidden` label — see above. */
+.stat {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.stat svg { width: 13px; height: 13px; }
+/* Names what the figure counts; lighter so the number still leads. */
+.stat__label { margin-left: -2px; font-weight: 500; color: var(--text-faint); }
+.stat--muted { color: var(--text-faint); }
+.stat__dot { width: 7px; height: 7px; border-radius: 50%; }
+.stat__dot--contact { background: var(--pill-blue-text); }
+.stat__dot--conversion { background: var(--accent); }
+
 /* ---- Shared data-list page shell (design.md §3 table shell) ---- */
 .data-list {
   display: flex;
@@ -497,22 +706,6 @@ input, select, button, textarea { font-family: inherit; }
 /* Transparent to desktop table layout; becomes a stacked value in mobile cards. */
 .data-list .cell-stack { display: contents; }
 
-.data-list .state {
-  padding: 56px 20px;
-  text-align: center;
-  color: var(--text-faint);
-  font-size: 14px;
-}
-.data-list .state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
-.data-list .state__hint { margin-top: 6px; }
-.data-list .state--error { color: var(--accent-soft-text); }
-.data-list .state__retry {
-  display: block;
-  margin: 14px auto 0;
-  background: var(--bg-card);
-  color: var(--text-tertiary);
-  border: 1px solid var(--border-input);
-}
 
 .data-list .pagination {
   display: flex;
@@ -782,6 +975,12 @@ input, select, button, textarea { font-family: inherit; }
     padding: 18px 16px 14px;
   }
   .data-list .topbar h1 { font-size: 22px; }
+
+  .page-head h1 { font-size: 22px; }
+
+  /* Shared list chrome, tightened for phones. */
+  .data-list > .year-nav { padding: 0 16px 14px; }
+  .month-section__label { font-size: 14px; }
 
   .data-list .filters { padding: 0 16px 14px; gap: 10px; }
   /* Search shares its row with the "Filtres" trigger instead of taking a whole

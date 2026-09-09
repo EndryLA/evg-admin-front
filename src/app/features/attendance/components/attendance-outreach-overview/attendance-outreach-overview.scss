@@ -4,69 +4,16 @@
   display: block;
 }
 
-/* ---- Year navigator: chevron, year, chevron — centered ---- */
-.year-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 22px;
-}
-.year-nav__arrow {
-  width: 32px;
-  height: 32px;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--accent);
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-.year-nav__arrow:not(:disabled):hover { background: var(--accent-soft-bg); }
-.year-nav__arrow:disabled { opacity: 0.4; cursor: default; }
-.year-nav__arrow:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--accent-ring);
-}
-.year-nav__arrow svg { width: 18px; height: 18px; }
-.year-nav__label {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
+/* The shared `.year-nav` carries no gutter when nested in a component. */
+.year-nav { margin-bottom: 22px; }
 
 /* ---- Header figure ---- */
 .overview-head { margin: 0 0 24px; }
 .overview-head__figure { margin: 0; font-size: 17px; font-weight: 700; color: var(--text-primary); }
 .overview-head__hint { margin: 4px 0 0; font-size: 12.5px; color: var(--text-faint); }
 
-/* ---- Month groups ---- */
-.month { margin-bottom: 26px; }
-.month:last-child { margin-bottom: 0; }
-.month__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.month__label {
-  flex: none;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--text-faint);
-  white-space: nowrap;
-}
-.month__rule { flex: 1; height: 1px; background: var(--border-subtle); }
-.month__count { flex: none; font-size: 12.5px; color: var(--text-faint); }
-
-.month__cards { display: flex; flex-direction: column; gap: 10px; }
+/* ---- Month groups: heading is the shared `.month-section` chrome ---- */
+.month-section__cards { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---- Outreach card ---- */
 .card {
@@ -78,9 +25,9 @@
 .card__head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 14px 18px;
+  padding: 12px 16px;
   border: none;
   background: transparent;
   font: inherit;
@@ -100,12 +47,34 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  text-align: left;
 }
-.card__line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.card__name { font-weight: 700; font-size: 15px; color: var(--text-primary); }
-.card__date { font-size: 13px; font-weight: 500; color: var(--text-muted); }
-.card__total { font-size: 13.5px; font-weight: 600; color: var(--text-secondary); }
+.card__name {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card__head:hover .card__name { color: var(--accent); }
+.card__sub {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Count chips are the shared `.stat` chrome; this is just their row. */
+.card__stats {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .card__chevron {
   flex: none;
@@ -131,7 +100,7 @@
   justify-content: space-between;
   gap: 10px;
   width: 100%;
-  padding: 12px 18px;
+  padding: 12px 16px;
   border: none;
   border-bottom: 1px solid var(--border-faint);
   background: transparent;
@@ -170,7 +139,7 @@
 .roster {
   list-style: none;
   margin: 0;
-  padding: 8px 18px 12px 34px;
+  padding: 8px 16px 12px 32px;
   border-bottom: 1px solid var(--border-faint);
   background: var(--bg-sunken);
   display: flex;
@@ -188,24 +157,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- States ---- */
-.state {
-  padding: 40px 24px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
-.state__hint { margin-top: 6px; }
-.state--error { color: var(--accent-soft-text); }
-.state__retry {
-  display: block;
-  margin: 14px auto 0;
-  background: var(--bg-card);
-  color: var(--text-tertiary);
-  border: 1px solid var(--border-input);
-}
-
 @media (max-width: 720px) {
-  .range { justify-content: flex-start; }
+  /* Stats wrap onto their own line rather than squeezing the sortie name. */
+  .card__head { flex-wrap: wrap; }
+  .card__title { flex: 1 1 100%; }
+  .card__stats { flex-wrap: wrap; }
 }

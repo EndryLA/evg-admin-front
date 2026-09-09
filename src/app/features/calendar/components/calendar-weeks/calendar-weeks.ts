@@ -204,9 +204,12 @@ export class CalendarWeeks {
       });
     }
 
-    // A block belongs to the month of its last day inside the year — so the
-    // week of 30 nov → 6 déc files under December, whole, rather than being
-    // split across two sections.
+    // A block belongs to the month of its week-end — the thing the block is
+    // built around — so the week of 30 nov → 6 déc files under December, whole,
+    // rather than being split across two sections. Reading the *last* day
+    // instead would misfile a week-end that straddles two months: with Saturday
+    // the 31st and Sunday the 1st, January's final week-end would be listed
+    // under February and January would appear to end a week early.
     const months: WeekMonth[] = [];
     for (let month = 0; month < 12; month++) {
       months.push({
@@ -225,7 +228,12 @@ export class CalendarWeeks {
       block.current = block.key === todayKey;
       block.isPast = block.days.every((d) => d.isPast);
 
-      const home = months[fromIso(block.days[block.days.length - 1].iso).getMonth()];
+      // The Saturday, or the Sunday when the Saturday fell outside the year.
+      // A block with no week-end at all is the year's trailing stub — a few
+      // weekdays whose week-end belongs to next year — so its last day answers.
+      const anchor =
+        block.days.find((d) => d.isWeekend) ?? block.days[block.days.length - 1];
+      const home = months[fromIso(anchor.iso).getMonth()];
       home.weeks.push(block);
       for (const day of block.days) {
         home.count += day.events.length;

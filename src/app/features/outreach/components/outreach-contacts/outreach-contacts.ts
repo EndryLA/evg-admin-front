@@ -42,6 +42,14 @@ export class OutreachContacts {
   private readonly router = inject(Router);
 
   readonly contacts = input<ContactEntry[]>([]);
+
+  /** The heading's split counts — the list mixes both types. */
+  protected readonly contactCount = computed(
+    () => this.contacts().filter((c) => c.type === 'CONTACT').length,
+  );
+  protected readonly conversionCount = computed(
+    () => this.contacts().filter((c) => c.type === 'CONVERSION').length,
+  );
   readonly loading = input(false);
   readonly error = input<string | null>(null);
   /** When set, "Voir tout" navigates to this route instead of toggling. */

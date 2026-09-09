@@ -95,10 +95,21 @@ export class OutreachList {
   protected readonly menuPos = signal<{ top: number; left: number }>({ top: 0, left: 0 });
 
   protected readonly fmtDate = formatDateFr;
-  protected readonly fmtTime = formatTimeFr;
-  /** Compact `17/07/26 - 14:30` used in the mobile card, where date + start
+  /** Compact `17/07/26 · 14:30` used in the mobile card, where date + start
    *  time share one line. */
   protected readonly fmtDateTimeShort = formatDateTimeShortFr;
+
+  /** `14:30 – 17:00`, or the start alone when there's no end time. Start and
+   *  end shared a column each until they were folded together — three
+   *  time-ish columns read as three dates at a glance. */
+  protected timeRange(start?: string | null, end?: string | null): string {
+    const from = formatTimeFr(start);
+    const to = formatTimeFr(end);
+    if (from === '—') {
+      return to === '—' ? '—' : to;
+    }
+    return to === '—' ? from : `${from} – ${to}`;
+  }
 
   /** True when any filter is narrowing the list (drives the reset button). */
   protected readonly hasActiveFilters = computed(

@@ -3,14 +3,16 @@
   Gestion
 </a>
 
-<header class="list-head">
-  <span class="eyebrow">Contacts</span>
-  <h1>{{ outreach()?.name || 'Sortie' }}</h1>
-  @if (outreach()) {
-    <p class="list-head__sub">
-      <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
-    </p>
-  }
+<header class="page-head">
+  <div class="page-head__main">
+    <span class="eyebrow">Contacts</span>
+    <h1>{{ outreach()?.name || 'Sortie' }}</h1>
+    @if (outreach()) {
+      <p class="page-head__sub">
+        <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+      </p>
+    }
+  </div>
 </header>
 
 @if (!loading() && !error() && contacts().length > 0) {

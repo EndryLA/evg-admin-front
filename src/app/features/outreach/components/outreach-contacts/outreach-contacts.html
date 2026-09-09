@@ -1,8 +1,19 @@
 <section class="contacts">
   <h2 class="contacts__title">
-    Contacts
+    Contacts &amp; conversions
     @if (!loading() && !error()) {
-      <span class="contacts__count">{{ contacts().length }}</span>
+      <span class="contacts__counts">
+        <span class="stat" [title]="contactCount() + ' contact(s)'">
+          <span class="stat__dot stat__dot--contact" aria-hidden="true"></span>
+          {{ contactCount() }}
+          <span class="stat__label">contact{{ contactCount() > 1 ? 's' : '' }}</span>
+        </span>
+        <span class="stat" [title]="conversionCount() + ' conversion(s)'">
+          <span class="stat__dot stat__dot--conversion" aria-hidden="true"></span>
+          {{ conversionCount() }}
+          <span class="stat__label">conversion{{ conversionCount() > 1 ? 's' : '' }}</span>
+        </span>
+      </span>
     }
   </h2>
 

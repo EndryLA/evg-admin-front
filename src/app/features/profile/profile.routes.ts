@@ -11,7 +11,7 @@ import { hasAnyRole } from '../../core/auth/auth.guard';
 export const PROFILE_ROUTES: Routes = [
   {
     path: 'profils',
-    title: 'Profils · Évangélisation',
+    title: 'Effectif · Évangélisation',
     loadComponent: () =>
       import('./pages/profile-list/profile-list').then((m) => m.ProfileList),
   },

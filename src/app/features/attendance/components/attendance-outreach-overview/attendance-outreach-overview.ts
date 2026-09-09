@@ -1,9 +1,9 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
+import { formatDateFr, monthYearLabel } from '../../../../shared/util/date.util';
 import { AttendanceStatsService } from '../../attendance-stats.service';
 import {
-  MONTH_LABELS,
   type AttendeeName,
   type OutreachAttendanceOverview,
   type StatsQuery,
@@ -77,7 +77,7 @@ export class AttendanceOutreachOverview implements OnInit {
       const key = `${year}-${month}`;
       let group = byKey.get(key);
       if (!group) {
-        const label = `${MONTH_LABELS[Number(month)] ?? month} ${year}`.toUpperCase();
+        const label = monthYearLabel(row.outreach.date);
         group = { key, label, rows: [] };
         byKey.set(key, group);
       }
@@ -125,6 +125,14 @@ export class AttendanceOutreachOverview implements OnInit {
     this.load();
   }
 
+  protected goToCurrentYear(): void {
+    if (this.isCurrentYear()) {
+      return;
+    }
+    this.year.set(this.currentYear);
+    this.load();
+  }
+
   // ---- Outreach cards ----
 
   protected isOpen(uuid: string): boolean {
@@ -140,11 +148,8 @@ export class AttendanceOutreachOverview implements OnInit {
     return [...row.teams].sort((a, b) => b.members.length - a.members.length);
   }
 
-  /** `YYYY-MM-DD` → `08/08/2026`. */
-  protected dateLabel(iso: string): string {
-    const [year, month, day] = iso.split('-');
-    return year && month && day ? `${day}/${month}/${year}` : iso;
-  }
+  /** `08/08/2026`, matching the sortie sub-line on Contacts & Conversions. */
+  protected readonly dateLabel = formatDateFr;
 
   // ---- Team / guest rosters (all data already in `rows`, nothing to fetch) ----
 

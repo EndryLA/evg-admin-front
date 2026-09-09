@@ -1,6 +1,6 @@
 <header class="topbar">
   <div>
-    <h1>Contacts</h1>
+    <h1>Contacts &amp; Conversions</h1>
     <p class="topbar__sub">
       {{ totalElements() }} personne{{ totalElements() > 1 ? 's' : '' }} rencontrée{{ totalElements() > 1 ? 's' : '' }}
       · {{ groups().length }} sortie{{ groups().length > 1 ? 's' : '' }} en {{ year() }}.
@@ -140,7 +140,18 @@
         <div class="month-section__head">
           <span class="month-section__label">{{ section.label }}</span>
           <span class="month-section__rule" aria-hidden="true"></span>
-          <span class="month-section__count">{{ section.total }} contact{{ section.total > 1 ? 's' : '' }}</span>
+          <span class="month-section__count">
+            <span class="stat" [title]="section.contacts + ' contact(s)'">
+              <span class="stat__dot stat__dot--contact" aria-hidden="true"></span>
+              {{ section.contacts }}
+              <span class="stat__label">contact{{ section.contacts > 1 ? 's' : '' }}</span>
+            </span>
+            <span class="stat" [title]="section.conversions + ' conversion(s)'">
+              <span class="stat__dot stat__dot--conversion" aria-hidden="true"></span>
+              {{ section.conversions }}
+              <span class="stat__label">conversion{{ section.conversions > 1 ? 's' : '' }}</span>
+            </span>
+          </span>
         </div>
 
         @for (group of section.groups; track group.outreach.uuid) {
@@ -169,7 +180,7 @@
                 <span class="group-head__text">
                   <span class="group-head__name">{{ group.outreach.name || 'Sortie' }}</span>
                   <span class="group-head__sub">
-                    {{ fmtDateTimeShort(group.outreach.date, group.outreach.startTime) }}
+                    {{ fmtDateTime(group.outreach.date, group.outreach.startTime) }}
                     @if (group.outreach.cityName) { · {{ group.outreach.cityName }} }
                     @if (group.outreach.location) { · {{ group.outreach.location }} }
                   </span>

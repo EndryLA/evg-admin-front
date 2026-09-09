@@ -1,6 +1,6 @@
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { ContactEditTokenStore } from '../../../../core/contact-edit/contact-edit-token.store';
 import { messageFromError } from '../../../../core/http/http-error.util';
@@ -32,7 +32,7 @@ type ViewState = 'loading' | 'error' | 'closed' | 'empty' | 'list';
  */
 @Component({
   selector: 'app-public-contact-edit',
-  imports: [ReactiveFormsModule, BrandLogo, ContactFields],
+  imports: [ReactiveFormsModule, RouterLink, BrandLogo, ContactFields],
   templateUrl: './public-contact-edit.html',
   styleUrl: './public-contact-edit.scss',
 })

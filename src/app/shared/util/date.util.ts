@@ -83,16 +83,26 @@ export function formatDateShortFr(value?: string | null): string {
   return `${dd}/${mm}/${yy}`;
 }
 
-/** `03/09/98 - 14:30` — a short date and a clock-time on one line, to save space
- *  on mobile. Falls back to the short date alone when the time is absent, or `—`
- *  when there's no date. */
+/** `03/09/1998 · 14:30` — the house date/time pairing (design.md §4). Falls back
+ *  to the date alone when the time is absent, or `—` when there's no date. */
+export function formatDateTimeFr(date?: string | null, time?: string | null): string {
+  const d = formatDateFr(date);
+  if (d === PLACEHOLDER) {
+    return PLACEHOLDER;
+  }
+  const t = time ? formatTimeFr(time) : PLACEHOLDER;
+  return t === PLACEHOLDER ? d : `${d} · ${t}`;
+}
+
+/** `03/09/98 · 14:30` — the same pairing on the two-digit year, for compact
+ *  mobile cards where the full date doesn't fit. */
 export function formatDateTimeShortFr(date?: string | null, time?: string | null): string {
   const d = formatDateShortFr(date);
   if (d === PLACEHOLDER) {
     return PLACEHOLDER;
   }
   const t = time ? formatTimeFr(time) : PLACEHOLDER;
-  return t === PLACEHOLDER ? d : `${d} - ${t}`;
+  return t === PLACEHOLDER ? d : `${d} · ${t}`;
 }
 
 /** Match a bare clock-time, `HH:mm` or `HH:mm:ss`, as the backend sends for

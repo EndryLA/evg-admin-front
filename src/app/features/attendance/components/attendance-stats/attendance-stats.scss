@@ -239,24 +239,6 @@
   white-space: nowrap;
 }
 
-/* ---- States ---- */
-.state {
-  padding: 40px 24px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-.state__title { font-size: 18px; font-weight: 700; color: var(--text-tertiary); }
-.state__hint { margin-top: 6px; }
-.state--error { color: var(--accent-soft-text); }
-.state__retry {
-  display: block;
-  margin: 14px auto 0;
-  background: var(--bg-card);
-  color: var(--text-tertiary);
-  border: 1px solid var(--border-input);
-}
-
 /* ---- Mobile ---- */
 @media (max-width: 720px) {
   .tiles { grid-template-columns: repeat(2, 1fr); gap: 10px; }

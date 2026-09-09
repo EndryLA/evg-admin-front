@@ -4,7 +4,7 @@ import type { Routes } from '@angular/router';
 export const CONTACT_ROUTES: Routes = [
   {
     path: 'contacts',
-    title: 'Contacts · Évangélisation',
+    title: 'Contacts & Conversions · Évangélisation',
     loadComponent: () =>
       import('./pages/contact-list/contact-list').then((m) => m.ContactList),
   },
