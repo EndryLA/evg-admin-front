@@ -13,6 +13,7 @@ import type {
 /** Raw `/api/stats` payloads — every field optional to survive partial responses. */
 export interface RawAttendanceSummary {
   outreaches?: number;
+  totalPresences?: number;
   totalAttendances?: number;
   memberAttendances?: number;
   guestAttendances?: number;
@@ -20,6 +21,7 @@ export interface RawAttendanceSummary {
   memberProportion?: number;
   guestProportion?: number;
   avgAttendancePerOutreach?: number;
+  avgPresencesPerOutreach?: number;
 }
 
 export interface RawOutreachAttendance {
@@ -100,6 +102,7 @@ const toStatus = (value: string | undefined): OutreachStatus =>
 export function toAttendanceSummary(raw: RawAttendanceSummary): AttendanceSummary {
   return {
     outreaches: num(raw.outreaches),
+    totalPresences: num(raw.totalPresences),
     totalAttendances: num(raw.totalAttendances),
     memberAttendances: num(raw.memberAttendances),
     guestAttendances: num(raw.guestAttendances),
@@ -107,6 +110,7 @@ export function toAttendanceSummary(raw: RawAttendanceSummary): AttendanceSummar
     memberProportion: num(raw.memberProportion),
     guestProportion: num(raw.guestProportion),
     avgAttendancePerOutreach: num(raw.avgAttendancePerOutreach),
+    avgPresencesPerOutreach: num(raw.avgPresencesPerOutreach),
   };
 }
 

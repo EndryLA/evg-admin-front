@@ -45,6 +45,10 @@
         <span class="tile__label">Contacts</span>
       </div>
       <div class="tile">
+        <span class="tile__value">{{ percent(s.conversionRate) }}</span>
+        <span class="tile__label">Taux de conversion</span>
+      </div>
+      <div class="tile">
         <span class="tile__value">{{ totalAttendances() }}</span>
         <span class="tile__label">Personnes mobilisées</span>
       </div>
@@ -61,8 +65,8 @@
         <span class="tile__label">Sorties</span>
       </div>
       <div class="tile">
-        <span class="tile__value">{{ decimal(s.avgEntriesPerOutreach) }}</span>
-        <span class="tile__label">Moy. personnes / sortie</span>
+        <span class="tile__value">{{ decimal(avgPresencesPerOutreach()) }}</span>
+        <span class="tile__label">Moy. présences / sortie</span>
       </div>
     </section>
 
@@ -85,6 +89,7 @@
                 <th scope="col" class="num">Sorties</th>
                 <th scope="col" class="num">Conversions</th>
                 <th scope="col" class="num">Contacts</th>
+                <th scope="col" class="num">Taux</th>
                 <th scope="col" class="num">Effectif</th>
                 <th scope="col" class="num">Dépt</th>
                 <th scope="col" class="num">Leaders</th>
@@ -97,6 +102,7 @@
                   <td class="num">{{ m.outreaches }}</td>
                   <td class="num num--accent">{{ m.conversions }}</td>
                   <td class="num">{{ m.contacts }}</td>
+                  <td class="num num--muted">{{ percent(m.conversionRate) }}</td>
                   <td class="num">{{ m.attendances }}</td>
                   <td class="num num--muted">{{ m.members }}</td>
                   <td class="num num--muted">{{ m.leaders }}</td>
@@ -109,14 +115,54 @@
                 <td class="num">{{ s.outreaches }}</td>
                 <td class="num num--accent">{{ s.conversions }}</td>
                 <td class="num">{{ s.contacts }}</td>
-                <td class="num">{{ totalAttendances() }}</td>
-                <td class="num num--muted">{{ totalMembers() }}</td>
-                <td class="num num--muted">{{ totalLeaders() }}</td>
+                <td class="num num--muted">{{ percent(s.conversionRate) }}</td>
+                <td class="num">{{ rowTotals().attendances }}</td>
+                <td class="num num--muted">{{ rowTotals().members }}</td>
+                <td class="num num--muted">{{ rowTotals().leaders }}</td>
               </tr>
             </tfoot>
           </table>
         </div>
       </section>
+
+      @if (cityRows().length) {
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title">Par ville</h2>
+            <span class="panel__count">{{ cityRows().length }} ville{{ cityRows().length > 1 ? 's' : '' }}</span>
+          </div>
+          <div class="table-wrap">
+            <table class="grid">
+              <caption class="sr-only">Contacts et conversions par commune sur la période sélectionnée</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Ville</th>
+                  <th scope="col" class="num">Secteur</th>
+                  <th scope="col" class="num">Conversions</th>
+                  <th scope="col" class="num">Contacts</th>
+                  <th scope="col" class="num">Taux</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (city of cityRows(); track city.cityUuid) {
+                  <tr>
+                    <th scope="row" class="grid__label">
+                      {{ city.name }}
+                      @if (city.departmentCode) {
+                        <span class="grid__sub">{{ city.departmentCode }}</span>
+                      }
+                    </th>
+                    <td class="num num--muted">{{ city.sector ?? '—' }}</td>
+                    <td class="num num--accent">{{ city.conversions }}</td>
+                    <td class="num">{{ city.contacts }}</td>
+                    <td class="num num--muted">{{ percent(city.conversionRate) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
 
       @for (month of months(); track month.key) {
         <section class="panel">
@@ -136,6 +182,7 @@
                   }
                   <th scope="col" class="num">Conversions</th>
                   <th scope="col" class="num">Contacts</th>
+                  <th scope="col" class="num">Taux</th>
                   <th scope="col" class="num">Effectif</th>
                   <th scope="col" class="num">Dépt</th>
                   <th scope="col" class="num">Leaders</th>
@@ -161,6 +208,7 @@
                     }
                     <td class="num num--accent">{{ row.conversions }}</td>
                     <td class="num">{{ row.contacts }}</td>
+                    <td class="num num--muted">{{ percent(row.conversionRate) }}</td>
                     <td class="num">{{ row.attendances ?? '—' }}</td>
                     <td class="num num--muted">{{ row.members ?? '—' }}</td>
                     <td class="num num--muted">{{ row.leaders ?? '—' }}</td>
@@ -176,6 +224,7 @@
                   }
                   <td class="num num--accent">{{ month.totals.conversions }}</td>
                   <td class="num">{{ month.totals.contacts }}</td>
+                  <td class="num num--muted">{{ percent(month.totals.conversionRate) }}</td>
                   <td class="num">{{ month.totals.attendances }}</td>
                   <td class="num num--muted">{{ month.totals.members }}</td>
                   <td class="num num--muted">{{ month.totals.leaders }}</td>

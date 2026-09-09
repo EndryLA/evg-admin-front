@@ -11,6 +11,7 @@ import {
   type CityContacts,
   type ContactSummary,
   type MonthlyContacts,
+  type PresenceSummary,
   type StatsPeriod,
   type StatsQuery,
   type TerrainReport,
@@ -32,13 +33,18 @@ interface SortieRow {
   cityCode: string;
   conversions: number;
   contacts: number;
+  /**
+   * Everyone met — contacts and conversions together. Not a column: it is only
+   * the denominator behind the taux, which is what the bilan actually reads.
+   */
   entries: number;
+  /** `conversions / entries`, 0..1. */
   conversionRate: number;
-  /** Everyone mobilised; `null` when no presence was recorded. */
+  /** The sortie's recorded headcount; `null` when no presence was recorded. */
   attendances: number | null;
-  /** Département members among them. */
+  /** Département members among them, from the tracked check-ins. */
   members: number | null;
-  /** Everyone else on the sortie — `attendances - members`. */
+  /** Everyone else on the sortie — `headcount - dépt`, leaders and invitees. */
   leaders: number | null;
 }
 
@@ -46,7 +52,10 @@ interface SortieRow {
 interface RowTotals {
   conversions: number;
   contacts: number;
+  /** Summed only to derive {@link RowTotals.conversionRate}; never a column. */
   entries: number;
+  /** `conversions / entries` over the month, 0..1. */
+  conversionRate: number;
   attendances: number;
   members: number;
   leaders: number;
@@ -60,6 +69,8 @@ interface MonthlyRow {
   outreaches: number;
   conversions: number;
   contacts: number;
+  /** The API's own rate for the month, 0..1. */
+  conversionRate: number;
   attendances: number;
   members: number;
   leaders: number;
@@ -113,10 +124,12 @@ export class TerrainStats implements OnInit {
 
   protected readonly stats = signal<TerrainReport | null>(null);
   protected readonly cities = signal<CityContacts[]>([]);
+  /** The server's presence totals over the range — what the headline tiles read. */
+  protected readonly presenceSummary = signal<PresenceSummary | null>(null);
   /** Presence counts keyed by outreach uuid, joined onto the sortie rows. */
-  private readonly presences = signal<Record<string, { attendances: number; members: number }>>(
-    {},
-  );
+  private readonly presences = signal<
+    Record<string, { totalPresences: number; members: number }>
+  >({});
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
@@ -128,18 +141,38 @@ export class TerrainStats implements OnInit {
   /** True once we know the range holds no sortie. */
   protected readonly empty = computed(() => (this.summary()?.outreaches ?? 0) === 0);
 
-  /** Everyone mobilised over the range — the Excel's "Personnes mobilisées (Total)". */
-  protected readonly totalAttendances = computed(() =>
-    Object.values(this.presences()).reduce((sum, p) => sum + p.attendances, 0),
+  /**
+   * Everyone mobilised over the range — the Excel's "Personnes mobilisées (Total)".
+   * The recorded headcount, not the tracked check-ins: team leaders never check
+   * in, so only the headcount counts them.
+   */
+  protected readonly totalAttendances = computed(
+    () => this.presenceSummary()?.totalPresences ?? 0,
   );
 
   /** Département members among them — the Excel's "Personnes mobilisées (DPT)". */
-  protected readonly totalMembers = computed(() =>
-    Object.values(this.presences()).reduce((sum, p) => sum + p.members, 0),
+  protected readonly totalMembers = computed(
+    () => this.presenceSummary()?.memberAttendances ?? 0,
   );
 
   /** Everyone else on the sorties — `effectif - dépt`. */
-  protected readonly totalLeaders = computed(() => this.totalAttendances() - this.totalMembers());
+  protected readonly totalLeaders = computed(() =>
+    Math.max(0, this.totalAttendances() - this.totalMembers()),
+  );
+
+  /**
+   * The same three figures summed from the sortie rows, for the récapitulatif's
+   * Totaux line. Kept separate from the tiles above so that table adds up to its
+   * own rows even when a sortie in the range carries no recorded headcount.
+   */
+  protected readonly rowTotals = computed(() => {
+    const months = this.months();
+    return {
+      attendances: months.reduce((sum, m) => sum + m.totals.attendances, 0),
+      members: months.reduce((sum, m) => sum + m.totals.members, 0),
+      leaders: months.reduce((sum, m) => sum + m.totals.leaders, 0),
+    };
+  });
 
   /** The API's monthly totals, oldest first (as in the bilan). */
   private readonly monthlyStats = computed<MonthlyContacts[]>(() =>
@@ -160,6 +193,7 @@ export class TerrainStats implements OnInit {
         outreaches: m.outreaches,
         conversions: m.conversions,
         contacts: m.contacts,
+        conversionRate: m.conversionRate,
         attendances: totals?.attendances ?? 0,
         members: totals?.members ?? 0,
         leaders: totals?.leaders ?? 0,
@@ -187,9 +221,9 @@ export class TerrainStats implements OnInit {
         contacts: o.contacts,
         entries: o.entries,
         conversionRate: o.conversionRate,
-        attendances: presence?.attendances ?? null,
+        attendances: presence?.totalPresences ?? null,
         members: presence?.members ?? null,
-        leaders: presence ? presence.attendances - presence.members : null,
+        leaders: presence ? Math.max(0, presence.totalPresences - presence.members) : null,
       };
       const bucket = groups.get(key);
       if (bucket) {
@@ -206,6 +240,14 @@ export class TerrainStats implements OnInit {
         return { key, label: monthLabel(key), rows, totals: this.totals(rows) };
       });
   });
+
+  /**
+   * Average headcount per sortie — the recap tile, straight from the server so it
+   * matches the Présences dashboard's own "Moy. / sortie" over the same range.
+   */
+  protected readonly avgPresencesPerOutreach = computed(
+    () => this.presenceSummary()?.avgPresencesPerOutreach ?? 0,
+  );
 
   /**
    * Distinct cities the sorties were held in over the range — the recap tile.
@@ -232,6 +274,17 @@ export class TerrainStats implements OnInit {
   });
 
   /**
+   * The city breakdown from `/api/stats/outreach/cities`, most conversions first
+   * — the endpoint returns no particular order. Cities the range produced nothing
+   * in are dropped: a tail of zero rows says nothing the totals don't.
+   */
+  protected readonly cityRows = computed<CityContacts[]>(() =>
+    this.cities()
+      .filter((c) => c.entries > 0)
+      .sort((a, b) => b.conversions - a.conversions || b.contacts - a.contacts),
+  );
+
+  /**
    * Whether any sortie in the range carries a city — a column of blanks reads as
    * a bug, so it is dropped until there is something to show in it.
    */
@@ -250,17 +303,19 @@ export class TerrainStats implements OnInit {
 
     forkJoin({
       stats: this.service.terrain(query),
+      presenceSummary: this.service.presenceSummary(query),
       presences: this.service.presences(query),
       cities: this.service.cities(query),
     }).subscribe({
-      next: ({ stats, presences, cities }) => {
+      next: ({ stats, presenceSummary, presences, cities }) => {
         this.stats.set(stats);
+        this.presenceSummary.set(presenceSummary);
         this.cities.set(cities);
         this.presences.set(
           Object.fromEntries(
             presences.map((p) => [
               p.outreachUuid,
-              { attendances: p.attendances, members: p.members },
+              { totalPresences: p.totalPresences, members: p.members },
             ]),
           ),
         );
@@ -293,10 +348,13 @@ export class TerrainStats implements OnInit {
   /** Sum a month's columns; distinct cities are counted, not added. */
   private totals(rows: readonly SortieRow[]): RowTotals {
     const cities = new Set(rows.map((r) => r.cityLabel).filter(Boolean));
+    const conversions = rows.reduce((sum, r) => sum + r.conversions, 0);
+    const entries = rows.reduce((sum, r) => sum + r.entries, 0);
     return {
-      conversions: rows.reduce((sum, r) => sum + r.conversions, 0),
+      conversions,
       contacts: rows.reduce((sum, r) => sum + r.contacts, 0),
-      entries: rows.reduce((sum, r) => sum + r.entries, 0),
+      entries,
+      conversionRate: entries === 0 ? 0 : conversions / entries,
       attendances: rows.reduce((sum, r) => sum + (r.attendances ?? 0), 0),
       members: rows.reduce((sum, r) => sum + (r.members ?? 0), 0),
       leaders: rows.reduce((sum, r) => sum + (r.leaders ?? 0), 0),
@@ -307,5 +365,10 @@ export class TerrainStats implements OnInit {
   /** One decimal, French comma, trimmed when whole. */
   protected decimal(value: number): string {
     return value.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+  }
+
+  /** A 0..1 rate as a French percentage — `18,4 %`. */
+  protected percent(value: number): string {
+    return `${this.decimal(value * 100)} %`;
   }
 }

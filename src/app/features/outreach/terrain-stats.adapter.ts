@@ -5,6 +5,7 @@ import type {
   MonthlyContacts,
   OutreachContactStats,
   OutreachPresenceCounts,
+  PresenceSummary,
   SectorContacts,
   TerrainReport,
 } from './terrain-stats.models';
@@ -68,9 +69,19 @@ export interface RawTerrainReport {
   perOutreach?: RawOutreachContactStats[];
 }
 
+/** Raw `/api/stats/summary` payload — only the fields the bilan reads. */
+export interface RawPresenceSummary {
+  outreaches?: number;
+  totalPresences?: number;
+  totalAttendances?: number;
+  memberAttendances?: number;
+  avgPresencesPerOutreach?: number;
+}
+
 /** Raw `/api/stats/outreaches` row — only the presence fields are read here. */
 export interface RawOutreachPresenceCounts {
   outreachUuid?: string;
+  totalPresences?: number;
   attendances?: number;
   members?: number;
   guests?: number;
@@ -148,11 +159,22 @@ export function toTerrainReport(raw: RawTerrainReport): TerrainReport {
   };
 }
 
+export function toPresenceSummary(raw: RawPresenceSummary): PresenceSummary {
+  return {
+    outreaches: num(raw.outreaches),
+    totalPresences: num(raw.totalPresences),
+    totalAttendances: num(raw.totalAttendances),
+    memberAttendances: num(raw.memberAttendances),
+    avgPresencesPerOutreach: num(raw.avgPresencesPerOutreach),
+  };
+}
+
 export function toOutreachPresenceCounts(
   raw: RawOutreachPresenceCounts,
 ): OutreachPresenceCounts {
   return {
     outreachUuid: raw.outreachUuid ?? '',
+    totalPresences: num(raw.totalPresences),
     attendances: num(raw.attendances),
     members: num(raw.members),
     guests: num(raw.guests),

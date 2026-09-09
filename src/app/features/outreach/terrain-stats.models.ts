@@ -106,10 +106,35 @@ export interface TerrainReport {
   perOutreach: OutreachContactStats[];
 }
 
+/**
+ * The presence side of the bilan over the whole range (`AttendanceSummary`,
+ * `/api/stats/summary`) — the server's own totals, as opposed to summing the
+ * per-sortie rows on the client. Only the fields the terrain bilan reads are
+ * modelled; the attendance dashboard has its own, fuller model of the same
+ * payload.
+ */
+export interface PresenceSummary {
+  outreaches: number;
+  /** Recorded headcounts summed — everyone who was out, team leaders included. */
+  totalPresences: number;
+  /** Only the presences tracked through the check-in form. */
+  totalAttendances: number;
+  /** Département members among the tracked check-ins. */
+  memberAttendances: number;
+  /** `totalPresences / outreaches` — the headcount average on the tile. */
+  avgPresencesPerOutreach: number;
+}
+
 /** Per-sortie presence counts, joined onto the contact figures. */
 export interface OutreachPresenceCounts {
   outreachUuid: string;
-  /** `members + guests` — everyone mobilised for that sortie. */
+  /**
+   * The manually recorded headcount — everyone mobilised for that sortie, team
+   * leaders included. They never check in, so this is the only figure that counts
+   * them, and it is what the effectif columns show.
+   */
+  totalPresences: number;
+  /** `members + guests` — only the presences tracked through the check-in form. */
   attendances: number;
   /** Département members (ouvriers/aides) — the "effectif DPT" column. */
   members: number;

@@ -192,8 +192,13 @@ export class AttendanceStats implements OnInit {
   /** True once we know the range holds no outreaches. */
   protected readonly empty = computed(() => (this.summary()?.outreaches ?? 0) === 0);
 
+  /**
+   * Average headcount per sortie. Built on the recorded headcount, not on the
+   * tracked check-ins: team leaders never check in, so only the headcount counts
+   * everyone who was actually out.
+   */
   protected readonly avgLabel = computed(() => {
-    const avg = this.summary()?.avgAttendancePerOutreach ?? 0;
+    const avg = this.summary()?.avgPresencesPerOutreach ?? 0;
     // One decimal, French comma, trimmed when whole.
     return avg.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
   });

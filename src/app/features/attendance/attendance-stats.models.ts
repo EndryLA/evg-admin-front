@@ -24,6 +24,12 @@ export interface StatsQuery {
 /** Aggregate totals over the range (`AttendanceSummary`). */
 export interface AttendanceSummary {
   outreaches: number;
+  /**
+   * The recorded headcounts summed — everyone who was out, team leaders included.
+   * They never check in, so this sits above `totalAttendances`.
+   */
+  totalPresences: number;
+  /** Only the presences tracked through the check-in form (`members + guests`). */
   totalAttendances: number;
   memberAttendances: number;
   guestAttendances: number;
@@ -33,7 +39,10 @@ export interface AttendanceSummary {
   memberProportion: number;
   /** `guestAttendances / totalAttendances`, 0..1, 0 when none. */
   guestProportion: number;
+  /** `totalAttendances / outreaches` — tracked check-ins only. */
   avgAttendancePerOutreach: number;
+  /** `totalPresences / outreaches` — the headcount average shown on the tile. */
+  avgPresencesPerOutreach: number;
 }
 
 /** Lifecycle status of an outreach. */

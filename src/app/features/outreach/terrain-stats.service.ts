@@ -5,16 +5,19 @@ import { map, type Observable } from 'rxjs';
 import {
   toCityContacts,
   toOutreachPresenceCounts,
+  toPresenceSummary,
   toSectorContacts,
   toTerrainReport,
   type RawCityContacts,
   type RawOutreachPresenceCounts,
+  type RawPresenceSummary,
   type RawSectorContacts,
   type RawTerrainReport,
 } from './terrain-stats.adapter';
 import type {
   CityContacts,
   OutreachPresenceCounts,
+  PresenceSummary,
   SectorContacts,
   StatsQuery,
   TerrainReport,
@@ -75,6 +78,18 @@ export class TerrainStatsService {
     return this.http
       .get<RawSectorContacts[]>(`${BASE}/outreach/sectors`, { params: this.queryParams(query) })
       .pipe(map((list) => (list ?? []).map(toSectorContacts)));
+  }
+
+/**
+   * The range's presence totals, straight from the server — what the "Personnes
+   * mobilisées" and "Moy. présences / sortie" tiles show. Summing the per-sortie
+   * rows would only agree with it when every sortie in the range carries a
+   * recorded headcount, so the headline reads the server's figure instead.
+   */
+  presenceSummary(query: StatsQuery): Observable<PresenceSummary> {
+    return this.http
+      .get<RawPresenceSummary>(`${BASE}/summary`, { params: this.queryParams(query) })
+      .pipe(map(toPresenceSummary));
   }
 
   /**
