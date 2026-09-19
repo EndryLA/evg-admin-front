@@ -13,6 +13,7 @@ import { CONTACT_ROUTES, PUBLIC_CONTACT_ROUTES } from './features/contact/contac
 import { DASHBOARD_ROUTES } from './features/dashboard/dashboard.routes';
 import { INVENTORY_ROUTES } from './features/inventory/inventory.routes';
 import { OUTREACH_ROUTES } from './features/outreach/outreach.routes';
+import { PUBLIC_PRE_ATTENDANCE_ROUTES } from './features/pre-attendance/pre-attendance.routes';
 import { PROFILE_ROUTES } from './features/profile/profile.routes';
 import { PUBLIC_SORTIE_ROUTES } from './features/sortie/sortie.routes';
 import { USER_ROUTES } from './features/user/user.routes';
@@ -22,6 +23,7 @@ export const routes: Routes = [
   ...PUBLIC_SORTIE_ROUTES,
   ...PUBLIC_CONTACT_ROUTES,
   ...PUBLIC_ATTENDANCE_ROUTES,
+  ...PUBLIC_PRE_ATTENDANCE_ROUTES,
   {
     path: '',
     canActivate: [authGuard],

@@ -49,7 +49,7 @@
       </div>
       <div class="link-row__actions">
         <button type="button" class="btn" (click)="copyLink(publicFormUrl())">
-          @if (copied()) {
+          @if (copiedUrl() === publicFormUrl()) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
             Copié
           } @else {
@@ -63,7 +63,32 @@
         </a>
       </div>
     </section>
+
     </div>
+
+    @if (o.status === 'SCHEDULED') {
+      <section class="card signup-link" aria-labelledby="signup-link-title">
+        <div class="signup-link__text">
+          <h2 class="signup-link__title" id="signup-link-title">Lien d'inscription</h2>
+          <p class="signup-link__hint">À partager avant la sortie. Les inscriptions ferment à son démarrage.</p>
+        </div>
+        <div class="signup-link__row">
+          <code class="signup-link__url">{{ signupUrl() }}</code>
+          <button type="button" class="btn signup-link__btn" (click)="copyLink(signupUrl())">
+            @if (copiedUrl() === signupUrl()) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+              Copié
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copier
+            }
+          </button>
+          <a class="btn signup-link__btn" [href]="signupPath()" target="_blank" rel="noopener" aria-label="Ouvrir la page d'inscription">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          </a>
+        </div>
+      </section>
+    }
 
     <div class="manage-actions">
     @switch (o.status) {
@@ -107,6 +132,13 @@
     </a>
     </div>
   </div>
+
+  <app-outreach-pre-attendances
+    [items]="preAttendances()"
+    [loading]="preLoading()"
+    [error]="preError()"
+    [seeAllLink]="['/sorties', uuid(), 'pre-inscriptions']"
+    (retry)="loadPreAttendances()" />
 
   <app-outreach-contacts
     [contacts]="contacts()"

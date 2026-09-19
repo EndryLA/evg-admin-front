@@ -13,11 +13,50 @@
       </p>
     }
   </div>
+
+  @if (canManage) {
+    <button type="button" class="btn btn--primary add-btn" (click)="openAdd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Ajouter une personne
+    </button>
+  }
 </header>
+
+@if (canManage) {
+  <!-- Mobile-only floating action button — the header button gives way to it. -->
+  <button type="button" class="fab" (click)="openAdd()" aria-label="Ajouter une personne">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+}
+
+@if (actionError(); as message) {
+  <p class="alert alert--error" role="alert">{{ message }}</p>
+}
 
 <app-outreach-presences
   [presences]="presences()"
   [loading]="loading()"
   [error]="error()"
   [expanded]="true"
+  [showCount]="false"
+  [deletable]="canManage"
+  (remove)="askRemove($event)"
   (retry)="load()" />
+
+@if (formOpen()) {
+  <app-outreach-attendance-form
+    [busy]="saving()"
+    [error]="saveError()"
+    (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}
+
+@if (toRemove(); as p) {
+  <app-confirm-dialog
+    title="Retirer cette présence ?"
+    [busy]="removing()"
+    (confirm)="confirmRemove()"
+    (cancel)="cancelRemove()">
+    La présence de <strong>{{ name(p) }}</strong> à cette sortie sera supprimée.
+  </app-confirm-dialog>
+}

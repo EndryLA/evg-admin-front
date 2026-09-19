@@ -7,6 +7,7 @@ import { messageFromError } from '../../../../core/http/http-error.util';
 import { OutreachCloseDialog } from '../../components/outreach-close-dialog/outreach-close-dialog';
 import { OutreachStartDialog } from '../../components/outreach-start-dialog/outreach-start-dialog';
 import { OutreachContacts } from '../../components/outreach-contacts/outreach-contacts';
+import { OutreachPreAttendances } from '../../components/outreach-pre-attendances/outreach-pre-attendances';
 import { OutreachPresences } from '../../components/outreach-presences/outreach-presences';
 import { OutreachService } from '../../outreach.service';
 import {
@@ -15,6 +16,7 @@ import {
   type ContactEntry,
   type Outreach,
   type OutreachAttendance,
+  type OutreachPreAttendance,
 } from '../../outreach.models';
 
 /**
@@ -22,10 +24,20 @@ import {
  * controls: lifecycle status, and QR codes linking to the public contact and
  * presence forms. Status persists through a dedicated PATCH endpoint,
  * independent of the outreach's core fields (edited on Details).
+ *
+ * Also shows a read-only glance at the sortie's pre-registrations — confirming
+ * them into presences happens on their own full-list page.
  */
 @Component({
   selector: 'app-outreach-manage',
-  imports: [RouterLink, OutreachCloseDialog, OutreachStartDialog, OutreachContacts, OutreachPresences],
+  imports: [
+    RouterLink,
+    OutreachCloseDialog,
+    OutreachStartDialog,
+    OutreachContacts,
+    OutreachPreAttendances,
+    OutreachPresences,
+  ],
   host: { class: 'manage-page', '(document:keydown.escape)': 'closeQr()' },
   templateUrl: './outreach-manage.html',
   styleUrl: './outreach-manage.scss',
@@ -49,14 +61,18 @@ export class OutreachManage implements OnInit {
   protected readonly presencesLoading = signal(true);
   protected readonly presencesError = signal<string | null>(null);
 
+  protected readonly preAttendances = signal<OutreachPreAttendance[]>([]);
+  protected readonly preLoading = signal(true);
+  protected readonly preError = signal<string | null>(null);
+
   protected readonly startOpen = signal(false);
   protected readonly closeOpen = signal(false);
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
 
   protected readonly qrDataUrl = signal<string>('');
-  /** Whether the public link was just copied — drives the "Copié" state. */
-  protected readonly copied = signal(false);
+  /** The link that was just copied, if any — drives its button's "Copié" state. */
+  protected readonly copiedUrl = signal<string | null>(null);
   // Fullscreen QR overlay — holds whichever code was opened.
   protected readonly qrOpen = signal(false);
   protected readonly qrFsSrc = signal<string>('');
@@ -74,6 +90,12 @@ export class OutreachManage implements OnInit {
   protected readonly publicFormPath = computed(() => `/sortie/${this.uuid()}`);
   protected readonly publicFormUrl = computed(
     () => `${this.document.location.origin}${this.publicFormPath()}`,
+  );
+
+  /** Separate public sign-up page, shared ahead of a planned sortie. */
+  protected readonly signupPath = computed(() => `/inscription/${this.uuid()}`);
+  protected readonly signupUrl = computed(
+    () => `${this.document.location.origin}${this.signupPath()}`,
   );
 
   ngOnInit(): void {
@@ -112,6 +134,11 @@ export class OutreachManage implements OnInit {
       },
     });
 
+    this.loadPresences();
+    this.loadPreAttendances();
+  }
+
+  private loadPresences(): void {
     this.presencesLoading.set(true);
     this.presencesError.set(null);
     this.service.attendances(this.uuid()).subscribe({
@@ -122,6 +149,21 @@ export class OutreachManage implements OnInit {
       error: (err) => {
         this.presencesError.set(messageFromError(err, 'Chargement des présences impossible.'));
         this.presencesLoading.set(false);
+      },
+    });
+  }
+
+  protected loadPreAttendances(): void {
+    this.preLoading.set(true);
+    this.preError.set(null);
+    this.service.preAttendances(this.uuid()).subscribe({
+      next: (data) => {
+        this.preAttendances.set(data);
+        this.preLoading.set(false);
+      },
+      error: (err) => {
+        this.preError.set(messageFromError(err, 'Chargement des pré-inscriptions impossible.'));
+        this.preLoading.set(false);
       },
     });
   }
@@ -202,8 +244,12 @@ export class OutreachManage implements OnInit {
       return;
     }
     clipboard.writeText(url).then(() => {
-      this.copied.set(true);
-      setTimeout(() => this.copied.set(false), 2000);
+      this.copiedUrl.set(url);
+      setTimeout(() => {
+        if (this.copiedUrl() === url) {
+          this.copiedUrl.set(null);
+        }
+      }, 2000);
     }, () => undefined);
   }
 }

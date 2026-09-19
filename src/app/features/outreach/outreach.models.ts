@@ -237,6 +237,50 @@ export interface OutreachAttendance {
   reason: AttendanceReason | null;
 }
 
+/**
+ * Fields sent when adding a presence (`AttendanceRequest` minus the outreach,
+ * which the page already knows). A MEMBER carries `profileUuid`; a GUEST carries
+ * a name, optionally how they came, and who invited them.
+ */
+export interface OutreachAttendanceInput {
+  type: AttendanceType;
+  profileUuid: string | null;
+  firstname: string | null;
+  lastname: string | null;
+  reason: AttendanceReason | null;
+  invitedBy: string | null;
+}
+
+/** French labels for {@link AttendanceReason}, in the order offered in the form. */
+export const ATTENDANCE_REASON_OPTIONS: readonly {
+  value: AttendanceReason;
+  label: string;
+}[] = [
+  { value: 'INVITATION', label: ATTENDANCE_REASON_LABELS.INVITATION },
+  { value: 'INFO_GROUP', label: ATTENDANCE_REASON_LABELS.INFO_GROUP },
+  { value: 'INSTAGRAM', label: ATTENDANCE_REASON_LABELS.INSTAGRAM },
+  { value: 'BLOC', label: ATTENDANCE_REASON_LABELS.BLOC },
+  { value: 'SECTOR', label: ATTENDANCE_REASON_LABELS.SECTOR },
+  { value: 'OTHER', label: ATTENDANCE_REASON_LABELS.OTHER },
+];
+
+/** Full name of a presence row, or an em dash when it has none. */
+export function presenceName(p: Pick<OutreachAttendance, 'firstname' | 'lastname'>): string {
+  return `${p.firstname} ${p.lastname}`.trim() || '—';
+}
+
+/**
+ * Someone who announced, before the outreach started, that they would come —
+ * mapped from `PreAttendanceResponse`. Staff confirm it on the day, which turns
+ * it into an actual {@link OutreachAttendance}.
+ */
+export interface OutreachPreAttendance extends OutreachAttendance {
+  /** Whether it has already been turned into a presence. */
+  confirmed: boolean;
+  /** ISO datetime of the sign-up, or `null` when unknown. */
+  createdAt: string | null;
+}
+
 /** A person met during an outreach, mapped from `ContactEntryResponse`. */
 export interface ContactEntry {
   uuid: string;

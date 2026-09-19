@@ -1,7 +1,7 @@
 <section class="presences">
   <h2 class="presences__title">
     Présences
-    @if (!loading() && !error()) {
+    @if (showCount() && !loading() && !error()) {
       <span class="presences__count">{{ presences().length }}</span>
     }
   </h2>
@@ -25,8 +25,9 @@
           <tr>
             <th>Personne</th>
             <th>Type</th>
-            <th>Provenance</th>
-            <th>Invité par</th>
+            @if (deletable()) {
+              <th class="col-remove"><span class="visually-hidden">Retirer</span></th>
+            }
           </tr>
         </thead>
         <tbody>
@@ -34,26 +35,39 @@
             <tr>
               <td class="cell-main">{{ name(p) }}</td>
               <td><span class="pill pill--{{ typeTone(p.type) }}">{{ typeLabel(p.type) }}</span></td>
-              <td class="cell-muted">{{ reasonLabel(p) }}</td>
-              <td class="cell-muted">{{ p.invitedBy || '—' }}</td>
+              @if (deletable()) {
+                <td class="col-remove">
+                  <button type="button" class="row-remove" title="Retirer" [attr.aria-label]="'Retirer ' + name(p) + ' des présences'" (click)="remove.emit(p)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                  </button>
+                </td>
+              }
             </tr>
           }
         </tbody>
       </table>
 
-      @if (hasMore()) {
-        @if (seeAllLink(); as link) {
-          <a [routerLink]="link" class="see-all">Voir tout ({{ presences().length }})</a>
-        } @else {
-          <button type="button" class="see-all" (click)="toggle()">
-            @if (showAll()) {
-              Voir moins
-            } @else {
-              Voir tout ({{ presences().length }})
-            }
-          </button>
-        }
+      @if (!seeAllLink() && hasMore()) {
+        <button type="button" class="see-all" (click)="toggle()">
+          @if (showAll()) {
+            Voir moins
+          } @else {
+            Voir tout ({{ presences().length }})
+          }
+        </button>
       }
+    }
+
+    <!-- Outside the branches above: the full-list page is where presences are
+         added, so it stays reachable even when there is nothing to list yet. -->
+    @if (!loading() && !error() && seeAllLink(); as link) {
+      <a [routerLink]="link" class="see-all">
+        @if (presences().length > 0) {
+          Voir tout ({{ presences().length }})
+        } @else {
+          Gérer les présences
+        }
+      </a>
     }
   </div>
 </section>

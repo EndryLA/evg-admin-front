@@ -1,16 +1,19 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, type Observable } from 'rxjs';
+import { EMPTY, expand, map, reduce, type Observable } from 'rxjs';
 
 import {
   toContactEntry,
   toOutreach,
   toOutreachAttendance,
   toOutreachPage,
+  toOutreachPreAttendance,
+  toRawAttendanceRequest,
   toRawOutreachRequest,
   type RawContactEntry,
   type RawOutreach,
   type RawOutreachAttendance,
+  type RawOutreachPreAttendance,
   type RawPage,
 } from './outreach.adapter';
 import {
@@ -19,9 +22,11 @@ import {
   type ManagerOption,
   type Outreach,
   type OutreachAttendance,
+  type OutreachAttendanceInput,
   type OutreachFilter,
   type OutreachInput,
   type OutreachPage,
+  type OutreachPreAttendance,
   type OutreachStatus,
 } from './outreach.models';
 
@@ -32,6 +37,9 @@ interface RawProfileLite {
 }
 
 const BASE = '/api/outreaches';
+
+/** Attendances per request when walking every page (the backend caps a page at 2000). */
+const ATTENDANCE_FETCH_SIZE = 1000;
 
 /**
  * Gateway to `/api/outreaches`. Like profiles, the backend paginates without a
@@ -95,18 +103,68 @@ export class OutreachService {
 
   /**
    * Presences recorded for the given outreach. The backend has no per-outreach
-   * attendance endpoint, so this pulls the collection and filters in memory —
-   * reading `/api/attendances` directly to avoid a cross-feature import.
+   * attendance endpoint, so this pulls the whole collection and filters in
+   * memory — reading `/api/attendances` directly to avoid a cross-feature
+   * import. Every page is walked: stopping at the first one would silently drop
+   * the presences of all but the most recent sorties.
    */
   attendances(uuid: string): Observable<OutreachAttendance[]> {
-    const params = new HttpParams().set('page', '0').set('size', '100');
-    return this.http.get<RawPage<RawOutreachAttendance>>('/api/attendances', { params }).pipe(
-      map((page) =>
-        (page.content ?? [])
-          .filter((a) => a.outreachUuid === uuid)
-          .map(toOutreachAttendance),
+    const fetchPage = (page: number) =>
+      this.http.get<RawPage<RawOutreachAttendance>>('/api/attendances', {
+        params: new HttpParams().set('page', page).set('size', ATTENDANCE_FETCH_SIZE),
+      });
+    return fetchPage(0).pipe(
+      expand((res, i) => (res.last === false ? fetchPage(i + 1) : EMPTY)),
+      reduce<RawPage<RawOutreachAttendance>, OutreachAttendance[]>(
+        (all, res) =>
+          all.concat(
+            (res.content ?? [])
+              .filter((a) => a.outreachUuid === uuid)
+              .map(toOutreachAttendance),
+          ),
+        [],
       ),
     );
+  }
+
+  /**
+   * Record a presence for this outreach. Goes to the authenticated collection
+   * endpoint (not the public outreach-scoped one), so staff can add someone
+   * whatever the sortie's status.
+   */
+  createAttendance(
+    outreachUuid: string,
+    input: OutreachAttendanceInput,
+  ): Observable<OutreachAttendance> {
+    return this.http
+      .post<RawOutreachAttendance>(
+        '/api/attendances',
+        toRawAttendanceRequest(outreachUuid, input),
+      )
+      .pipe(map(toOutreachAttendance));
+  }
+
+  /** Remove a presence recorded by mistake. */
+  removeAttendance(uuid: string): Observable<void> {
+    return this.http.delete(`/api/attendances/${uuid}`).pipe(map(() => undefined));
+  }
+
+  /** People who signed up before the outreach started, oldest first. */
+  preAttendances(uuid: string): Observable<OutreachPreAttendance[]> {
+    return this.http
+      .get<RawOutreachPreAttendance[]>(`${BASE}/${uuid}/pre-attendances`)
+      .pipe(map((list) => (list ?? []).map(toOutreachPreAttendance)));
+  }
+
+  /** Turn a sign-up into an actual presence (creates the attendance server-side). */
+  confirmPreAttendance(uuid: string): Observable<OutreachPreAttendance> {
+    return this.http
+      .post<RawOutreachPreAttendance>(`/api/pre-attendances/${uuid}/confirm`, null)
+      .pipe(map(toOutreachPreAttendance));
+  }
+
+  removePreAttendance(uuid: string): Observable<void> {
+    return this.http.delete(`/api/pre-attendances/${uuid}`).pipe(map(() => undefined));
   }
 
   create(input: OutreachInput): Observable<Outreach> {
@@ -144,7 +202,8 @@ export class OutreachService {
     return this.http.delete(`${BASE}/${uuid}`).pipe(map(() => undefined));
   }
 
-  /** Members selectable as the outreach's responsible person. */
+  /** Members selectable as the outreach's responsible person, or as the linked
+   *  profile of a MEMBER presence. */
   managers(): Observable<ManagerOption[]> {
     const params = new HttpParams()
       .set('page', '0')

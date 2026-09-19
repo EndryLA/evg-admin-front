@@ -6,8 +6,24 @@
   padding: 22px 32px 48px;
 }
 
-.page-head { margin: 18px 0 4px; }
+/* Title on the left, the "Nouvelle présence" action on the right. */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 18px 0 4px;
+}
+.page-head__main { flex: 1; min-width: 0; }
+.page-head .btn svg { width: 16px; height: 16px; }
+
+.alert { margin: 16px 0 0; }
 
 @media (max-width: 720px) {
-  :host { padding: 18px 16px 40px; }
+  /* Bottom padding clears the FAB (56px + its 20px inset) so it never covers
+     the last row or the card's "Voir tout" footer. */
+  :host { padding: 18px 16px calc(96px + env(safe-area-inset-bottom)); }
+
+  .page-head { flex-direction: column; align-items: stretch; }
+  /* The inline add button gives way to the FAB. */
+  .add-btn { display: none; }
 }

@@ -15,4 +15,6 @@ export const ACCESS = {
   teamLeaders: ['SUPER_ADMIN'],
   /** Maintaining the city directory. */
   cities: ['ADMIN', 'SUPER_ADMIN'],
+  /** Creating, correcting and deleting attendance records. */
+  attendances: ['ADMIN', 'SUPER_ADMIN'],
 } as const satisfies Record<string, readonly UserRole[]>;

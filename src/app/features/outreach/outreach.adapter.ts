@@ -7,8 +7,10 @@ import type {
   ContactType,
   Outreach,
   OutreachAttendance,
+  OutreachAttendanceInput,
   OutreachInput,
   OutreachPage,
+  OutreachPreAttendance,
   OutreachStatus,
 } from './outreach.models';
 
@@ -67,6 +69,24 @@ export interface RawOutreachAttendance {
    *  name lives (the top-level name fields are only filled for guests). */
   profile?: { firstname?: string; lastname?: string } | null;
   outreachUuid?: string;
+}
+
+/** Raw `AttendanceRequest` sent when creating or editing a presence. */
+export interface RawAttendanceRequest {
+  type: AttendanceType;
+  outreachUuid: string;
+  profileUuid?: string;
+  firstname?: string;
+  lastname?: string;
+  reason?: AttendanceReason;
+  invitedBy?: string;
+}
+
+/** Raw `PreAttendanceResponse` — an attendance plus its confirmation state. */
+export interface RawOutreachPreAttendance extends RawOutreachAttendance {
+  confirmed?: boolean;
+  attendanceUuid?: string | null;
+  createdAt?: string | null;
 }
 
 /** Raw `CityResponse`, as nested in `OutreachResponse.city` and
@@ -232,6 +252,46 @@ export function toOutreachAttendance(raw: RawOutreachAttendance): OutreachAttend
     invitedBy: raw.invitedBy ?? '',
     type: toAttendanceType(raw.type),
     reason: toAttendanceReason(raw.reason),
+  };
+}
+
+/**
+ * Map a new presence to the raw `AttendanceRequest`. Optional fields are
+ * omitted when empty so the backend only receives what applies to the type.
+ */
+export function toRawAttendanceRequest(
+  outreachUuid: string,
+  input: OutreachAttendanceInput,
+): RawAttendanceRequest {
+  const request: RawAttendanceRequest = { type: input.type, outreachUuid };
+
+  if (input.type === 'MEMBER') {
+    if (input.profileUuid) {
+      request.profileUuid = input.profileUuid;
+    }
+    return request;
+  }
+
+  const firstname = input.firstname?.trim();
+  if (firstname) request.firstname = firstname;
+
+  const lastname = input.lastname?.trim();
+  if (lastname) request.lastname = lastname;
+
+  const invitedBy = input.invitedBy?.trim();
+  if (invitedBy) request.invitedBy = invitedBy;
+
+  if (input.reason) request.reason = input.reason;
+
+  return request;
+}
+
+/** Map a raw pre-attendance to the outreach feature's sign-up model. */
+export function toOutreachPreAttendance(raw: RawOutreachPreAttendance): OutreachPreAttendance {
+  return {
+    ...toOutreachAttendance(raw),
+    confirmed: raw.confirmed ?? false,
+    createdAt: raw.createdAt ?? null,
   };
 }
 

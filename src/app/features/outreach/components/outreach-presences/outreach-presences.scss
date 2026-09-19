@@ -46,6 +46,30 @@ td { padding: 14px 20px; vertical-align: middle; }
 .cell-main { font-weight: 600; color: var(--text-primary); }
 .cell-muted { color: var(--text-secondary); white-space: nowrap; }
 
+/* Per-row remove control (full-list page, admins only). */
+.col-remove { width: 52px; text-align: right; }
+.row-remove {
+  display: inline-flex;
+  padding: 5px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.row-remove svg { width: 16px; height: 16px; }
+.row-remove:hover { color: var(--accent); background: var(--accent-disc-bg); }
+.row-remove:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* "Voir tout / Voir moins" toggle spanning the card footer. */
 .see-all {
   display: block;
@@ -63,8 +87,20 @@ td { padding: 14px 20px; vertical-align: middle; }
 }
 .see-all:hover { background: var(--bg-inset); color: var(--text-primary); }
 
+/* ---- Phones ----
+   Three narrow columns still fit, so the table holds; it only tightens up and
+   grows its remove control into a proper touch target. */
 @media (max-width: 720px) {
-  .card { overflow-x: auto; }
-  table { min-width: 480px; }
   th, td { padding: 12px 16px; }
+  th:first-child, td:first-child { padding-right: 8px; }
+  /* Long names wrap instead of pushing the pill off-screen. */
+  .cell-main { overflow-wrap: anywhere; }
+
+  .col-remove { width: 44px; padding-left: 0; }
+  .row-remove {
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+  }
 }

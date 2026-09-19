@@ -47,6 +47,14 @@ export const OUTREACH_ROUTES: Routes = [
       ),
   },
   {
+    path: 'sorties/:uuid/pre-inscriptions',
+    title: 'Pré-inscriptions de la sortie · Évangélisation',
+    loadComponent: () =>
+      import('./pages/outreach-pre-attendances-list/outreach-pre-attendances-list').then(
+        (m) => m.OutreachPreAttendancesList,
+      ),
+  },
+  {
     path: 'sorties/:uuid/presences',
     title: 'Présences de la sortie · Évangélisation',
     loadComponent: () =>

@@ -2,9 +2,9 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import {
-  ATTENDANCE_REASON_LABELS,
   ATTENDANCE_TYPE_LABELS,
   ATTENDANCE_TYPE_TONES,
+  presenceName,
   type AttendanceType,
   type OutreachAttendance,
 } from '../../outreach.models';
@@ -18,7 +18,7 @@ const PREVIEW_COUNT = 5;
  * loads the data and handles retry. Shared by the detail and manage pages.
  *
  * Two optional modes tweak the footer:
- * - `seeAllLink` turns "Voir tout" into a navigation to a dedicated full-list
+ * - `seeAllLink` turns the footer into a navigation to a dedicated full-list
  *   page instead of an in-place toggle.
  * - `expanded` shows every row with no footer, for that full-list page itself.
  */
@@ -32,12 +32,22 @@ export class OutreachPresences {
   readonly presences = input<OutreachAttendance[]>([]);
   readonly loading = input(false);
   readonly error = input<string | null>(null);
-  /** When set, "Voir tout" navigates to this route instead of toggling. */
+  /**
+   * When set, the footer becomes a permanent link to this route rather than an
+   * in-place toggle — it is the only way into the page where presences are
+   * added and removed, so it shows however few rows there are, empty included.
+   */
   readonly seeAllLink = input<string | unknown[] | null>(null);
   /** Show all rows with no footer — for the standalone full-list page. */
   readonly expanded = input(false);
+  /** Offer a remove control per row — set by the full-list page for admins. */
+  readonly deletable = input(false);
+  /** Show the count chip beside the title. Off on the full-list page. */
+  readonly showCount = input(true);
 
   readonly retry = output<void>();
+  /** A row was picked for removal; only ever emitted when {@link deletable}. */
+  readonly remove = output<OutreachAttendance>();
 
   protected readonly showAll = signal(false);
 
@@ -55,14 +65,7 @@ export class OutreachPresences {
   protected typeTone(type: AttendanceType): string {
     return ATTENDANCE_TYPE_TONES[type];
   }
-  protected name(p: OutreachAttendance): string {
-    return `${p.firstname} ${p.lastname}`.trim() || '—';
-  }
-  /** "Provenance" for a guest; members have no reason. */
-  protected reasonLabel(p: OutreachAttendance): string {
-    return p.reason ? ATTENDANCE_REASON_LABELS[p.reason] : '—';
-  }
-
+  protected readonly name = presenceName;
   protected toggle(): void {
     this.showAll.update((v) => !v);
   }

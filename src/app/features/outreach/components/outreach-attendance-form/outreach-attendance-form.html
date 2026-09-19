@@ -1,0 +1,90 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Nouvelle présence"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal__head">
+      <span class="eyebrow">Ajouter une présence</span>
+      <h2 class="modal__title">Nouvelle présence</h2>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        @if (error(); as message) {
+          <p class="modal__error field--span" role="alert">{{ message }}</p>
+        }
+
+        <label class="field field--span">
+          <span class="field__label">Type</span>
+          <select class="field__control" formControlName="type">
+            <option value="MEMBER">Membre du département</option>
+            <option value="GUEST">Invité</option>
+          </select>
+        </label>
+
+        @if (isMember) {
+          <div class="field field--span">
+            <label class="field__label" for="attendance-member">Membre</label>
+            <app-member-autocomplete
+              inputId="attendance-member"
+              formControlName="member"
+              placeholder="Recherchez un membre par son nom…"
+              [ariaInvalid]="invalid('member')" />
+            @if (invalid('member')) {
+              <span class="field__error">Sélectionnez un membre dans la liste.</span>
+            }
+          </div>
+        } @else {
+          <label class="field">
+            <span class="field__label">Prénom</span>
+            <input class="field__control" formControlName="firstname" autocomplete="off"
+              (blur)="capitalize('firstname')" [attr.aria-invalid]="invalid('firstname')" />
+            @if (invalid('firstname')) {
+              <span class="field__error">Le prénom est requis.</span>
+            }
+          </label>
+
+          <label class="field">
+            <span class="field__label">Nom</span>
+            <input class="field__control" formControlName="lastname" autocomplete="off"
+              (blur)="capitalize('lastname')" [attr.aria-invalid]="invalid('lastname')" />
+            @if (invalid('lastname')) {
+              <span class="field__error">Le nom est requis.</span>
+            }
+          </label>
+
+          <label class="field">
+            <span class="field__label">Provenance</span>
+            <select class="field__control" formControlName="reason">
+              <option value="">Non renseignée</option>
+              @for (option of reasonOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Invité par</span>
+            <input class="field__control" formControlName="invitedBy" autocomplete="off"
+              [attr.aria-invalid]="invalid('invitedBy')" />
+            @if (invalid('invitedBy')) {
+              <span class="field__error">Requis pour une invitation.</span>
+            }
+          </label>
+        }
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">
+          {{ busy() ? 'Ajout…' : 'Ajouter' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

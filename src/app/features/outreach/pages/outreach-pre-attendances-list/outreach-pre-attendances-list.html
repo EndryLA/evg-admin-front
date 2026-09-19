@@ -1,0 +1,33 @@
+<a [routerLink]="['/sorties', uuid(), 'gestion']" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Gestion
+</a>
+
+<header class="page-head">
+  <div class="page-head__main">
+    <span class="eyebrow">Pré-inscriptions</span>
+    <h1>{{ outreach()?.name || 'Sortie' }}</h1>
+    @if (outreach()) {
+      <p class="page-head__sub">
+        <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+      </p>
+    }
+  </div>
+</header>
+
+@if (!canConfirm() && !loading() && items().length > 0) {
+  <p class="notice" role="status">
+    La confirmation des présences sera disponible une fois la sortie démarrée.
+  </p>
+}
+
+<app-outreach-pre-attendances
+  [items]="items()"
+  [loading]="loading()"
+  [error]="error()"
+  [expanded]="true"
+  [canConfirm]="canConfirm()"
+  [busyUuid]="busyUuid()"
+  [actionError]="actionError()"
+  (confirm)="confirm($event)"
+  (retry)="load()" />

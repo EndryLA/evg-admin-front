@@ -1,0 +1,152 @@
+/* Pre-registrations card — mirrors the presences card. Pill/button/state tokens are global (styles.scss). */
+:host { display: block; margin-top: 30px; }
+
+.pre__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+.pre__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.pre__sub { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
+.pre__alert { margin: 0 0 12px; }
+.pre__title + .card { margin-top: 12px; }
+
+.card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead tr { border-bottom: 1px solid var(--border-subtle); }
+th {
+  padding: 12px 20px;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+tbody tr { border-bottom: 1px solid var(--border-faint); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 14px 20px; vertical-align: middle; }
+.cell-main { font-weight: 600; color: var(--text-primary); }
+.cell-muted { color: var(--text-secondary); white-space: nowrap; }
+.cell-actions { text-align: right; white-space: nowrap; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Compact row actions. */
+.row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 7px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.row-btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.row-btn + .row-btn { margin-left: 6px; }
+.row-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.row-btn:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.row-btn--confirm:not(:disabled):hover { border-color: var(--accent); color: var(--accent-soft-text); background: var(--accent-soft-bg); }
+.row-btn--icon { width: 32px; padding: 0; justify-content: center; }
+.row-btn--icon:not(:disabled):hover { color: var(--accent-soft-text); border-color: var(--accent-soft-border); background: var(--accent-disc-bg); }
+
+/* "Voir tout / Voir moins" toggle spanning the card footer. */
+.see-all {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-top: 1px solid var(--border-faint);
+  background: var(--bg-sunken);
+  color: var(--text-tertiary);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.see-all:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+/* ---- Phones ----
+   The compact card is two columns and stays a table. The expanded table has six,
+   far past a phone's width, so each row becomes a stacked card: the name and its
+   type pill on top, the details as label → value lines, then a full-width
+   Confirmer button — a touch target you can hit while standing in the street. */
+@media (max-width: 720px) {
+  th, td { padding: 12px 16px; }
+  /* Long names wrap instead of pushing the type pill off-screen. */
+  .cell-main { overflow-wrap: anywhere; }
+
+  .pre--expanded {
+    table, tbody, tr, td { display: block; width: auto; }
+    thead { display: none; }
+
+    tbody tr {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-faint);
+    }
+
+    td { padding: 0; }
+    td + td { margin-top: 8px; }
+
+    .cell-main { font-size: 15px; }
+    /* Pull the type pill up beside the name rather than onto its own line. */
+    .cell-main + td { margin-top: 6px; }
+
+    /* Details read "Provenance   Non renseignée" across the card. */
+    .cell-muted {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      white-space: normal;
+      font-size: 13.5px;
+    }
+    .cell-muted::before {
+      content: attr(data-label);
+      flex: 0 0 auto;
+      color: var(--text-faint);
+    }
+
+    .cell-actions { margin-top: 12px; text-align: left; }
+    .cell-actions .row-btn {
+      width: 100%;
+      height: 40px;
+      justify-content: center;
+    }
+  }
+}

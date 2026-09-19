@@ -1,0 +1,89 @@
+<section class="pre" [class.pre--expanded]="expanded()" aria-labelledby="pre-title">
+  <h2 class="pre__title" id="pre-title">
+    Pré-inscriptions
+    @if (!loading() && !error() && !expanded()) {
+      <span class="pre__count">{{ items().length }}</span>
+    }
+  </h2>
+  @if (!loading() && !error() && items().length > 0) {
+    <p class="pre__sub">{{ confirmedCount() }} confirmée(s) sur {{ items().length }}</p>
+  }
+
+  @if (actionError(); as message) {
+    <p class="alert alert--error pre__alert" role="alert">{{ message }}</p>
+  }
+
+  <div class="card">
+    @if (loading()) {
+      <div class="state">Chargement des pré-inscriptions…</div>
+    } @else if (error(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="retry.emit()">Réessayer</button>
+      </div>
+    } @else if (items().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucune pré-inscription</div>
+        <div class="state__hint">Personne ne s'est encore inscrit à cette sortie.</div>
+      </div>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Personne</th>
+            <th>Type</th>
+            @if (expanded()) {
+              <th>Provenance</th>
+              <th>Invité par</th>
+              <th>Inscrit le</th>
+              <th><span class="visually-hidden">Actions</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of visible(); track p.uuid) {
+            <tr>
+              <td class="cell-main">{{ name(p) }}</td>
+              <td><span class="pill pill--{{ typeTone(p) }}">{{ typeLabel(p) }}</span></td>
+              @if (expanded()) {
+                <!-- data-label feeds the stacked card layout on phones, where the
+                     table header is hidden (see the 720px breakpoint). -->
+                <td class="cell-muted" data-label="Provenance">{{ reasonLabel(p) }}</td>
+                <td class="cell-muted" data-label="Invité par">{{ p.invitedBy || '—' }}</td>
+                <td class="cell-muted" data-label="Inscrit le">{{ fmtDate(p.createdAt) }}</td>
+                <td class="cell-actions">
+                  @if (p.confirmed) {
+                    <span class="pill pill--green">Présent(e)</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="row-btn row-btn--confirm"
+                      [disabled]="!canConfirm() || busyUuid() !== null"
+                      [attr.title]="canConfirm() ? null : 'Disponible une fois la sortie démarrée'"
+                      [attr.aria-label]="'Confirmer la présence de ' + name(p)"
+                      (click)="confirm.emit(p)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+                      {{ busyUuid() === p.uuid ? 'Confirmation…' : 'Confirmer' }}
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (seeAllLink(); as link) {
+        <a [routerLink]="link" class="see-all">Voir tout ({{ items().length }})</a>
+      } @else if (hasMore()) {
+        <button type="button" class="see-all" (click)="toggle()">
+          @if (showAll()) {
+            Voir moins
+          } @else {
+            Voir tout ({{ items().length }})
+          }
+        </button>
+      }
+    }
+  </div>
+</section>
