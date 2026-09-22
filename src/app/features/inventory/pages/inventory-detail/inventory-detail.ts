@@ -50,7 +50,7 @@ import {
 export class InventoryDetailPage implements OnInit {
   private readonly service = inject(InventoryService);
   private readonly operationService = inject(InventoryOperationService);
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   /** Route param, bound via `withComponentInputBinding`. */

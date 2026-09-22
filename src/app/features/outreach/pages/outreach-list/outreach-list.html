@@ -100,10 +100,12 @@
     </div>
   </div>
 
-  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-    Nouvelle sortie
-  </button>
+  @if (auth.canEdit('ADMIN', 'SUPER_ADMIN')) {
+    <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nouvelle sortie
+    </button>
+  }
 </div>
 
 <!-- Backdrop behind the mobile filter drawer. -->
@@ -112,9 +114,11 @@
 }
 
 <!-- Mobile-only floating action button — creates a new outreach. -->
-<button type="button" class="fab" (click)="openCreate()" aria-label="Nouvelle sortie">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-</button>
+@if (auth.canEdit('ADMIN', 'SUPER_ADMIN')) {
+  <button type="button" class="fab" (click)="openCreate()" aria-label="Nouvelle sortie">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+}
 
 <div class="table-region">
   @if (loading()) {

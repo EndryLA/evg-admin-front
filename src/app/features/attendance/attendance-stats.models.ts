@@ -57,7 +57,12 @@ export interface OutreachAttendance {
   location: string;
   cityLabel: string;
   status: OutreachStatus;
-  /** `members + guests`. */
+  /**
+   * The manually recorded headcount — everyone who was out, team leaders
+   * included. Sits above {@link attendances}, which only counts check-ins.
+   */
+  totalPresences: number;
+  /** Tracked check-ins only — `members + guests`. Leaders never check in. */
   attendances: number;
   members: number;
   guests: number;

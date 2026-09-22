@@ -1,6 +1,7 @@
 import { Component, computed, ElementRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import {
   formatDateFr,
@@ -60,6 +61,7 @@ export class OutreachList {
   private readonly service = inject(OutreachService);
   private readonly router = inject(Router);
   private readonly hostRef: ElementRef<HTMLElement> = inject(ElementRef);
+  protected readonly auth = inject(AuthService);
 
   // ---- Data ----
   protected readonly rows = signal<Outreach[]>([]);

@@ -94,6 +94,13 @@ export class ContactList implements OnDestroy {
   protected readonly totalElements = computed(() =>
     this.groups().reduce((sum, g) => sum + g.total, 0),
   );
+  /** Year-wide split of the loaded entries, shown as stat chips under the title. */
+  protected readonly totalContacts = computed(() =>
+    this.groups().reduce((sum, g) => sum + g.contacts, 0),
+  );
+  protected readonly totalConversions = computed(() =>
+    this.groups().reduce((sum, g) => sum + g.conversions, 0),
+  );
 
   // ---- Year ----
   private readonly currentYear = new Date().getFullYear();

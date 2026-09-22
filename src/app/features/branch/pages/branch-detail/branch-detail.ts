@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
+import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { BranchForm } from '../../components/branch-form/branch-form';
@@ -32,6 +33,7 @@ export class BranchDetail implements OnInit {
   private readonly service = inject(BranchService);
   private readonly membershipService = inject(BranchMembershipService);
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
 
   /** Route param, bound via `withComponentInputBinding`. */
   readonly uuid = input.required<string>();

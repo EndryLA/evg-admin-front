@@ -27,6 +27,8 @@ import type { CalendarItem, EventStatus } from '../../calendar.models';
 export class CalendarEventDetail {
   readonly item = input.required<CalendarItem>();
   readonly busy = input(false);
+  /** Whether edit/delete/status actions are offered — off for view-only users. */
+  readonly canManage = input(true);
 
   readonly close = output<void>();
   readonly edit = output<void>();

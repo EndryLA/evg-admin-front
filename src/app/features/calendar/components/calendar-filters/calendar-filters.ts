@@ -57,6 +57,8 @@ export class CalendarFilters implements OnDestroy {
   readonly managers = input.required<ManagerOption[]>();
   /** Entries currently on screen — the drawer's "voir les résultats" count. */
   readonly resultCount = input(0);
+  /** Whether to show the "Nouveau" action — off for view-only users. */
+  readonly canCreate = input(true);
 
   readonly change = output<CalendarFilterState>();
   readonly create = output<void>();

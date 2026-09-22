@@ -65,14 +65,19 @@
                   </button>
                 } @empty {
                   <!-- The empty day is the widest target on its row, so it
-                       opens the creation just like its date does. -->
-                  <button
-                    type="button"
-                    class="wk__free"
-                    (click)="createOn.emit(day.iso)"
-                    [attr.aria-label]="'Ajouter au ' + day.weekday + ' ' + day.day">
-                    Libre
-                  </button>
+                       opens the creation just like its date does. View-only
+                       users get a plain label instead of a create button. -->
+                  @if (canCreate()) {
+                    <button
+                      type="button"
+                      class="wk__free"
+                      (click)="createOn.emit(day.iso)"
+                      [attr.aria-label]="'Ajouter au ' + day.weekday + ' ' + day.day">
+                      Libre
+                    </button>
+                  } @else {
+                    <span class="wk__free wk__free--static">Libre</span>
+                  }
                 }
               </div>
             </div>

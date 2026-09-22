@@ -58,6 +58,7 @@
     <app-calendar-weeks
       [items]="items()"
       [year]="year()"
+      [canCreate]="canCreate()"
       (selectItem)="selectItem.emit($event)"
       (createOn)="createOn.emit($event)" />
   </div>
@@ -105,9 +106,11 @@
   <section class="mcal__agenda" aria-label="Événements du jour">
     <div class="mcal__agenda-head">
       <h3 class="mcal__agenda-title">{{ selectedLabel() }}</h3>
-      <button type="button" class="mcal__add" (click)="createOn.emit(selected())" aria-label="Ajouter un événement ce jour">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
+      @if (canCreate()) {
+        <button type="button" class="mcal__add" (click)="createOn.emit(selected())" aria-label="Ajouter un événement ce jour">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      }
     </div>
 
     @if (dayEvents().length === 0) {

@@ -31,6 +31,7 @@ export interface RawOutreachAttendance {
   location?: string;
   cityLabel?: string;
   status?: string;
+  totalPresences?: number;
   attendances?: number;
   members?: number;
   guests?: number;
@@ -122,6 +123,7 @@ export function toOutreachAttendance(raw: RawOutreachAttendance): OutreachAttend
     location: raw.location ?? '',
     cityLabel: raw.cityLabel ?? '',
     status: toStatus(raw.status),
+    totalPresences: num(raw.totalPresences),
     attendances: num(raw.attendances),
     members: num(raw.members),
     guests: num(raw.guests),

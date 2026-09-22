@@ -138,6 +138,8 @@ export class CalendarWeeks {
   /** The year to lay out. Entries outside it are ignored. */
   readonly year = input.required<number>();
   readonly layout = input<WeeksLayout>('stack');
+  /** Whether an empty day offers to create on it — off for view-only users. */
+  readonly canCreate = input(true);
 
   /** A tapped entry — the parent opens its detail (or the sortie it mirrors). */
   readonly selectItem = output<CalendarItem>();
@@ -254,7 +256,9 @@ export class CalendarWeeks {
       this.selectItem.emit(first);
       return;
     }
-    this.createOn.emit(day.iso);
+    if (this.canCreate()) {
+      this.createOn.emit(day.iso);
+    }
   }
 
   protected typeClass(item: CalendarItem): string {

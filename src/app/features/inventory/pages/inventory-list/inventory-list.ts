@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
+import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { InventoryForm } from '../../components/inventory-form/inventory-form';
 import { InventoryService } from '../../inventory.service';
@@ -38,6 +39,7 @@ function normalize(value: string): string {
 export class InventoryList {
   private readonly service = inject(InventoryService);
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
 
   // ---- Data ----
   protected readonly items = signal<InventoryItem[]>([]);

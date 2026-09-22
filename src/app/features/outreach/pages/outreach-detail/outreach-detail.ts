@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
+import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { formatDateFr, formatTimeFr } from '../../../../shared/util/date.util';
@@ -28,6 +29,7 @@ import {
 export class OutreachDetail implements OnInit {
   private readonly service = inject(OutreachService);
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
 
   /** Route param, bound via `withComponentInputBinding`. */
   readonly uuid = input.required<string>();

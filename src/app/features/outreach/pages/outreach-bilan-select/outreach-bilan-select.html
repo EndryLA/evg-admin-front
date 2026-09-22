@@ -1,0 +1,51 @@
+<a routerLink="/flyers" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Génération de flyers
+</a>
+
+<header class="page-head">
+  <div class="page-head__main">
+    <span class="eyebrow">Flyer · Bilan</span>
+    <h1>Choisir une sortie</h1>
+    <p class="page-head__sub">Sélectionnez la sortie dont vous voulez générer le bilan.</p>
+  </div>
+</header>
+
+<div class="search">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+  <input
+    type="text"
+    class="search__input"
+    autocomplete="off"
+    placeholder="Rechercher par nom ou ville…"
+    [value]="query()"
+    (input)="onSearch($any($event.target).value)" />
+</div>
+
+@if (loading()) {
+  <div class="state">Chargement des sorties…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (filtered().length === 0) {
+  <div class="state">Aucune sortie trouvée.</div>
+} @else {
+  <ul class="sortie-list">
+    @for (o of filtered(); track o.uuid) {
+      <li>
+        <a class="sortie-row" [routerLink]="['/sorties', o.uuid, 'bilan']">
+          <span class="sortie-row__main">
+            <span class="sortie-row__name">{{ o.name }}</span>
+            <span class="sortie-row__meta">
+              {{ o.cityName || '—' }} · {{ fmtDate(o.date) }}
+            </span>
+          </span>
+          <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+          <svg class="sortie-row__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </li>
+    }
+  </ul>
+}

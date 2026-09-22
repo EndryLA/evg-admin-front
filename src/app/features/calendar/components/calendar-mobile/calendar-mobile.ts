@@ -109,6 +109,8 @@ export class CalendarMobile implements OnInit, OnDestroy {
   /** The feed for the visible window, already filtered by the page. */
   readonly items = input.required<CalendarItem[]>();
   readonly loading = input(false);
+  /** Whether the per-day "+" is offered — off for view-only users. */
+  readonly canCreate = input(true);
 
   /** The window to fetch, `YYYY-MM-DD` inclusive — the three swipeable months. */
   readonly rangeChange = output<{ from: string; to: string }>();

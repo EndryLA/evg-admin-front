@@ -24,7 +24,6 @@ import { forkJoin } from 'rxjs';
 
 import { ThemeService } from '../../../../core/theme/theme.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
-import { AttendanceMembersDialog } from '../attendance-members-dialog/attendance-members-dialog';
 import { AttendanceTeamDialog } from '../attendance-team-dialog/attendance-team-dialog';
 import { AttendanceStatsService } from '../../attendance-stats.service';
 import {
@@ -80,6 +79,7 @@ type Preset = StatsPeriod | 'all' | 'custom';
 interface ChartColors {
   total: string;
   member: string;
+  leader: string;
   guest: string;
   grid: string;
   tick: string;
@@ -89,33 +89,21 @@ interface ChartColors {
 }
 
 /** Which series the trend line plots. */
-type Metric = 'total' | 'member' | 'guest';
+type Metric = 'total' | 'member' | 'leader' | 'guest';
 
 /** Segmented options offered above the chart, in display order. */
 const METRICS: readonly { key: Metric; label: string }[] = [
   { key: 'total', label: 'Total' },
   { key: 'member', label: 'Membres' },
+  { key: 'leader', label: 'Leaders' },
   { key: 'guest', label: 'Invités' },
-];
-
-/**
- * Team ranking order. Rate and total genuinely diverge here — a team's rate
- * divides by `members × outreaches`, so a small, diligent team can out-rate a
- * big one. (Members get no such switch: every member's rate shares the same
- * `outreaches` denominator, so ordering by rate *is* ordering by presences.)
- */
-type TeamSort = 'presences' | 'rate';
-
-const TEAM_SORTS: readonly { key: TeamSort; label: string }[] = [
-  { key: 'presences', label: 'Total' },
-  { key: 'rate', label: 'Taux' },
 ];
 
 /** Label for the bucket of members whose profile has no team leader. */
 const NO_TEAM_LABEL = 'Sans équipe';
 
-/** Rows a leaderboard shows before it has to be expanded — keeps the panels short. */
-const LEADERBOARD_SIZE = 5;
+/** Teams shown before the list has to be expanded — keeps the panel short. */
+const TEAM_PREVIEW_SIZE = 5;
 
 /** Empty query — department-wide, all-time. */
 const EMPTY_QUERY: StatsQuery = {
@@ -129,14 +117,14 @@ const EMPTY_QUERY: StatsQuery = {
 
 /**
  * Département-wide presence dashboard, embedded in the Présences page. Pulls the
- * `/api/stats` aggregates (summary, per-outreach trend, top members, teams) for
- * a chosen range and renders headline tiles, a members-vs-guests line chart over
- * the outreaches, and the top-members / teams rankings.
+ * `/api/stats` aggregates (summary, per-outreach trend, teams) for a chosen range
+ * and renders headline tiles, a members-vs-guests line chart over the outreaches,
+ * and the per-team breakdown.
  */
 @Component({
   selector: 'app-attendance-stats',
   host: { class: 'stats-dashboard' },
-  imports: [AttendanceMembersDialog, AttendanceTeamDialog],
+  imports: [AttendanceTeamDialog],
   templateUrl: './attendance-stats.html',
   styleUrl: './attendance-stats.scss',
 })
@@ -158,22 +146,12 @@ export class AttendanceStats implements OnInit {
 
   protected readonly summary = signal<AttendanceSummary | null>(null);
   protected readonly outreaches = signal<OutreachAttendance[]>([]);
-  protected readonly topMembers = signal<ProfilePresence[]>([]);
   protected readonly teams = signal<TeamStats[]>([]);
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
 
-  // ---- "Tous les membres" dialog ----
-  protected readonly membersOpen = signal(false);
-  /** The full roster, absentees included; fetched once per range. `null` = not loaded. */
-  protected readonly allMembers = signal<ProfilePresence[] | null>(null);
-  protected readonly allMembersLoading = signal(false);
-  protected readonly allMembersError = signal<string | null>(null);
-
   // ---- Teams panel + team dialog ----
-  protected readonly teamSort = signal<TeamSort>('presences');
-  protected readonly teamSorts = TEAM_SORTS;
   /** Whether the panel lists every team or just the leading few. */
   protected readonly teamsExpanded = signal(false);
   /** The team whose dialog is open, or `null` when closed. */
@@ -219,6 +197,7 @@ export class AttendanceStats implements OnInit {
     return {
       total: dark ? '#f4f4f5' : '#18181b',
       member: dark ? '#ef4444' : '#dc2626',
+      leader: dark ? '#60a5fa' : '#2563eb',
       guest: dark ? '#8b8b93' : '#71717a',
       grid: dark ? 'rgba(255,255,255,0.07)' : 'rgba(24,24,27,0.07)',
       tick: dark ? '#a1a1aa' : '#71717a',
@@ -260,16 +239,29 @@ export class AttendanceStats implements OnInit {
     return multiYear ? [label, year] : label;
   }
 
-  /** The per-outreach values plotted for the active metric. */
+  /**
+   * The per-outreach values plotted for the active metric. `total` is the full
+   * recorded headcount; `leader` is what that headcount holds beyond the tracked
+   * check-ins (`totalPresences − attendances`), since leaders never check in.
+   */
   private metricSeries(outreaches: OutreachAttendance[], metric: Metric): number[] {
-    return outreaches.map((o) =>
-      metric === 'total' ? o.attendances : metric === 'member' ? o.members : o.guests,
-    );
+    return outreaches.map((o) => {
+      switch (metric) {
+        case 'total':
+          return o.totalPresences;
+        case 'member':
+          return o.members;
+        case 'leader':
+          return Math.max(0, o.totalPresences - o.attendances);
+        case 'guest':
+          return o.guests;
+      }
+    });
   }
 
   /** The active metric's line color. */
   private metricColor(colors: ChartColors, metric: Metric): string {
-    return metric === 'total' ? colors.total : metric === 'member' ? colors.member : colors.guest;
+    return colors[metric];
   }
 
   /** The active metric's dataset label. */
@@ -411,55 +403,34 @@ export class AttendanceStats implements OnInit {
     }
   }
 
-  // ---- "Tous les membres" dialog ----
-
-  /** Open the full roster (absentees included), fetching it once per range. */
-  protected showAllMembers(): void {
-    this.membersOpen.set(true);
-    if (this.allMembers() || this.allMembersLoading()) {
-      return;
-    }
-    this.allMembersLoading.set(true);
-    this.allMembersError.set(null);
-    this.service.roster(this.query()).subscribe({
-      next: (members) => {
-        this.allMembers.set(members);
-        this.allMembersLoading.set(false);
-      },
-      error: (err) => {
-        this.allMembersError.set(messageFromError(err, 'Chargement des membres impossible.'));
-        this.allMembersLoading.set(false);
-      },
-    });
-  }
-
-  protected closeMembers(): void {
-    this.membersOpen.set(false);
-  }
-
   // ---- Teams panel + team dialog ----
 
-  private readonly sortedTeams = computed(() => {
-    const copy = [...this.teams()];
-    return this.teamSort() === 'rate'
-      ? copy.sort((a, b) => b.presenceRate - a.presenceRate)
-      : copy.sort((a, b) => b.totalPresences - a.totalPresences);
-  });
+  /**
+   * Teams in a plain alphabetical order — no ranking. Real teams sort by their
+   * leader's name; the "sans équipe" bucket is always pushed to the end.
+   */
+  private readonly orderedTeams = computed(() =>
+    [...this.teams()].sort((a, b) => {
+      if (!a.teamLeaderUuid) {
+        return 1;
+      }
+      if (!b.teamLeaderUuid) {
+        return -1;
+      }
+      return this.teamLabel(a).localeCompare(this.teamLabel(b), 'fr');
+    }),
+  );
 
-  /** The teams on screen: the leading few, or all of them once expanded. */
+  /** The teams on screen: the first few, or all of them once expanded. */
   protected readonly visibleTeams = computed(() =>
-    this.teamsExpanded() ? this.sortedTeams() : this.sortedTeams().slice(0, LEADERBOARD_SIZE),
+    this.teamsExpanded() ? this.orderedTeams() : this.orderedTeams().slice(0, TEAM_PREVIEW_SIZE),
   );
 
   /** True when there are more teams than the panel shows by default. */
-  protected readonly teamsOverflow = computed(() => this.teams().length > LEADERBOARD_SIZE);
+  protected readonly teamsOverflow = computed(() => this.teams().length > TEAM_PREVIEW_SIZE);
 
   protected toggleTeams(): void {
     this.teamsExpanded.update((open) => !open);
-  }
-
-  protected setTeamSort(sort: TeamSort): void {
-    this.teamSort.set(sort);
   }
 
   /**
@@ -506,9 +477,6 @@ export class AttendanceStats implements OnInit {
     this.loading.set(true);
     this.loadError.set(null);
     // Everything below is scoped to the range being replaced.
-    this.membersOpen.set(false);
-    this.allMembers.set(null);
-    this.allMembersError.set(null);
     this.openTeam.set(null);
     this.teamsExpanded.set(false);
     this.teamMembers.set({});
@@ -518,13 +486,11 @@ export class AttendanceStats implements OnInit {
     forkJoin({
       summary: this.service.summary(query),
       outreaches: this.service.outreaches(query),
-      topMembers: this.service.profiles(query, LEADERBOARD_SIZE),
       teams: this.service.teams(query),
     }).subscribe({
-      next: ({ summary, outreaches, topMembers, teams }) => {
+      next: ({ summary, outreaches, teams }) => {
         this.summary.set(summary);
         this.outreaches.set(outreaches);
-        this.topMembers.set(topMembers);
         this.teams.set(teams);
         this.loading.set(false);
       },

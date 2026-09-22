@@ -1,5 +1,8 @@
 import type { Routes } from '@angular/router';
 
+import { ACCESS } from '../../core/auth/access';
+import { hasAnyRole } from '../../core/auth/auth.guard';
+
 /** Outreach feature routes, mounted under the authenticated shell. */
 export const OUTREACH_ROUTES: Routes = [
   {
@@ -13,6 +16,17 @@ export const OUTREACH_ROUTES: Routes = [
     title: 'Sorties évangélisation',
     loadComponent: () =>
       import('./pages/outreach-list/outreach-list').then((m) => m.OutreachList),
+  },
+  {
+    // Literal path — must stay before `sorties/:uuid`, or it'd be read as a uuid.
+    path: 'sorties/bilan',
+    title: 'Choisir une sortie · Bilan · Évangélisation',
+    // Picker reached from the flyer hub, so it follows the flyer rule.
+    canActivate: [hasAnyRole(...ACCESS.flyers)],
+    loadComponent: () =>
+      import('./pages/outreach-bilan-select/outreach-bilan-select').then(
+        (m) => m.OutreachBilanSelect,
+      ),
   },
   {
     path: 'sorties/:uuid',

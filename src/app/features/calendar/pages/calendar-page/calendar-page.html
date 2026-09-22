@@ -12,6 +12,7 @@
   <app-calendar-filters
     [managers]="managers()"
     [resultCount]="items().length"
+    [canCreate]="canManage()"
     (change)="onFiltersChange($event)"
     (create)="openCreate()" />
 }
@@ -28,6 +29,7 @@
   <app-calendar-mobile
     [items]="items()"
     [loading]="loading()"
+    [canCreate]="canManage()"
     (rangeChange)="onMobileRange($event)"
     (selectItem)="onSelectItem($event)"
     (createOn)="openCreateOn($event)" />
@@ -75,6 +77,7 @@
         [items]="items()"
         [year]="year()"
         layout="columns"
+        [canCreate]="canManage()"
         (selectItem)="onSelectItem($event)"
         (createOn)="openCreateOn($event)" />
     </div>
@@ -88,9 +91,11 @@
 <!-- Phone create action: the filter bar (and its "Nouveau" button) is desktop
      only, and the week list has no per-day "+", so this is the one way in.
      Hidden above the breakpoint by the global `.fab` rules. -->
-<button type="button" class="fab" (click)="openCreate()" aria-label="Planifier">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-</button>
+@if (canManage()) {
+  <button type="button" class="fab" (click)="openCreate()" aria-label="Planifier">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+}
 
 @if (choosingOn(); as date) {
   <app-calendar-create-choice
@@ -103,6 +108,7 @@
   <app-calendar-event-detail
     [item]="item"
     [busy]="saving()"
+    [canManage]="canManage()"
     (close)="closeDetail()"
     (edit)="openEdit()"
     (remove)="askDelete()"

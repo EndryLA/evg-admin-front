@@ -11,6 +11,7 @@ import { CALENDAR_ROUTES } from './features/calendar/calendar.routes';
 import { CITY_ROUTES } from './features/city/city.routes';
 import { CONTACT_ROUTES, PUBLIC_CONTACT_ROUTES } from './features/contact/contact.routes';
 import { DASHBOARD_ROUTES } from './features/dashboard/dashboard.routes';
+import { FLYER_ROUTES } from './features/flyer/flyer.routes';
 import { INVENTORY_ROUTES } from './features/inventory/inventory.routes';
 import { OUTREACH_ROUTES } from './features/outreach/outreach.routes';
 import { PUBLIC_PRE_ATTENDANCE_ROUTES } from './features/pre-attendance/pre-attendance.routes';
@@ -39,6 +40,7 @@ export const routes: Routes = [
       ...BRANCH_ROUTES,
       ...CITY_ROUTES,
       ...INVENTORY_ROUTES,
+      ...FLYER_ROUTES,
       ...USER_ROUTES,
     ],
   },

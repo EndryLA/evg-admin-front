@@ -63,6 +63,16 @@ export class AuthService {
     return roles.some((role) => this.roles().includes(role));
   }
 
+  /**
+   * Whether the signed-in user holds one of `roles` — the variadic sugar the
+   * templates use to gate an action, e.g. `auth.canEdit('ADMIN', 'SUPER_ADMIN')`.
+   * Client-side only; the backend enforces the same rule (see the controllers'
+   * `@PreAuthorize`).
+   */
+  canEdit(...roles: UserRole[]): boolean {
+    return this.hasAnyRole(roles);
+  }
+
   /** Raw access token for the HTTP interceptor. */
   accessToken(): string | null {
     return this.session()?.accessToken ?? null;

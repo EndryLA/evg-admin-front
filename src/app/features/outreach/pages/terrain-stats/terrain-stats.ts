@@ -8,7 +8,6 @@ import { TerrainStatsService } from '../../terrain-stats.service';
 import {
   EMPTY_STATS_QUERY,
   MONTH_NAMES_FR,
-  type CityContacts,
   type ContactSummary,
   type MonthlyContacts,
   type PresenceSummary,
@@ -33,13 +32,6 @@ interface SortieRow {
   cityCode: string;
   conversions: number;
   contacts: number;
-  /**
-   * Everyone met — contacts and conversions together. Not a column: it is only
-   * the denominator behind the taux, which is what the bilan actually reads.
-   */
-  entries: number;
-  /** `conversions / entries`, 0..1. */
-  conversionRate: number;
   /** The sortie's recorded headcount; `null` when no presence was recorded. */
   attendances: number | null;
   /** Département members among them, from the tracked check-ins. */
@@ -52,10 +44,6 @@ interface SortieRow {
 interface RowTotals {
   conversions: number;
   contacts: number;
-  /** Summed only to derive {@link RowTotals.conversionRate}; never a column. */
-  entries: number;
-  /** `conversions / entries` over the month, 0..1. */
-  conversionRate: number;
   attendances: number;
   members: number;
   leaders: number;
@@ -69,8 +57,6 @@ interface MonthlyRow {
   outreaches: number;
   conversions: number;
   contacts: number;
-  /** The API's own rate for the month, 0..1. */
-  conversionRate: number;
   attendances: number;
   members: number;
   leaders: number;
@@ -123,7 +109,6 @@ export class TerrainStats implements OnInit {
   protected readonly preset = signal<Preset>('CURRENT_YEAR');
 
   protected readonly stats = signal<TerrainReport | null>(null);
-  protected readonly cities = signal<CityContacts[]>([]);
   /** The server's presence totals over the range — what the headline tiles read. */
   protected readonly presenceSummary = signal<PresenceSummary | null>(null);
   /** Presence counts keyed by outreach uuid, joined onto the sortie rows. */
@@ -193,7 +178,6 @@ export class TerrainStats implements OnInit {
         outreaches: m.outreaches,
         conversions: m.conversions,
         contacts: m.contacts,
-        conversionRate: m.conversionRate,
         attendances: totals?.attendances ?? 0,
         members: totals?.members ?? 0,
         leaders: totals?.leaders ?? 0,
@@ -219,8 +203,6 @@ export class TerrainStats implements OnInit {
         cityCode: o.city?.departmentCode ?? '',
         conversions: o.conversions,
         contacts: o.contacts,
-        entries: o.entries,
-        conversionRate: o.conversionRate,
         attendances: presence?.totalPresences ?? null,
         members: presence?.members ?? null,
         leaders: presence ? Math.max(0, presence.totalPresences - presence.members) : null,
@@ -274,17 +256,6 @@ export class TerrainStats implements OnInit {
   });
 
   /**
-   * The city breakdown from `/api/stats/outreach/cities`, most conversions first
-   * — the endpoint returns no particular order. Cities the range produced nothing
-   * in are dropped: a tail of zero rows says nothing the totals don't.
-   */
-  protected readonly cityRows = computed<CityContacts[]>(() =>
-    this.cities()
-      .filter((c) => c.entries > 0)
-      .sort((a, b) => b.conversions - a.conversions || b.contacts - a.contacts),
-  );
-
-  /**
    * Whether any sortie in the range carries a city — a column of blanks reads as
    * a bug, so it is dropped until there is something to show in it.
    */
@@ -305,12 +276,10 @@ export class TerrainStats implements OnInit {
       stats: this.service.terrain(query),
       presenceSummary: this.service.presenceSummary(query),
       presences: this.service.presences(query),
-      cities: this.service.cities(query),
     }).subscribe({
-      next: ({ stats, presenceSummary, presences, cities }) => {
+      next: ({ stats, presenceSummary, presences }) => {
         this.stats.set(stats);
         this.presenceSummary.set(presenceSummary);
-        this.cities.set(cities);
         this.presences.set(
           Object.fromEntries(
             presences.map((p) => [
@@ -348,13 +317,9 @@ export class TerrainStats implements OnInit {
   /** Sum a month's columns; distinct cities are counted, not added. */
   private totals(rows: readonly SortieRow[]): RowTotals {
     const cities = new Set(rows.map((r) => r.cityLabel).filter(Boolean));
-    const conversions = rows.reduce((sum, r) => sum + r.conversions, 0);
-    const entries = rows.reduce((sum, r) => sum + r.entries, 0);
     return {
-      conversions,
+      conversions: rows.reduce((sum, r) => sum + r.conversions, 0),
       contacts: rows.reduce((sum, r) => sum + r.contacts, 0),
-      entries,
-      conversionRate: entries === 0 ? 0 : conversions / entries,
       attendances: rows.reduce((sum, r) => sum + (r.attendances ?? 0), 0),
       members: rows.reduce((sum, r) => sum + (r.members ?? 0), 0),
       leaders: rows.reduce((sum, r) => sum + (r.leaders ?? 0), 0),
@@ -365,10 +330,5 @@ export class TerrainStats implements OnInit {
   /** One decimal, French comma, trimmed when whole. */
   protected decimal(value: number): string {
     return value.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
-  }
-
-  /** A 0..1 rate as a French percentage — `18,4 %`. */
-  protected percent(value: number): string {
-    return `${this.decimal(value * 100)} %`;
   }
 }

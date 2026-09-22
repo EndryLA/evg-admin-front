@@ -123,11 +123,6 @@
 .panel__more:hover { background: var(--bg-inset); color: var(--text-primary); }
 
 .chart-panel { margin-bottom: 16px; }
-.panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
-}
 
 /* ---- Trend chart ---- */
 .metric-switch {
@@ -195,25 +190,6 @@
   border-top: 2px solid var(--text-faint);
   border-right: 2px solid var(--text-faint);
   transform: rotate(45deg);
-}
-
-/* Rank shown as a red avatar-style disc; top 3 get a solid fill, the rest a soft tint. */
-.leader__rank {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--accent-soft-bg);
-  color: var(--accent-soft-text);
-  font-size: 13px;
-  font-weight: 700;
-}
-.leader__rank--top {
-  background: var(--accent);
-  color: var(--text-on-accent);
 }
 
 .leader__body { flex: 1; min-width: 0; }

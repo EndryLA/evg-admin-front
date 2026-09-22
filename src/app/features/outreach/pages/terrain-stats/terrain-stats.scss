@@ -145,6 +145,26 @@
   font-weight: 400;
   color: var(--text-secondary);
 }
+
+/* The per-month sortie tables share one fixed column template (the `col.c-*`
+   widths below) so they line up with each other: without it each table auto-sizes
+   its own Date/Sortie/Ville columns to its own content, so one month's number
+   columns land in a different place than the next. The numeric columns are a
+   fixed width and sit at the table's right edge; overflow text is ellipsised.
+   The Récapitulatif mensuel table keeps the natural (auto) layout above. */
+.bilan .grid--sorties {
+  min-width: 900px;
+  table-layout: fixed;
+}
+.bilan .grid--sorties col.c-num { width: 96px; }
+.bilan .grid--sorties col.c-conv { width: 118px; } /* "Conversions" is the widest header. */
+.bilan .grid--sorties col.c-date { width: 100px; }
+.bilan .grid--sorties col.c-ville { width: 140px; }
+.bilan .grid--sorties th,
+.bilan .grid--sorties td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .bilan .grid thead th {
   font-size: 11.5px;
   font-weight: 600;
@@ -223,6 +243,10 @@
     display: table;
     min-width: max-content;
     table-layout: auto;
+  }
+  .bilan .grid--sorties {
+    min-width: 900px;
+    table-layout: fixed;
   }
   .bilan .grid thead { display: table-header-group; }
   .bilan .grid tbody { display: table-row-group; gap: 0; }

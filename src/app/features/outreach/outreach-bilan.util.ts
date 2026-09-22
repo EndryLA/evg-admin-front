@@ -14,11 +14,11 @@ export const BILAN_SIZE = 1080;
 const TEMPLATE_SRC = 'assets/bilan-template.png';
 
 /**
- * The grotesque the template's own figures are set in — matched against a
- * filled-in reference export. All of these ship with the OS, so nothing has to
- * be fetched; `Plus Jakarta Sans` (the app font) is only a last resort.
+ * The typeface the figures are set in. `Garet` is the department's flyer font
+ * (`@font-face` in `styles.scss`, Heavy weight at 700), awaited before drawing;
+ * the OS grotesques are the fallback, with the app font as a last resort.
  */
-const FAMILY = "Arial, 'Helvetica Neue', Helvetica, 'Plus Jakarta Sans', sans-serif";
+const FAMILY = "'Garet', Arial, 'Helvetica Neue', Helvetica, 'Plus Jakarta Sans', sans-serif";
 const WEIGHT = 700;
 const INK = '#000000';
 
@@ -88,7 +88,12 @@ async function ensureFont(): Promise<void> {
     return;
   }
   try {
-    await document.fonts.load(`${WEIGHT} ${DIGIT_HEIGHT}px ${FAMILY}`);
+    // Load Garet by its own name (Heavy weight) as well as the full stack, so
+    // the first draw doesn't fall back to Arial before the webfont arrives.
+    await Promise.all([
+      document.fonts.load(`${WEIGHT} 100px "Garet"`),
+      document.fonts.load(`${WEIGHT} ${DIGIT_HEIGHT}px ${FAMILY}`),
+    ]);
   } catch {
     // A font that won't load isn't worth failing the render over.
   }
@@ -190,22 +195,5 @@ export async function drawBilan(
   });
 }
 
-/** Download `canvas` as a PNG named `filename`. */
-export function downloadCanvasPng(canvas: HTMLCanvasElement, filename: string): void {
-  canvas.toBlob((blob) => {
-    if (!blob) {
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename.endsWith('.png') ? filename : `${filename}.png`;
-    // Safari only honours `download` on an anchor in the document, and cancels
-    // the transfer if the object URL is revoked too early.
-    anchor.style.display = 'none';
-    document.body.append(anchor);
-    anchor.click();
-    anchor.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 30_000);
-  }, 'image/png');
-}
+// Re-exported so the bilan page keeps a single import surface.
+export { downloadCanvasPng } from '../../shared/util/canvas.util';

@@ -1,0 +1,295 @@
+/* Invitation flyer generator. Field/button tokens are global (styles.scss). */
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  padding: 22px 32px 48px;
+}
+
+/* ---- Step 1: sortie picker (shown before the flyer editor) ---- */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 480px;
+  margin-bottom: 18px;
+  padding: 0 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-card);
+}
+.search svg { width: 18px; height: 18px; color: var(--text-muted); flex: none; }
+.search__input {
+  flex: 1;
+  border: 0;
+  background: none;
+  padding: 11px 0;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.sortie-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.sortie-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.sortie-row:hover {
+  border-color: var(--accent, #d81f27);
+  transform: translateY(-1px);
+}
+.sortie-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  margin-right: auto;
+}
+.sortie-row__name {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sortie-row__meta { font-size: 13px; color: var(--text-muted); }
+.sortie-row__go { flex: none; width: 18px; height: 18px; color: var(--text-muted); }
+
+/* The next (upcoming) sortie, brought into focus. */
+.sortie-row--next {
+  border-color: var(--accent, #d81f27);
+  background: color-mix(in srgb, var(--accent, #d81f27) 6%, var(--bg-card));
+  box-shadow: inset 0 0 0 1px var(--accent, #d81f27);
+}
+.sortie-row__name { display: inline-flex; align-items: center; gap: 8px; }
+.sortie-row__flag {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent, #d81f27);
+}
+
+.state {
+  padding: 28px;
+  text-align: center;
+  color: var(--text-muted);
+  border: 1px dashed var(--border-subtle);
+  border-radius: 10px;
+}
+.state--error { color: var(--danger, #c0392b); }
+.state__retry { margin-left: 12px; }
+
+/* Chosen-sortie banner at the top of the editor's Informations panel. */
+.chosen {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-inset);
+}
+.chosen__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-right: auto; }
+.chosen__name { font-size: 14px; font-weight: 600; }
+.chosen__meta { font-size: 13px; color: var(--text-muted); }
+.chosen__change { flex: none; }
+
+/* Preview beside the inputs; stacks under 900px. */
+.invite-body {
+  display: grid;
+  grid-template-columns: minmax(280px, 520px) minmax(280px, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.panel {
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.panel__title { margin: 0 0 18px; font-size: 16px; }
+
+/* The canvas renders at 1080×1080 and is scaled down to fit its column. */
+.preview__frame {
+  border: 1px solid var(--border-faint);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-inset);
+}
+.preview__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+/* Dragging pans the photo; stop the browser from scrolling/zooming on touch. */
+.preview__canvas--draggable {
+  cursor: grab;
+  touch-action: none;
+}
+.preview__canvas--draggable:active { cursor: grabbing; }
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.zoom__label { font-size: 13px; color: var(--text-muted); }
+.zoom__range { flex: 1; accent-color: var(--accent, #d81f27); }
+
+.preview__hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.preview .alert { margin: 14px 0 0; }
+
+/* Selected-badge controls under the preview. */
+.badge-edit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.badge-edit__label { font-size: 13px; font-weight: 600; flex: none; }
+.badge-edit .zoom__range { flex: 1; accent-color: var(--accent, #d81f27); }
+.badge-edit__remove {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--danger, #c0392b);
+  cursor: pointer;
+}
+.badge-edit__remove:hover { text-decoration: underline; }
+
+/* Transport stop results. */
+.stop-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.stop-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: inherit;
+  cursor: pointer;
+}
+.stop-row:hover { border-color: var(--accent, #d81f27); }
+.stop-row--active { border-color: var(--accent, #d81f27); background: var(--bg-inset); }
+.stop-row__name { font-size: 14px; font-weight: 600; margin-right: auto; }
+.stop-row__city { font-weight: 400; color: var(--text-muted); }
+.stop-row__count { font-size: 12px; color: var(--text-muted); }
+
+/* Line chips: each shows the line's real colours; click to add a badge. */
+.lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.line-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 40px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.line-chip__plus { font-weight: 700; opacity: 0.8; }
+
+.controls__hint {
+  margin: -6px 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.controls__grid {
+  display: grid;
+  gap: 14px;
+}
+.controls__wide { width: 100%; }
+.controls__download { margin-top: 22px; }
+
+/* Photo picker: the file input is hidden behind a styled label button. */
+.photo-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.photo-pick__btn { cursor: pointer; }
+.photo-pick__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.photo-pick__name {
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.photo-pick__clear {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--danger, #c0392b);
+  cursor: pointer;
+}
+.photo-pick__clear:hover { text-decoration: underline; }
+
+@media (max-width: 900px) {
+  .invite-body { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  :host { padding: 18px 16px 40px; }
+  .panel { padding: 18px; }
+}

@@ -101,6 +101,14 @@
         }
       </div>
 
+      @if (canSeeFlyers()) {
+        <p class="nav__section">Communication</p>
+        <a routerLink="/flyers" routerLinkActive="nav__item--active" class="nav__item" title="Génération de flyers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+          <span class="nav__label">Génération de flyers</span>
+        </a>
+      }
+
       <p class="nav__section">Organisation</p>
       <a routerLink="/branches" routerLinkActive="nav__item--active" class="nav__item" title="Branches">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 9h.01M14 9h.01M10 13h.01M14 13h.01"/></svg>

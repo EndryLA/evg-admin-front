@@ -17,4 +17,6 @@ export const ACCESS = {
   cities: ['ADMIN', 'SUPER_ADMIN'],
   /** Creating, correcting and deleting attendance records. */
   attendances: ['ADMIN', 'SUPER_ADMIN'],
+  /** The "Génération de flyers" hub and its generators (restricted for now). */
+  flyers: ['SUPER_ADMIN'],
 } as const satisfies Record<string, readonly UserRole[]>;

@@ -1,3 +1,14 @@
+/* Title sub-line: the year's contact/conversion/presence chips, then the
+   sortie count. Flex so the `.stat` chips keep an even gap and wrap on narrow
+   screens. */
+.topbar__sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+.topbar__sub-sep { color: var(--text-muted); }
+
 /* Contact-specific column widths. Generic table-shell styles live in the
    global `.data-list` block (src/styles.scss). */
 .cell-select { width: 44px; }

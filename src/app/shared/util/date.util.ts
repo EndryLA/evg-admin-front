@@ -67,6 +67,43 @@ export function formatLongDateFr(value?: string | null): string {
   return `${WEEKDAYS_FR[date.getDay()]} ${day} ${MONTHS_FR[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+/** `Samedi 19 Septembre` — weekday, day and month, each capitalised, no year.
+ *  For flyer headlines. Empty string (not `—`) when absent/invalid. */
+export function formatFlyerDateFr(value?: string | null): string {
+  if (!value) {
+    return '';
+  }
+  const date = parseDate(value);
+  if (!date) {
+    return '';
+  }
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  return `${cap(WEEKDAYS_FR[date.getDay()])} ${date.getDate()} ${cap(MONTHS_FR[date.getMonth()])}`;
+}
+
+/** `['SAMEDI', '10', 'OCTOBRE']` — weekday / day / month, upper-cased, for the
+ *  stacked flyer date headline. Empty array when absent/invalid. */
+export function formatFlyerDatePartsFr(value?: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+  const date = parseDate(value);
+  if (!date) {
+    return [];
+  }
+  return [
+    WEEKDAYS_FR[date.getDay()].toLocaleUpperCase('fr-FR'),
+    String(date.getDate()),
+    MONTHS_FR[date.getMonth()].toLocaleUpperCase('fr-FR'),
+  ];
+}
+
+/** `11h00` — start time for flyer headlines. Empty string when absent/invalid. */
+export function formatFlyerTimeFr(value?: string | null): string {
+  const t = value ? formatTimeFr(value) : PLACEHOLDER;
+  return t === PLACEHOLDER ? '' : t.replace(':', 'h');
+}
+
 /** `03/09/98` — two-digit year, for tight rows where the century is obvious.
  *  Returns `—` when absent/invalid. */
 export function formatDateShortFr(value?: string | null): string {

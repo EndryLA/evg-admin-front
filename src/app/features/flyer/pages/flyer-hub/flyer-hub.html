@@ -1,0 +1,35 @@
+<header class="page-head">
+  <div class="page-head__main">
+    <span class="eyebrow">Communication</span>
+    <h1>Génération de flyers</h1>
+    <p class="page-head__sub">Choisissez le type de flyer à créer.</p>
+  </div>
+</header>
+
+<div class="flyer-grid">
+  <a routerLink="/flyers/invitation" class="flyer-card">
+    <span class="flyer-card__thumb">
+      <img src="assets/invite-template.jpg" alt="Aperçu du flyer d'invitation" loading="lazy" />
+    </span>
+    <span class="flyer-card__footer">
+      <span class="flyer-card__body">
+        <span class="flyer-card__title">Flyer de sortie</span>
+        <span class="flyer-card__desc">Photo du lieu et nom du lieu, prêt à partager.</span>
+      </span>
+      <svg class="flyer-card__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+    </span>
+  </a>
+
+  <a routerLink="/sorties/bilan" class="flyer-card">
+    <span class="flyer-card__thumb">
+      <img src="assets/bilan-template.png" alt="Aperçu du flyer de bilan" loading="lazy" />
+    </span>
+    <span class="flyer-card__footer">
+      <span class="flyer-card__body">
+        <span class="flyer-card__title">Bilan de sortie</span>
+        <span class="flyer-card__desc">Choisissez une sortie et générez son bilan chiffré.</span>
+      </span>
+      <svg class="flyer-card__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+    </span>
+  </a>
+</div>

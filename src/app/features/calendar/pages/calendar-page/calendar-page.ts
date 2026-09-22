@@ -22,6 +22,7 @@ import frLocale from '@fullcalendar/core/locales/fr';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
+import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { CalendarCreateChoice } from '../../components/calendar-create-choice/calendar-create-choice';
@@ -152,6 +153,11 @@ export class CalendarPage {
   private readonly service = inject(CalendarService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
+
+  /** Planning is view-only unless the user may manage sorties/events. Gates
+   *  every create/edit/delete affordance and the grid's own drag-to-create. */
+  protected readonly canManage = computed(() => this.auth.canEdit('ADMIN', 'SUPER_ADMIN'));
 
   private readonly calendar = viewChild<FullCalendarComponent>('calendar');
   private readonly card = viewChild<ElementRef<HTMLElement>>('card');
@@ -276,7 +282,8 @@ export class CalendarPage {
     dayMaxEvents: true,
     weekNumbers: false,
     firstDay: 1,
-    selectable: true,
+    // View-only users can't drag-to-create on the grid.
+    selectable: this.canManage(),
     selectMirror: true,
     eventDisplay: 'block',
     displayEventEnd: false,
@@ -586,6 +593,10 @@ export class CalendarPage {
   // ---- Creating ----
   /** A click on a day (or the toolbar button): ask what to put on it. */
   protected openCreateOn(date: string): void {
+    // Guards every create path at the source (buttons, per-day "+", grid drag).
+    if (!this.canManage()) {
+      return;
+    }
     this.actionError.set(null);
     this.choosingOn.set(date);
   }
@@ -617,7 +628,7 @@ export class CalendarPage {
    */
   protected openEdit(): void {
     const item = this.selected();
-    if (!item || item.outreachUuid) {
+    if (!item || item.outreachUuid || !this.canManage()) {
       return;
     }
     this.saving.set(true);
@@ -680,7 +691,7 @@ export class CalendarPage {
 
   protected onStatusChange(status: EventStatus): void {
     const item = this.selected();
-    if (!item) {
+    if (!item || !this.canManage()) {
       return;
     }
     this.saving.set(true);
@@ -700,7 +711,7 @@ export class CalendarPage {
   // ---- Delete ----
   protected askDelete(): void {
     const item = this.selected();
-    if (item && !item.outreachUuid) {
+    if (item && !item.outreachUuid && this.canManage()) {
       this.confirmingDelete.set(item);
     }
   }

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
+import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { BranchForm } from '../../components/branch-form/branch-form';
 import { BranchMembershipService } from '../../branch-membership.service';
@@ -42,6 +43,7 @@ export class BranchList {
   private readonly service = inject(BranchService);
   private readonly membershipService = inject(BranchMembershipService);
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
 
   // ---- Data ----
   protected readonly branches = signal<Branch[]>([]);

@@ -3,6 +3,26 @@
    switch between light and dark by flipping `data-theme` on the root element
    (see ThemeService). Light is the default; the dark block overrides tokens. */
 
+/* Garet — the department's flyer typeface. Only the flyer canvases set it in
+   `ctx.font`; the two weights that ship map to the roles the flyers use:
+   Book for regular text, Heavy for the bold headline/figure lettering. */
+@font-face {
+  font-family: 'Garet';
+  src: url('/assets/fonts/Garet-Book.woff2') format('woff2'),
+       url('/assets/fonts/Garet-Book.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Garet';
+  src: url('/assets/fonts/Garet-Heavy.woff2') format('woff2'),
+       url('/assets/fonts/Garet-Heavy.woff') format('woff');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
 
