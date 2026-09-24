@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import type { Subscription } from 'rxjs';
 
 import {
   drawInvite,
@@ -52,6 +53,40 @@ const BADGE_GAP = 18;
 const BADGE_ORIGIN_X = 890;
 const BADGE_ORIGIN_Y = 540;
 
+/** Stop results shown at once — past this, a narrower search is the better fix. */
+const MAX_STOP_RESULTS = 8;
+/** Line chips previewed on a stop result before collapsing into "+n". */
+const STOP_PREVIEW_LINES = 6;
+
+/** Networks in the order a rider would look for them; others sort after. */
+const NETWORK_ORDER = ['rer', 'transilien', 'train', 'ter', 'metro', 'tram'];
+
+/** A selected stop's lines under one network heading (RER, Métro…). */
+interface LineGroup {
+  network: string;
+  lines: TransitLine[];
+}
+
+/** Group a stop's lines by network, most useful networks first. */
+function groupLines(lines: TransitLine[]): LineGroup[] {
+  const rank = (network: string): number => {
+    const key = network
+      .toLocaleLowerCase('fr-FR')
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '');
+    const i = NETWORK_ORDER.findIndex((n) => key.startsWith(n));
+    return i === -1 ? NETWORK_ORDER.length : i;
+  };
+  const groups = new Map<string, TransitLine[]>();
+  for (const line of lines) {
+    const network = line.network?.trim() || 'Autres';
+    groups.set(network, [...(groups.get(network) ?? []), line]);
+  }
+  return [...groups]
+    .map(([network, list]) => ({ network, lines: list }))
+    .sort((a, b) => rank(a.network) - rank(b.network) || a.network.localeCompare(b.network, 'fr'));
+}
+
 /** How many recent sorties to load into the picker. */
 const OUTREACH_PAGE_SIZE = 100;
 
@@ -81,7 +116,7 @@ type DragMode = 'none' | 'photo' | 'badge';
   selector: 'app-flyer-invitation',
   imports: [RouterLink],
   templateUrl: './flyer-invitation.html',
-  styleUrl: './flyer-invitation.scss',
+  styleUrls: ['./flyer-invitation.scss', './flyer-transit.scss'],
 })
 export class FlyerInvitation {
   private readonly transit = inject(TransitService);
@@ -184,8 +219,22 @@ export class FlyerInvitation {
   protected readonly stops = signal<TransitStop[]>([]);
   protected readonly searching = signal(false);
   protected readonly searchError = signal<string | null>(null);
+  /** The query the current `stops` answer — drives the "no result" message. */
+  protected readonly searchedQuery = signal('');
   protected readonly selectedStop = signal<TransitStop | null>(null);
+  protected readonly visibleStops = computed(() => this.stops().slice(0, MAX_STOP_RESULTS));
+  protected readonly hiddenStopCount = computed(() =>
+    Math.max(this.stops().length - MAX_STOP_RESULTS, 0),
+  );
+  protected readonly stopLineGroups = computed(() => groupLines(this.selectedStop()?.routes ?? []));
+  /** Lines already on the flyer, so their chips read as "added" and toggle off. */
+  protected readonly placedLineIds = computed(
+    () => new Set(this.badges().flatMap((b) => (b.lineId ? [b.lineId] : []))),
+  );
+  /** The line whose logo is being fetched — its chip shows a busy state. */
+  protected readonly pendingLineId = signal<string | null>(null);
   private searchTimer?: ReturnType<typeof setTimeout>;
+  private searchSub?: Subscription;
 
   private readonly values = computed<InviteValues>(() => ({
     photo: this.photo(),
@@ -329,18 +378,23 @@ export class FlyerInvitation {
   protected onTransitSearch(value: string): void {
     this.transitQuery.set(value);
     clearTimeout(this.searchTimer);
+    // A newer query supersedes any search still in flight, so a slow response
+    // can't land over the results for what's typed now.
+    this.searchSub?.unsubscribe();
+    this.searchError.set(null);
     const q = value.trim();
     if (q.length < 2) {
       this.stops.set([]);
+      this.searchedQuery.set('');
       this.searching.set(false);
       return;
     }
     this.searching.set(true);
     this.searchTimer = setTimeout(() => {
-      this.transit.searchStops(q).subscribe({
+      this.searchSub = this.transit.searchStops(q).subscribe({
         next: (stops) => {
           this.stops.set(stops);
-          this.searchError.set(null);
+          this.searchedQuery.set(q);
           this.searching.set(false);
         },
         error: () => {
@@ -351,16 +405,65 @@ export class FlyerInvitation {
     }, 350);
   }
 
+  /** Enter picks the first result — usually the stop whose name was typed. */
+  protected onTransitEnter(event: Event): void {
+    event.preventDefault();
+    const first = this.visibleStops()[0];
+    if (first && !this.searching()) {
+      this.selectStop(first);
+    }
+  }
+
+  protected clearTransitSearch(): void {
+    this.onTransitSearch('');
+    this.selectedStop.set(null);
+  }
+
+  /** Open a stop's lines; the result list folds away behind it. */
   protected selectStop(stop: TransitStop): void {
     this.selectedStop.set(stop);
   }
 
+  /** Back to the results (the search is kept) to pick another stop. */
+  protected changeStop(): void {
+    this.selectedStop.set(null);
+  }
+
+  protected previewLines(stop: TransitStop): TransitLine[] {
+    return stop.routes.slice(0, STOP_PREVIEW_LINES);
+  }
+  protected moreLines(stop: TransitStop): number {
+    return Math.max(stop.routes.length - STOP_PREVIEW_LINES, 0);
+  }
+
+  /** Chip colours: the line's own, or the network blue when IDFM has none. */
+  protected lineBg(line: TransitLine): string {
+    return '#' + (line.color || '1f3a93');
+  }
+  protected lineFg(line: TransitLine): string {
+    return '#' + (line.textColor || 'ffffff');
+  }
+
+  /** Tap a line: add its logo, or take it off again if it's already placed. */
+  protected toggleLine(line: TransitLine): void {
+    if (this.placedLineIds().has(line.lineId)) {
+      this.badges.update((list) => list.filter((b) => b.lineId !== line.lineId));
+      if (!this.badges().some((b) => b.id === this.selectedBadgeId())) {
+        this.selectedBadgeId.set(null);
+      }
+      return;
+    }
+    this.addLine(line);
+  }
+
   /** Load the line's official pictogram, then place it as a badge and select it. */
-  protected addLine(line: TransitLine): void {
-    if (!line.pictoId) {
+  private addLine(line: TransitLine): void {
+    if (!line.pictoId || this.pendingLineId()) {
       return;
     }
     const count = this.badges().length;
+    this.pendingLineId.set(line.lineId);
+    this.searchError.set(null);
     this.transit.picto(line.pictoId).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
@@ -369,6 +472,7 @@ export class FlyerInvitation {
           const badge: FlyerBadge = {
             id: crypto.randomUUID(),
             label: [line.network, line.shortName].filter(Boolean).join(' ') || line.shortName,
+            lineId: line.lineId,
             image,
             // Lay new badges out two per row so they don't stack exactly.
             x: BADGE_ORIGIN_X + (count % 2) * (DEFAULT_BADGE + BADGE_GAP),
@@ -377,13 +481,33 @@ export class FlyerInvitation {
           };
           this.badges.update((list) => [...list, badge]);
           this.selectedBadgeId.set(badge.id);
+          this.pendingLineId.set(null);
           URL.revokeObjectURL(url);
         };
-        image.onerror = () => URL.revokeObjectURL(url);
+        image.onerror = () => {
+          this.searchError.set('Logo illisible pour cette ligne.');
+          this.pendingLineId.set(null);
+          URL.revokeObjectURL(url);
+        };
         image.src = url;
       },
-      error: () => this.searchError.set('Logo indisponible pour cette ligne.'),
+      error: () => {
+        this.searchError.set('Logo indisponible pour cette ligne.');
+        this.pendingLineId.set(null);
+      },
     });
+  }
+
+  /** Select a placed logo from the list, to resize or remove it. */
+  protected selectBadge(id: string): void {
+    this.selectedBadgeId.set(this.selectedBadgeId() === id ? null : id);
+  }
+
+  protected removeBadge(id: string): void {
+    this.badges.update((list) => list.filter((b) => b.id !== id));
+    if (this.selectedBadgeId() === id) {
+      this.selectedBadgeId.set(null);
+    }
   }
 
   protected onBadgeSize(value: string): void {

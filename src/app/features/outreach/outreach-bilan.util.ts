@@ -14,12 +14,14 @@ export const BILAN_SIZE = 1080;
 const TEMPLATE_SRC = 'assets/bilan-template.png';
 
 /**
- * The typeface the figures are set in. `Garet` is the department's flyer font
- * (`@font-face` in `styles.scss`, Heavy weight at 700), awaited before drawing;
- * the OS grotesques are the fallback, with the app font as a last resort.
+ * The typeface the figures are set in. `Montserrat Arabic` is the department's
+ * flyer font (`@font-face` in `styles.scss`, Black weight at 900), awaited
+ * before drawing; the OS grotesques are the fallback, with the app font as a
+ * last resort.
  */
-const FAMILY = "'Garet', Arial, 'Helvetica Neue', Helvetica, 'Plus Jakarta Sans', sans-serif";
-const WEIGHT = 700;
+const FAMILY =
+  "'Montserrat Arabic', Arial, 'Helvetica Neue', Helvetica, 'Plus Jakarta Sans', sans-serif";
+const WEIGHT = 900;
 const INK = '#000000';
 
 /**
@@ -88,10 +90,10 @@ async function ensureFont(): Promise<void> {
     return;
   }
   try {
-    // Load Garet by its own name (Heavy weight) as well as the full stack, so
-    // the first draw doesn't fall back to Arial before the webfont arrives.
+    // Load the flyer face by its own name as well as the full stack, so the
+    // first draw doesn't fall back to Arial before the webfont arrives.
     await Promise.all([
-      document.fonts.load(`${WEIGHT} 100px "Garet"`),
+      document.fonts.load(`${WEIGHT} 100px "Montserrat Arabic"`),
       document.fonts.load(`${WEIGHT} ${DIGIT_HEIGHT}px ${FAMILY}`),
     ]);
   } catch {

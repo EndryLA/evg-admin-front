@@ -18,5 +18,5 @@ export const ACCESS = {
   /** Creating, correcting and deleting attendance records. */
   attendances: ['ADMIN', 'SUPER_ADMIN'],
   /** The "Génération de flyers" hub and its generators (restricted for now). */
-  flyers: ['SUPER_ADMIN'],
+  flyers: ['SUPER_ADMIN', 'ADMIN'],
 } as const satisfies Record<string, readonly UserRole[]>;

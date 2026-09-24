@@ -43,7 +43,7 @@ function toProfileName(raw: RawProfileName): ProfileName | null {
   selector: 'app-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, BrandLogo],
   templateUrl: './app-shell.html',
-  styleUrl: './app-shell.scss',
+  styleUrls: ['./app-shell.scss', './app-shell-mobile.scss'],
   host: {
     '(document:keydown.escape)': 'closeSidebar()',
   },

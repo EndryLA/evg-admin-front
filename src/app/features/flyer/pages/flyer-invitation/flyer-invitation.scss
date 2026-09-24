@@ -188,57 +188,6 @@
 }
 .badge-edit__remove:hover { text-decoration: underline; }
 
-/* Transport stop results. */
-.stop-list {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-  max-height: 240px;
-  overflow-y: auto;
-}
-.stop-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  padding: 9px 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--bg-card);
-  color: inherit;
-  cursor: pointer;
-}
-.stop-row:hover { border-color: var(--accent, #d81f27); }
-.stop-row--active { border-color: var(--accent, #d81f27); background: var(--bg-inset); }
-.stop-row__name { font-size: 14px; font-weight: 600; margin-right: auto; }
-.stop-row__city { font-weight: 400; color: var(--text-muted); }
-.stop-row__count { font-size: 12px; color: var(--text-muted); }
-
-/* Line chips: each shows the line's real colours; click to add a badge. */
-.lines {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-.line-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 40px;
-  padding: 7px 12px;
-  border: 0;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
-}
-.line-chip__plus { font-weight: 700; opacity: 0.8; }
-
 .controls__hint {
   margin: -6px 0 18px;
   font-size: 13px;

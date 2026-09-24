@@ -16,14 +16,14 @@ export const INVITE_SIZE = 1080;
 const TEMPLATE_SRC = 'assets/invite-template.jpg';
 
 /**
- * The heavy grotesque the flyer's lettering is set in. `Garet` is the
- * department's flyer typeface (`@font-face` in `styles.scss`, Heavy weight at
- * 700); it's awaited before drawing. The OS grotesques are the fallback if it
+ * The heavy grotesque the flyer's lettering is set in. `Montserrat Arabic` is
+ * the department's flyer typeface (`@font-face` in `styles.scss`, Black weight
+ * at 900); it's awaited before drawing. The OS grotesques are the fallback if it
  * hasn't arrived, with the app font as a last resort.
  */
 const FAMILY =
-  "'Garet', Arial, 'Helvetica Neue', Helvetica, 'Plus Jakarta Sans', sans-serif";
-const WEIGHT = 700;
+  "'Montserrat Arabic', Arial, 'Helvetica Neue', Helvetica, 'Plus Jakarta Sans', sans-serif";
+const WEIGHT = 900;
 
 /** Dark ink for text on the light top of the artwork. */
 const INK = '#111111';
@@ -95,6 +95,8 @@ export interface FlyerBadge {
   id: string;
   /** Line label for the editor UI (not drawn on the canvas), e.g. "RER C". */
   label: string;
+  /** The transit line this logo shows, so the picker can mark it as placed. */
+  lineId?: string;
   /** Official line pictogram (square PNG), loaded from the IDFM proxy. */
   image: HTMLImageElement;
   /** Centre position, template px. */
@@ -170,10 +172,10 @@ async function ensureFont(): Promise<void> {
     return;
   }
   try {
-    // Await Garet by its own name (Heavy weight) as well as the full stack, so
-    // the first draw doesn't fall back to Arial before the webfont arrives.
+    // Await the flyer face by its own name as well as the full stack, so the
+    // first draw doesn't fall back to Arial before the webfont arrives.
     await Promise.all([
-      document.fonts.load(`${WEIGHT} 100px "Garet"`),
+      document.fonts.load(`${WEIGHT} 100px "Montserrat Arabic"`),
       document.fonts.load(`${WEIGHT} ${PLACE.capHeight}px ${FAMILY}`),
     ]);
   } catch {

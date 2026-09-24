@@ -1,0 +1,318 @@
+/* Transports section of the flyer editor: find a stop, then tap its lines to
+   put their logos on the flyer. Split out of `flyer-invitation.scss` so neither
+   sheet runs past the 6kB component-style budget. Same component, so the
+   editor's tokens and `.controls__*` rules apply here too. */
+
+.transit {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+.transit__title {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.transit__hint,
+.transit__empty {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.transit__empty {
+  padding: 14px;
+  border: 1px dashed var(--border-input);
+  border-radius: 10px;
+  text-align: center;
+}
+.transit__alert { margin: 12px 0 0; }
+
+/* ---- Search field: icon, input, spinner or clear button in one box ---- */
+.transit-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 0 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--bg-input);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+  &:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+}
+.transit-search__icon { flex: none; width: 17px; height: 17px; color: var(--text-faint); }
+.transit-search__input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 0;
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  /* 16px keeps iOS from zooming the page when the field takes focus. */
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+
+  &::placeholder { color: var(--text-faint); }
+  /* Our own clear button replaces the browser's. */
+  &::-webkit-search-cancel-button { display: none; }
+}
+.transit-search__clear {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  &:hover { background: var(--bg-inset); color: var(--text-primary); }
+  svg { width: 16px; height: 16px; }
+}
+.transit-search__spinner,
+.line-chip__spinner {
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: transitSpin 0.7s linear infinite;
+}
+.transit-search__spinner {
+  width: 16px;
+  height: 16px;
+  margin: 0 8px;
+  color: var(--text-faint);
+}
+@keyframes transitSpin { to { transform: rotate(360deg); } }
+
+/* ---- Results: each stop previews its lines, so namesakes tell apart ---- */
+.stop-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.stop-list li + li { border-top: 1px solid var(--border-faint); }
+.stop-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 12px 10px 14px;
+  border: 0;
+  background: var(--bg-card);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s ease;
+
+  &:hover, &:active { background: var(--row-hover); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+}
+.stop-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin-right: auto;
+}
+.stop-row__name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stop-row__city { font-size: 12.5px; color: var(--text-muted); }
+.stop-row__lines {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 48%;
+}
+.stop-row__go { flex: none; width: 16px; height: 16px; color: var(--chevron); }
+
+.mini-line {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+.mini-line--more { background: var(--bg-inset); color: var(--text-muted); }
+
+/* ---- Chosen stop: a compact card replaces the search ---- */
+.stop-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid var(--accent-soft-border);
+  border-radius: 10px;
+  background: var(--accent-soft-bg);
+}
+.stop-card__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--bg-card);
+  color: var(--accent);
+
+  svg { width: 19px; height: 19px; }
+}
+.stop-card__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; margin-right: auto; }
+.stop-card__name {
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stop-card__city { font-size: 12.5px; color: var(--text-muted); }
+.stop-card__change {
+  flex: none;
+  padding: 8px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: var(--bg-sunken); }
+}
+
+/* ---- Lines of the chosen stop, grouped by network ---- */
+.line-group { margin-top: 14px; }
+.line-group__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Each chip wears its line's real colours; placed lines get a ring + check. */
+.line-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 56px;
+  min-height: 40px;
+  padding: 0 10px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line-bg, #1f3a93);
+  color: var(--line-fg, #fff);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  transition: transform 0.1s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+
+  &:active:not(:disabled) { transform: scale(0.96); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  &:disabled { cursor: not-allowed; opacity: 0.4; }
+}
+.line-chip--placed {
+  box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--line-bg, #1f3a93);
+}
+.line-chip--busy { cursor: progress; }
+.line-chip__state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+
+  svg { width: 12px; height: 12px; }
+}
+.line-chip__spinner { width: 12px; height: 12px; }
+
+/* ---- Logos already on the flyer: select to resize, × to remove ---- */
+.placed {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-subtle);
+}
+.placed__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.placed__item {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+.placed__item--selected {
+  border-color: var(--accent);
+  background: var(--accent-soft-bg);
+}
+.placed__select,
+.placed__remove {
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+.placed__select {
+  padding: 8px 4px 8px 13px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.placed__item--selected .placed__select { color: var(--accent-soft-text); }
+.placed__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--text-muted);
+
+  &:hover { color: var(--accent); }
+  svg { width: 14px; height: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line-chip { transition: none; }
+}
