@@ -1,33 +1,15 @@
-/* Web image picker. Reuses the global `.modal-form` shell (overlay/head/foot);
-   the results grid scrolls inside a fixed-height body. */
-
-/* Doubled class beats the global `.modal-form .modal` width/height rules. */
-.modal.modal--images {
-  width: 760px;
-  height: 80vh;
-  height: 80dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.modal__body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 18px 26px;
-}
-:host .modal__error { margin-bottom: 14px; }
+/* Inline web image finder (the flyer flow's "Photo" step). Results flow with
+   the page — no inner scroll box. */
+:host { display: block; }
 
 /* ---- Search field: icon, input, then spinner or submit in one box ---- */
 .search {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 14px;
   padding: 0 6px 0 12px;
   border: 1px solid var(--border-input);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--bg-input);
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 
@@ -36,11 +18,11 @@
     box-shadow: 0 0 0 3px var(--accent-ring);
   }
 }
-.search__icon { flex: none; width: 17px; height: 17px; color: var(--text-faint); }
+.search__icon { flex: none; width: 18px; height: 18px; color: var(--text-faint); }
 .search__input {
   flex: 1;
   min-width: 0;
-  padding: 11px 0;
+  padding: 13px 0;
   border: 0;
   background: none;
   color: var(--text-primary);
@@ -54,13 +36,13 @@
 }
 .search__go {
   flex: none;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border: 0;
   border-radius: 7px;
   background: var(--accent);
   color: var(--text-on-accent);
   font: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
 
@@ -71,15 +53,22 @@
   flex: none;
   width: 16px;
   height: 16px;
-  margin: 0 8px;
+  margin: 0 10px;
   border: 2px solid var(--text-faint);
   border-right-color: transparent;
   border-radius: 50%;
   animation: imageSearchSpin 0.7s linear infinite;
 }
 
+.results__error { margin: 14px 0 0; }
+.results__hint {
+  margin: 16px 0 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .state {
-  margin: 40px auto;
+  margin: 32px auto;
   max-width: 360px;
   text-align: center;
   font-size: 13.5px;
@@ -93,7 +82,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin: 0 auto 24px;
+  margin: 8px auto 0;
   max-width: 360px;
   text-align: center;
 }
@@ -113,7 +102,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 }
 .tile {
@@ -127,6 +116,7 @@
   overflow: hidden;
   background: var(--bg-inset);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: border-color 0.12s ease, transform 0.12s ease;
 
   img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -161,20 +151,9 @@
 }
 @keyframes imageSearchSpin { to { transform: rotate(360deg); } }
 
-/* Phones: the picker takes the whole screen. */
+/* Phones: two big tiles per row. */
 @media (max-width: 560px) {
-  :host .modal-overlay { padding: 0; }
-  .modal.modal--images {
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    max-height: none;
-    border-radius: 0;
-  }
-  :host .modal__head { padding: 18px 16px 14px; }
-  .modal__body { padding: 14px 16px; }
-  :host .modal__foot { padding: 12px 16px; }
-  .grid-images { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+  .grid-images { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,13 +1,9 @@
 /* Transports section of the flyer editor: find a stop, then tap its lines to
    put their logos on the flyer. Split out of `flyer-invitation.scss` so neither
    sheet runs past the 6kB component-style budget. Same component, so the
-   editor's tokens and `.controls__*` rules apply here too. */
+   flow's tokens apply here too. */
 
-.transit {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border-subtle);
-}
+.transit { margin: 0; }
 .transit__title {
   margin: 0 0 12px;
   font-size: 12.5px;

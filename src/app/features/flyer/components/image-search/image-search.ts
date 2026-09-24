@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, afterNextRender, inject, output, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { catchError, type Subscription } from 'rxjs';
 
 import { ImageSearchService, type WebImage } from '../../image-search.service';
@@ -11,23 +11,22 @@ export interface PickedImage {
 }
 
 /**
- * Modal for finding the flyer's centre photo on the web (SerpAPI-backed). Owns
- * the search and the download; emits the picked image as a Blob so the parent
- * only has to decode it onto the canvas.
+ * Inline finder for the flyer's centre photo on the web (SerpAPI-backed) — the
+ * "Photo" step of the flyer flow. Owns the search and the download; emits the
+ * picked image as a Blob so the parent only has to decode it onto the canvas.
+ * Importing from the device is offered only once the web search fails.
  */
 @Component({
-  selector: 'app-image-search-dialog',
-  host: { class: 'modal-form', '(keydown.escape)': 'close.emit()' },
-  templateUrl: './image-search-dialog.html',
-  styleUrl: './image-search-dialog.scss',
+  selector: 'app-image-search',
+  templateUrl: './image-search.html',
+  styleUrl: './image-search.scss',
 })
-export class ImageSearchDialog {
+export class ImageSearch implements OnInit {
   private readonly imageSearch = inject(ImageSearchService);
 
+  /** Pre-filled query (the sortie's lieu) — not run until the user asks: searches are billed. */
+  readonly initialQuery = input('');
   readonly picked = output<PickedImage>();
-  readonly close = output<void>();
-
-  private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('queryInput');
 
   protected readonly query = signal('');
   protected readonly images = signal<WebImage[]>([]);
@@ -44,11 +43,14 @@ export class ImageSearchDialog {
   private fetchSub?: Subscription;
 
   constructor() {
-    afterNextRender(() => this.inputRef()?.nativeElement.focus());
     inject(DestroyRef).onDestroy(() => {
       this.searchSub?.unsubscribe();
       this.fetchSub?.unsubscribe();
     });
+  }
+
+  ngOnInit(): void {
+    this.query.set(this.initialQuery());
   }
 
   protected onQuery(value: string): void {

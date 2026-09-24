@@ -16,10 +16,7 @@ import {
   type FlyerBadge,
   type InviteValues,
 } from '../../flyer-invitation.util';
-import {
-  ImageSearchDialog,
-  type PickedImage,
-} from '../../components/image-search-dialog/image-search-dialog';
+import { ImageSearch, type PickedImage } from '../../components/image-search/image-search';
 import { TransitService, type TransitLine, type TransitStop } from '../../transit.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import {
@@ -110,6 +107,18 @@ function localDateKey(date: Date): string {
 
 type DragMode = 'none' | 'photo' | 'badge';
 
+/** The flyer flow, one screen each: pick the sortie, find the photo, frame it,
+ *  add the transports, download. */
+type FlowStep = 'sortie' | 'photo' | 'frame' | 'transports' | 'download';
+
+/** The steps after the sortie, as the progress bar shows them. */
+const FLOW_STEPS: readonly { key: Exclude<FlowStep, 'sortie'>; label: string }[] = [
+  { key: 'photo', label: 'Photo' },
+  { key: 'frame', label: 'Cadrage' },
+  { key: 'transports', label: 'Transports' },
+  { key: 'download', label: 'Télécharger' },
+];
+
 /**
  * Standalone invitation-flyer generator (`/flyers/invitation`): a photo framed
  * in the central circle, the place name under the logo, and public-transport
@@ -118,7 +127,7 @@ type DragMode = 'none' | 'photo' | 'badge';
  */
 @Component({
   selector: 'app-flyer-invitation',
-  imports: [RouterLink, ImageSearchDialog],
+  imports: [RouterLink, ImageSearch],
   templateUrl: './flyer-invitation.html',
   styleUrls: ['./flyer-invitation.scss', './flyer-transit.scss'],
 })
@@ -129,6 +138,15 @@ export class FlyerInvitation {
 
   private readonly canvasRef =
     viewChild<ElementRef<HTMLCanvasElement>>('canvas');
+
+  // ---- Flow ----
+  /** Current screen; the canvas only drags what the step is about. */
+  protected readonly step = signal<FlowStep>('sortie');
+  protected readonly flowSteps = FLOW_STEPS;
+  /** 0-based position of the current step in `FLOW_STEPS` (-1 on the sortie picker). */
+  protected readonly stepIndex = computed(() =>
+    FLOW_STEPS.findIndex((s) => s.key === this.step()),
+  );
 
   protected readonly renderError = signal<string | null>(null);
 
@@ -218,8 +236,8 @@ export class FlyerInvitation {
     () => this.badges().find((b) => b.id === this.selectedBadgeId()) ?? null,
   );
 
-  /** Whether the web image picker modal is open. */
-  protected readonly imageDialogOpen = signal(false);
+  /** A picked image that couldn't be decoded — shown on the photo step. */
+  protected readonly photoError = signal<string | null>(null);
 
   // ---- Transport search ----
   protected readonly transitQuery = signal('');
@@ -328,12 +346,51 @@ export class FlyerInvitation {
   protected chooseOutreach(outreach: Outreach): void {
     this.outreach.set(outreach);
     this.place.set(outreach.location || outreach.cityName);
+    this.goTo('photo');
   }
 
   /** Back to the picker, keeping the photo and badges already placed. */
   protected changeOutreach(): void {
     this.outreach.set(null);
     this.query.set('');
+    this.goTo('sortie');
+    setTimeout(() => this.scrollToNext(), 0);
+  }
+
+  // ---- Flow navigation ----
+
+  /** Whether `step` can be opened: every step past the photo needs one. */
+  protected canOpen(step: FlowStep): boolean {
+    return step === 'sortie' || step === 'photo' || this.photo() !== null;
+  }
+
+  protected goTo(step: FlowStep): void {
+    if (!this.canOpen(step)) {
+      return;
+    }
+    // A selected badge only matters while the transports are being placed.
+    if (step !== 'transports') {
+      this.selectedBadgeId.set(null);
+    }
+    this.step.set(step);
+    // Each step is its own screen: start it from the top.
+    this.hostRef.nativeElement.scrollTo({ top: 0 });
+  }
+
+  protected next(): void {
+    const next = FLOW_STEPS[this.stepIndex() + 1];
+    if (next) {
+      this.goTo(next.key);
+    }
+  }
+
+  protected back(): void {
+    const i = this.stepIndex();
+    if (i <= 0) {
+      this.changeOutreach();
+    } else {
+      this.goTo(FLOW_STEPS[i - 1].key);
+    }
   }
 
   protected statusLabel(status: OutreachStatus): string {
@@ -365,28 +422,20 @@ export class FlyerInvitation {
     });
   }
 
-  // ---- Web image search ----
+  // ---- Photo step ----
 
-  protected openImageDialog(): void {
-    this.imageDialogOpen.set(true);
-  }
-
-  protected closeImageDialog(): void {
-    this.imageDialogOpen.set(false);
-  }
-
-  /** An image was picked in the modal (from the web, or imported from the device
-   *  when the web search fails): make it the centre photo and close. */
+  /** An image was picked (from the web, or imported from the device when the
+   *  web search fails): make it the centre photo and go frame it. */
   protected onImagePicked(picked: PickedImage): void {
+    this.photoError.set(null);
     this.setPhotoFromBlob(picked.blob, picked.name).then(
-      () => this.imageDialogOpen.set(false),
-      () => this.renderError.set('Image illisible. Choisissez-en une autre.'),
+      () => this.goTo('frame'),
+      () => this.photoError.set('Image illisible. Choisissez-en une autre.'),
     );
   }
 
-  protected clearPhoto(): void {
-    this.photo.set(null);
-    this.photoName.set('');
+  /** Put the photo back centred and un-zoomed. */
+  protected resetFraming(): void {
     this.scale.set(MIN_SCALE);
     this.offsetX.set(0);
     this.offsetY.set(0);
@@ -595,11 +644,13 @@ export class FlyerInvitation {
     if (!canvas) {
       return;
     }
-    const hit = this.badgeAt(canvas, event.clientX, event.clientY);
+    // Each step drags only its own layer: the photo, then the badges.
+    const hit =
+      this.step() === 'transports' ? this.badgeAt(canvas, event.clientX, event.clientY) : null;
     if (hit) {
       this.selectedBadgeId.set(hit.id);
       this.dragMode = 'badge';
-    } else if (this.photo()) {
+    } else if (this.step() === 'frame' && this.photo()) {
       this.selectedBadgeId.set(null);
       this.dragMode = 'photo';
     } else {
@@ -642,7 +693,7 @@ export class FlyerInvitation {
   }
 
   protected onWheel(event: WheelEvent): void {
-    const selected = this.selectedBadge();
+    const selected = this.step() === 'transports' ? this.selectedBadge() : null;
     if (selected) {
       // A badge is selected: the wheel resizes it.
       event.preventDefault();
@@ -652,7 +703,7 @@ export class FlyerInvitation {
       });
       return;
     }
-    if (this.photo()) {
+    if (this.step() === 'frame' && this.photo()) {
       event.preventDefault();
       const step = event.deltaY < 0 ? 0.12 : -0.12;
       this.scale.update((s) => Math.min(Math.max(s + step, MIN_SCALE), MAX_SCALE));

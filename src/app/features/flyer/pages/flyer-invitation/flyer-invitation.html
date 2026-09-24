@@ -3,19 +3,15 @@
   Génération de flyers
 </a>
 
-<header class="page-head">
-  <div class="page-head__main">
-    <span class="eyebrow">Flyer</span>
-    <h1>Flyer de sortie</h1>
-    @if (outreach()) {
-      <p class="page-head__sub">Ajoutez la photo et les transports, puis téléchargez l'image.</p>
-    } @else {
-      <p class="page-head__sub">Choisissez d'abord la sortie à annoncer.</p>
-    }
-  </div>
-</header>
+@if (step() === 'sortie') {
+  <header class="page-head">
+    <div class="page-head__main">
+      <span class="eyebrow">Flyer</span>
+      <h1>Flyer de sortie</h1>
+      <p class="page-head__sub">Choisissez la sortie à annoncer.</p>
+    </div>
+  </header>
 
-@if (!outreach()) {
   <!-- Step 1: pick the sortie the flyer announces; its lieu, date and heure fill in. -->
   <div class="search">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -71,254 +67,328 @@
     }
   }
 } @else {
-
-<div class="invite-body">
-  <section class="panel preview">
-    <h2 class="panel__title">Aperçu</h2>
-    <div class="preview__frame">
-      <canvas
-        #canvas
-        class="preview__canvas"
-        [class.preview__canvas--draggable]="photo() || badges().length"
-        role="img"
-        [attr.aria-label]="'Invitation ' + (place() || 'sans lieu')"
-        (pointerdown)="onPointerDown($event)"
-        (pointermove)="onPointerMove($event)"
-        (pointerup)="onPointerUp($event)"
-        (pointercancel)="onPointerUp($event)"
-        (wheel)="onWheel($event)"></canvas>
-    </div>
-    @if (photo()) {
-      <div class="zoom">
-        <span class="zoom__label">Zoom</span>
-        <input
-          type="range"
-          class="zoom__range"
-          min="0.3"
-          max="4"
-          step="0.01"
-          [value]="scale()"
-          (input)="onZoom($any($event.target).value)"
-          aria-label="Zoom de la photo" />
-      </div>
-      <p class="preview__hint">Glissez la photo pour la cadrer comme vous voulez ; molette ou curseur pour agrandir/réduire.</p>
-    }
-    @if (selectedBadge(); as b) {
-      <div class="badge-edit">
-        <span class="badge-edit__label">Logo&nbsp;: {{ b.label }}</span>
-        <input
-          type="range"
-          class="zoom__range"
-          [min]="minBadge"
-          [max]="maxBadge"
-          step="1"
-          [value]="b.size"
-          (input)="onBadgeSize($any($event.target).value)"
-          aria-label="Taille du badge" />
-        <button type="button" class="badge-edit__remove" (click)="removeSelectedBadge()">Supprimer</button>
-      </div>
-      <p class="preview__hint">Glissez le badge pour le placer ; curseur ou molette pour le redimensionner.</p>
-    }
-    @if (renderError(); as err) {
-      <p class="alert alert--error" role="alert">{{ err }}</p>
-    }
-  </section>
-
-  <section class="panel controls">
-    <h2 class="panel__title">Informations</h2>
-
-    @if (outreach(); as o) {
-      <div class="chosen">
-        <div class="chosen__text">
-          <span class="chosen__name">{{ o.name }}</span>
-          <span class="chosen__meta">
-            {{ o.cityName || '—' }}@if (dateText()) { · {{ dateText() }} }@if (timeText()) { {{ timeText() }} }
-          </span>
+  <div class="flow">
+    <!-- Where we are: the chosen sortie, then the four steps of the flow. -->
+    <div class="flow__top">
+      @if (outreach(); as o) {
+        <div class="chosen">
+          <div class="chosen__text">
+            <span class="chosen__name">{{ o.name }}</span>
+            <span class="chosen__meta">
+              {{ o.cityName || '—' }}@if (dateText()) { · {{ dateText() }} }@if (timeText()) { {{ timeText() }} }
+            </span>
+          </div>
+          <button type="button" class="chosen__change" (click)="changeOutreach()">Changer</button>
         </div>
-        <button type="button" class="btn chosen__change" (click)="changeOutreach()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
-          Changer de sortie
-        </button>
-      </div>
-    }
-
-    <p class="controls__hint">
-      Le lieu, la date et l'heure viennent de la sortie. Ajoutez une photo et,
-      si besoin, les logos des transports, puis téléchargez l'image.
-    </p>
-
-    <div class="controls__grid">
-      <div class="field controls__wide">
-        <span class="field__label">Photo (au centre)</span>
-        <div class="photo-pick">
-          <button
-            type="button"
-            class="btn photo-pick__btn"
-            aria-haspopup="dialog"
-            (click)="openImageDialog()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            Rechercher sur le web
-          </button>
-          @if (photoName(); as name) {
-            <span class="photo-pick__name">{{ name }}</span>
-            <button type="button" class="photo-pick__clear" (click)="clearPhoto()">Retirer</button>
-          }
-        </div>
-      </div>
-
-      <label class="field controls__wide">
-        <span class="field__label">Lieu</span>
-        <input
-          class="field__control"
-          type="text"
-          autocomplete="off"
-          placeholder="Gare d'Étampes"
-          [value]="place()"
-          (input)="onPlace($any($event.target).value)" />
-      </label>
-    </div>
-
-    <!-- Transports: find the stop, then tap its lines to put their logos on. -->
-    <section class="transit" aria-labelledby="transit-title">
-      <h3 class="transit__title" id="transit-title">Transports</h3>
-
-      @if (selectedStop(); as stop) {
-        <div class="stop-card">
-          <span class="stop-card__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 17l-2 4M15 17l2 4M9 14h.01M15 14h.01"/></svg>
-          </span>
-          <span class="stop-card__text">
-            <span class="stop-card__name">{{ stop.name }}</span>
-            @if (stop.city) { <span class="stop-card__city">{{ stop.city }}</span> }
-          </span>
-          <button type="button" class="stop-card__change" (click)="changeStop()">Changer</button>
-        </div>
-
-        @if (stop.routes.length) {
-          <p class="transit__hint">Touchez une ligne pour ajouter son logo. Touchez-la à nouveau pour le retirer.</p>
-          @for (group of stopLineGroups(); track group.network) {
-            <div class="line-group">
-              <span class="line-group__label">{{ group.network }}</span>
-              <div class="lines">
-                @for (line of group.lines; track line.lineId) {
-                  @let placed = placedLineIds().has(line.lineId);
-                  <button
-                    type="button"
-                    class="line-chip"
-                    [class.line-chip--placed]="placed"
-                    [class.line-chip--busy]="pendingLineId() === line.lineId"
-                    [style.--line-bg]="lineBg(line)"
-                    [style.--line-fg]="lineFg(line)"
-                    [disabled]="!line.pictoId || (pendingLineId() !== null && pendingLineId() !== line.lineId)"
-                    [attr.aria-pressed]="placed"
-                    [attr.aria-busy]="pendingLineId() === line.lineId"
-                    [title]="line.pictoId ? (group.network + ' ' + line.shortName) : 'Logo indisponible pour cette ligne'"
-                    (click)="toggleLine(line)">
-                    <span class="line-chip__name">{{ line.shortName }}</span>
-                    <span class="line-chip__state" aria-hidden="true">
-                      @if (pendingLineId() === line.lineId) {
-                        <span class="line-chip__spinner"></span>
-                      } @else if (placed) {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                      } @else {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                      }
-                    </span>
-                  </button>
-                }
-              </div>
-            </div>
-          }
-        } @else {
-          <p class="transit__empty">Aucune ligne trouvée pour cet arrêt.</p>
-        }
-      } @else {
-        <div class="transit-search">
-          <svg class="transit-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input
-            class="transit-search__input"
-            type="search"
-            enterkeyhint="search"
-            autocomplete="off"
-            placeholder="Gare ou station, ex. Étampes"
-            aria-label="Rechercher une gare ou une station"
-            [value]="transitQuery()"
-            (input)="onTransitSearch($any($event.target).value)"
-            (keydown.enter)="onTransitEnter($event)" />
-          @if (searching()) {
-            <span class="transit-search__spinner" aria-hidden="true"></span>
-          } @else if (transitQuery()) {
-            <button type="button" class="transit-search__clear" (click)="clearTransitSearch()" aria-label="Effacer la recherche">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      }
+      <ol class="progress" aria-label="Étapes du flyer">
+        @for (s of flowSteps; track s.key; let i = $index) {
+          <li
+            class="progress__step"
+            [class.progress__step--done]="i < stepIndex()"
+            [class.progress__step--current]="i === stepIndex()"
+            [attr.aria-current]="i === stepIndex() ? 'step' : null">
+            <button type="button" class="progress__btn" [disabled]="!canOpen(s.key)" (click)="goTo(s.key)">
+              <span class="progress__bar" aria-hidden="true"></span>
+              <span class="progress__label">{{ s.label }}</span>
             </button>
-          }
-        </div>
-
-        @if (!searching() && visibleStops().length) {
-          <ul class="stop-list" aria-label="Arrêts trouvés">
-            @for (s of visibleStops(); track s.stopId) {
-              <li>
-                <button type="button" class="stop-row" (click)="selectStop(s)">
-                  <span class="stop-row__main">
-                    <span class="stop-row__name">{{ s.name }}</span>
-                    @if (s.city) { <span class="stop-row__city">{{ s.city }}</span> }
-                  </span>
-                  <span class="stop-row__lines" aria-label="{{ s.routes.length }} ligne(s)">
-                    @for (line of previewLines(s); track line.lineId) {
-                      <span class="mini-line" [style.background]="lineBg(line)" [style.color]="lineFg(line)">{{ line.shortName }}</span>
-                    }
-                    @if (moreLines(s)) { <span class="mini-line mini-line--more">+{{ moreLines(s) }}</span> }
-                  </span>
-                  <svg class="stop-row__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
-              </li>
-            }
-          </ul>
-          @if (hiddenStopCount()) {
-            <p class="transit__hint">{{ hiddenStopCount() }} autre(s) arrêt(s) — précisez la recherche.</p>
-          }
-        } @else if (!searching() && searchedQuery() && !searchError()) {
-          <p class="transit__empty">Aucune gare ou station trouvée pour « {{ searchedQuery() }} ».</p>
-        } @else if (!transitQuery()) {
-          <p class="transit__hint">Recherchez la gare ou la station la plus proche du lieu de la sortie.</p>
+          </li>
         }
+      </ol>
+    </div>
+
+    @switch (step()) {
+      @case ('photo') {
+        <h1 class="flow__title">Trouvez la photo</h1>
+        <p class="flow__lead">Elle sera placée dans le cercle, au centre du flyer.</p>
+
+        @if (photoName(); as name) {
+          <div class="current-photo">
+            <span class="current-photo__text">Photo actuelle&nbsp;: <strong>{{ name }}</strong></span>
+            <button type="button" class="btn btn--primary current-photo__keep" (click)="goTo('frame')">Garder</button>
+          </div>
+        }
+        @if (photoError(); as err) {
+          <p class="alert alert--error flow__alert" role="alert">{{ err }}</p>
+        }
+
+        <app-image-search [initialQuery]="place()" (picked)="onImagePicked($event)" />
       }
 
-      @if (searchError(); as err) {
-        <p class="alert alert--error transit__alert" role="alert">{{ err }}</p>
+      @case ('frame') {
+        <h1 class="flow__title">Cadrez la photo</h1>
+        <p class="flow__lead">Glissez la photo pour la déplacer, utilisez le curseur pour zoomer.</p>
+
+        <div class="stage">
+          <div class="preview__frame">
+            <canvas
+              #canvas
+              class="preview__canvas"
+              [class.preview__canvas--draggable]="photo()"
+              role="img"
+              [attr.aria-label]="'Invitation ' + (place() || 'sans lieu')"
+              (pointerdown)="onPointerDown($event)"
+              (pointermove)="onPointerMove($event)"
+              (pointerup)="onPointerUp($event)"
+              (pointercancel)="onPointerUp($event)"
+              (wheel)="onWheel($event)"></canvas>
+          </div>
+          <div class="zoom">
+            <svg class="zoom__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></svg>
+            <input
+              type="range"
+              class="zoom__range"
+              min="0.3"
+              max="4"
+              step="0.01"
+              [value]="scale()"
+              (input)="onZoom($any($event.target).value)"
+              aria-label="Zoom de la photo" />
+            <svg class="zoom__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>
+          </div>
+          <div class="stage__tools">
+            <button type="button" class="link-btn" (click)="resetFraming()">Recentrer</button>
+            <button type="button" class="link-btn" (click)="goTo('photo')">Changer de photo</button>
+          </div>
+        </div>
       }
 
-      @if (badges().length) {
-        <div class="placed">
-          <span class="line-group__label">Sur le flyer</span>
-          <ul class="placed__list">
-            @for (b of badges(); track b.id) {
-              <li class="placed__item" [class.placed__item--selected]="selectedBadgeId() === b.id">
-                <button type="button" class="placed__select" [attr.aria-pressed]="selectedBadgeId() === b.id" (click)="selectBadge(b.id)" title="Sélectionner pour redimensionner">
-                  {{ b.label }}
-                </button>
-                <button type="button" class="placed__remove" (click)="removeBadge(b.id)" [attr.aria-label]="'Retirer ' + b.label">
+      @case ('transports') {
+        <h1 class="flow__title">Ajoutez les transports</h1>
+        <p class="flow__lead">Facultatif&nbsp;: cherchez la gare la plus proche et touchez ses lignes pour ajouter leurs logos.</p>
+
+        <div class="transports">
+          <div class="stage transports__preview">
+            <div class="preview__frame">
+            <canvas
+              #canvas
+              class="preview__canvas"
+              [class.preview__canvas--draggable]="badges().length"
+              role="img"
+              [attr.aria-label]="'Invitation ' + (place() || 'sans lieu')"
+              (pointerdown)="onPointerDown($event)"
+              (pointermove)="onPointerMove($event)"
+              (pointerup)="onPointerUp($event)"
+              (pointercancel)="onPointerUp($event)"
+              (wheel)="onWheel($event)"></canvas>
+          </div>
+            @if (selectedBadge(); as b) {
+              <div class="badge-edit">
+                <span class="badge-edit__label">{{ b.label }}</span>
+                <input
+                  type="range"
+                  class="zoom__range"
+                  [min]="minBadge"
+                  [max]="maxBadge"
+                  step="1"
+                  [value]="b.size"
+                  (input)="onBadgeSize($any($event.target).value)"
+                  aria-label="Taille du logo" />
+                <button type="button" class="badge-edit__remove" (click)="removeSelectedBadge()">Supprimer</button>
+              </div>
+              <p class="preview__hint">Glissez le logo pour le placer ; curseur pour sa taille.</p>
+            } @else if (badges().length) {
+              <p class="preview__hint">Touchez un logo dans l'aperçu pour le déplacer ou changer sa taille.</p>
+            }
+          </div>
+
+          <div class="transports__controls">
+        <!-- Transports: find the stop, then tap its lines to put their logos on. -->
+        <section class="transit" aria-label="Transports">
+          @if (selectedStop(); as stop) {
+            <div class="stop-card">
+              <span class="stop-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 17l-2 4M15 17l2 4M9 14h.01M15 14h.01"/></svg>
+              </span>
+              <span class="stop-card__text">
+                <span class="stop-card__name">{{ stop.name }}</span>
+                @if (stop.city) { <span class="stop-card__city">{{ stop.city }}</span> }
+              </span>
+              <button type="button" class="stop-card__change" (click)="changeStop()">Changer</button>
+            </div>
+
+            @if (stop.routes.length) {
+              <p class="transit__hint">Touchez une ligne pour ajouter son logo. Touchez-la à nouveau pour le retirer.</p>
+              @for (group of stopLineGroups(); track group.network) {
+                <div class="line-group">
+                  <span class="line-group__label">{{ group.network }}</span>
+                  <div class="lines">
+                    @for (line of group.lines; track line.lineId) {
+                      @let placed = placedLineIds().has(line.lineId);
+                      <button
+                        type="button"
+                        class="line-chip"
+                        [class.line-chip--placed]="placed"
+                        [class.line-chip--busy]="pendingLineId() === line.lineId"
+                        [style.--line-bg]="lineBg(line)"
+                        [style.--line-fg]="lineFg(line)"
+                        [disabled]="!line.pictoId || (pendingLineId() !== null && pendingLineId() !== line.lineId)"
+                        [attr.aria-pressed]="placed"
+                        [attr.aria-busy]="pendingLineId() === line.lineId"
+                        [title]="line.pictoId ? (group.network + ' ' + line.shortName) : 'Logo indisponible pour cette ligne'"
+                        (click)="toggleLine(line)">
+                        <span class="line-chip__name">{{ line.shortName }}</span>
+                        <span class="line-chip__state" aria-hidden="true">
+                          @if (pendingLineId() === line.lineId) {
+                            <span class="line-chip__spinner"></span>
+                          } @else if (placed) {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                          } @else {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                          }
+                        </span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            } @else {
+              <p class="transit__empty">Aucune ligne trouvée pour cet arrêt.</p>
+            }
+          } @else {
+            <div class="transit-search">
+              <svg class="transit-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input
+                class="transit-search__input"
+                type="search"
+                enterkeyhint="search"
+                autocomplete="off"
+                placeholder="Gare ou station, ex. Étampes"
+                aria-label="Rechercher une gare ou une station"
+                [value]="transitQuery()"
+                (input)="onTransitSearch($any($event.target).value)"
+                (keydown.enter)="onTransitEnter($event)" />
+              @if (searching()) {
+                <span class="transit-search__spinner" aria-hidden="true"></span>
+              } @else if (transitQuery()) {
+                <button type="button" class="transit-search__clear" (click)="clearTransitSearch()" aria-label="Effacer la recherche">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
-              </li>
+              }
+            </div>
+
+            @if (!searching() && visibleStops().length) {
+              <ul class="stop-list" aria-label="Arrêts trouvés">
+                @for (s of visibleStops(); track s.stopId) {
+                  <li>
+                    <button type="button" class="stop-row" (click)="selectStop(s)">
+                      <span class="stop-row__main">
+                        <span class="stop-row__name">{{ s.name }}</span>
+                        @if (s.city) { <span class="stop-row__city">{{ s.city }}</span> }
+                      </span>
+                      <span class="stop-row__lines" aria-label="{{ s.routes.length }} ligne(s)">
+                        @for (line of previewLines(s); track line.lineId) {
+                          <span class="mini-line" [style.background]="lineBg(line)" [style.color]="lineFg(line)">{{ line.shortName }}</span>
+                        }
+                        @if (moreLines(s)) { <span class="mini-line mini-line--more">+{{ moreLines(s) }}</span> }
+                      </span>
+                      <svg class="stop-row__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                  </li>
+                }
+              </ul>
+              @if (hiddenStopCount()) {
+                <p class="transit__hint">{{ hiddenStopCount() }} autre(s) arrêt(s) — précisez la recherche.</p>
+              }
+            } @else if (!searching() && searchedQuery() && !searchError()) {
+              <p class="transit__empty">Aucune gare ou station trouvée pour « {{ searchedQuery() }} ».</p>
+            } @else if (!transitQuery()) {
+              <p class="transit__hint">Recherchez la gare ou la station la plus proche du lieu de la sortie.</p>
             }
-          </ul>
+          }
+
+          @if (searchError(); as err) {
+            <p class="alert alert--error transit__alert" role="alert">{{ err }}</p>
+          }
+
+          @if (badges().length) {
+            <div class="placed">
+              <span class="line-group__label">Sur le flyer</span>
+              <ul class="placed__list">
+                @for (b of badges(); track b.id) {
+                  <li class="placed__item" [class.placed__item--selected]="selectedBadgeId() === b.id">
+                    <button type="button" class="placed__select" [attr.aria-pressed]="selectedBadgeId() === b.id" (click)="selectBadge(b.id)" title="Sélectionner pour redimensionner">
+                      {{ b.label }}
+                    </button>
+                    <button type="button" class="placed__remove" (click)="removeBadge(b.id)" [attr.aria-label]="'Retirer ' + b.label">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </section>
+          </div>
         </div>
       }
-    </section>
 
-    <button
-      type="button"
-      class="btn btn--primary btn--block controls__download"
-      [disabled]="renderError() !== null"
-      (click)="download()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-      Télécharger l'image
-    </button>
-  </section>
-</div>
-}
+      @case ('download') {
+        <h1 class="flow__title">Votre flyer est prêt</h1>
+        <p class="flow__lead">Vérifiez le lieu, puis téléchargez l'image.</p>
 
-@if (imageDialogOpen()) {
-  <app-image-search-dialog (picked)="onImagePicked($event)" (close)="closeImageDialog()" />
+        <div class="stage">
+          <div class="preview__frame">
+            <canvas
+              #canvas
+              class="preview__canvas"
+              [class.preview__canvas--draggable]="false"
+              role="img"
+              [attr.aria-label]="'Invitation ' + (place() || 'sans lieu')"
+              (pointerdown)="onPointerDown($event)"
+              (pointermove)="onPointerMove($event)"
+              (pointerup)="onPointerUp($event)"
+              (pointercancel)="onPointerUp($event)"
+              (wheel)="onWheel($event)"></canvas>
+          </div>
+          <label class="field stage__field">
+            <span class="field__label">Lieu écrit sur le flyer</span>
+            <input
+              class="field__control"
+              type="text"
+              autocomplete="off"
+              placeholder="Gare d'Étampes"
+              [value]="place()"
+              (input)="onPlace($any($event.target).value)" />
+          </label>
+          <button
+            type="button"
+            class="btn btn--primary btn--block flow__download"
+            [disabled]="renderError() !== null"
+            (click)="download()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            Télécharger l'image
+          </button>
+        </div>
+      }
+    }
+
+    @if (renderError(); as err) {
+      @if (step() !== 'photo') {
+        <p class="alert alert--error flow__alert" role="alert">{{ err }}</p>
+      }
+    }
+
+    <!-- Back / next, pinned to the bottom of the screen. -->
+    <nav class="flow-nav" aria-label="Navigation du flyer">
+      <button type="button" class="btn flow-nav__back" (click)="back()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Retour
+      </button>
+      @switch (step()) {
+        @case ('frame') {
+          <button type="button" class="btn btn--primary flow-nav__next" (click)="next()">
+            Suivant&nbsp;: transports
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        }
+        @case ('transports') {
+          <button type="button" class="btn btn--primary flow-nav__next" (click)="next()">
+            {{ badges().length ? 'Terminer' : 'Passer' }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        }
+      }
+    </nav>
+  </div>
 }
