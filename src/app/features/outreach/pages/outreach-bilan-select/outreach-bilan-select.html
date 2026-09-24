@@ -54,7 +54,7 @@
                 </span>
                 <span class="sortie-row__meta">{{ o.cityName || '—' }} · {{ fmtDate(o.date) }}</span>
               </span>
-              <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+              <span class="pill pill--{{ statusTone(o.status) }} sortie-row__status">{{ statusLabel(o.status) }}</span>
               <svg class="sortie-row__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
             </a>
           </li>
