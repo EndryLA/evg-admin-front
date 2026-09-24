@@ -101,6 +101,10 @@
   /* ---- Scrollbar ---- */
   --scrollbar-thumb: #e4e4e7;
 
+  /* Height of the app shell's pinned mobile top bar — what sticky headers sit
+     under once the document scrolls. The shell sets it on phones; 0 elsewhere. */
+  --shell-topbar-h: 0px;
+
   /* ---- Sidebar (dark chrome in both themes) ---- */
   --sidebar-bg: #161616;
   --sidebar-border: rgba(255, 255, 255, 0.08);
@@ -457,11 +461,15 @@ input, select, button, textarea { font-family: inherit; }
 .year-nav__today:hover { background: var(--bg-sunken); }
 
 /* ---- Month group heading: label, rule, count — pinned while its month scrolls ---- */
-.month-section { margin-bottom: 26px; }
+.month-section {
+  margin-bottom: 26px;
+  /* Jumping to a month lands its heading below the shell's mobile top bar. */
+  scroll-margin-top: var(--shell-topbar-h);
+}
 .month-section:last-child { margin-bottom: 0; }
 .month-section__head {
   position: sticky;
-  top: 0;
+  top: var(--shell-topbar-h);
   z-index: 2;
   display: flex;
   align-items: center;
@@ -831,7 +839,7 @@ input, select, button, textarea { font-family: inherit; }
 .slideover .icon-btn:hover { background: var(--border-input); }
 .slideover .panel__title { margin-top: 16px; font-size: 22px; }
 .slideover .panel__subtitle { margin: 3px 0 0; font-size: 13px; color: var(--text-muted); }
-.slideover .panel__body { flex: 1; overflow: auto; padding: 12px 24px; }
+.slideover .panel__body { flex: 1; overflow: auto; overscroll-behavior: contain; padding: 12px 24px; }
 .slideover .fields { margin: 0; display: flex; flex-direction: column; }
 .slideover .field-row {
   display: flex;
@@ -912,7 +920,10 @@ input, select, button, textarea { font-family: inherit; }
   width: 540px;
   max-width: 100%;
   max-height: 90vh;
+  max-height: 90dvh;
   overflow: auto;
+  /* Reaching the end of the form must not start scrolling the page behind. */
+  overscroll-behavior: contain;
   background: var(--bg-elevated);
   border-radius: 14px;
   box-shadow: var(--shadow-modal);
@@ -1257,6 +1268,7 @@ input, select, button, textarea { font-family: inherit; }
     bottom: 0;
     z-index: 46;
     max-height: 85vh;
+    max-height: 85dvh;
     background: var(--bg-elevated);
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
@@ -1308,6 +1320,7 @@ input, select, button, textarea { font-family: inherit; }
     gap: 18px;
     padding: 18px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
   /* Segmented status tabs stay a single row, scrolling if they overflow. */
@@ -1379,6 +1392,34 @@ input, select, button, textarea { font-family: inherit; }
   .fab svg { width: 24px; height: 24px; }
 }
 
+/* ===== Phones: the document scrolls, not the page =====
+   On desktop every routed page fills `.main` and scrolls inside itself. On
+   phones the app shell lets the document scroll instead (see app-shell.scss),
+   so those inner scrollers are undone here: each page, and the scrolling pane
+   inside the list shells, grows to its content. Selectors carry `.shell .main`
+   so they outrank the pages' own encapsulated `:host` / element rules.
+
+   The phone calendar (`.agenda`) is the exception — it is a fixed one-screen
+   layout with its own scrollers, sized in calendar-page.scss. */
+@media (max-width: 768px) {
+  .shell .main > :not(.agenda),
+  .shell .main .data-list,
+  .shell .main .data-list .table-region,
+  .shell .main app-attendance-stats,
+  .shell .main app-attendance-outreach-overview,
+  .shell .main .bilan {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  /* Breathing room under the last row, clear of the home indicator — and of
+     the floating create button on pages that have one. */
+  .shell .main { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .shell .main:has(.fab) { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .shell .main:has(> .agenda) { padding-bottom: 0; }
+}
+
 /* ===== Public pages (sortie landing + presence/contact forms) =====
    Unauthenticated and mobile-first: fill the whole viewport, no floating
    card. On wider screens it settles into a comfortable centered column. */
@@ -1387,7 +1428,7 @@ input, select, button, textarea { font-family: inherit; }
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 28px 16px calc(28px + env(safe-area-inset-bottom));
+  padding: calc(28px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
   background: var(--bg-page);
 }
 

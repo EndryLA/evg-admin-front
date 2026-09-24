@@ -167,9 +167,12 @@
   .agenda {
     display: flex;
     flex-direction: column;
-    /* Grow into `.main` rather than measuring it. */
-    flex: 1;
-    height: auto;
+    /* Exactly the screen under the shell's top bar. On phones the document
+       scrolls and `.main` grows to its content, so there is no parent height to
+       flex into — this is the one definite height the chain below hangs off. */
+    flex: none;
+    height: calc(100vh - var(--shell-topbar-h));
+    height: calc(100dvh - var(--shell-topbar-h));
     min-height: 0;
     /* The grid is sized to fit, so nothing here should scroll the page — an
        overshoot has to clip rather than pull the whole layout up. */

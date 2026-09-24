@@ -207,7 +207,7 @@ export class CityList {
     if (!sentinel) {
       return;
     }
-    const root = this.scrollRoot()?.nativeElement ?? null;
+    const root = this.scrollport();
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -220,16 +220,26 @@ export class CityList {
     this.destroyRef.onDestroy(() => io.disconnect());
   }
 
+  /**
+   * The element the list scrolls in: the table region on desktop, but on phones
+   * the document scrolls (the region grows to its content), so it's the
+   * viewport — `null`, as IntersectionObserver expects. Observing a region that
+   * doesn't scroll would see the sentinel as always visible and load every page.
+   */
+  private scrollport(): HTMLElement | null {
+    const region = this.scrollRoot()?.nativeElement;
+    return region && getComputedStyle(region).overflowY !== 'visible' ? region : null;
+  }
+
   /** If the sentinel is still visible after a load, fetch the next page. */
   private maybeLoadMore(): void {
     const sentinel = this.sentinel()?.nativeElement;
-    const root = this.scrollRoot()?.nativeElement;
-    if (!sentinel || !root || !this.hasMore()) {
+    if (!sentinel || !this.hasMore()) {
       return;
     }
-    const sRect = sentinel.getBoundingClientRect();
-    const rRect = root.getBoundingClientRect();
-    if (sRect.top <= rRect.bottom + 300) {
+    const root = this.scrollport();
+    const bottom = root ? root.getBoundingClientRect().bottom : window.innerHeight;
+    if (sentinel.getBoundingClientRect().top <= bottom + 300) {
       // Defer to avoid re-entrant loads within the same tick.
       queueMicrotask(() => this.loadMore());
     }

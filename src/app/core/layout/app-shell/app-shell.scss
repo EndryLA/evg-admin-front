@@ -271,9 +271,20 @@ a.nav__item--active:hover {
 }
 
 /* ---- Mobile: collapse sidebar into a slide-in overlay ---- */
+/* On phones the document itself scrolls, not a box inside the shell: that is
+   what lets the browser collapse its address bar, honours tap-the-status-bar to
+   go back up, and lets the router restore the scroll position. So the shell
+   grows with its content (`dvh`, not `vh`, which ignores the browser toolbars)
+   and the top bar pins itself. `--shell-topbar-h` is how far the page's own
+   sticky headers must sit below it (see styles.scss). */
 @media (max-width: 768px) {
   .shell {
+    --shell-topbar-h: calc(61px + env(safe-area-inset-top, 0px));
     flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
   }
 
   .topbar {
@@ -281,7 +292,10 @@ a.nav__item--active:hover {
     align-items: center;
     gap: 14px;
     flex: 0 0 auto;
-    padding: 10px 16px;
+    position: sticky;
+    top: 0;
+    /* 40px toggle + 2 × 10px padding + 1px border = 61px, mirrored above. */
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
     background: var(--bg-card);
     border-bottom: 1px solid var(--border);
     z-index: 30;
@@ -319,6 +333,10 @@ a.nav__item--active:hover {
 
   .main {
     flex: 1;
+    /* `clip` rather than `hidden`: it trims a too-wide table without making
+       `.main` a scroll container, which would re-anchor every sticky header. */
+    overflow: visible;
+    overflow-x: clip;
   }
 }
 

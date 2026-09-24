@@ -12,7 +12,7 @@
   display: block;
   height: 100%;
   overflow-y: auto;
-  padding: 18px 16px calc(32px + env(safe-area-inset-bottom));
+  padding: 18px 16px 32px;
 }
 
 /* Comfortable tap target without shifting the text off the grid. */

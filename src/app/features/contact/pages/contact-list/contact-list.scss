@@ -78,8 +78,9 @@ tbody tr.row--selected { background: var(--row-hover); }
 
 .group-head {
   position: sticky;
-  /* Sits directly under the pinned month heading (23px + its 8px padding). */
-  top: 39px;
+  /* Sits directly under the pinned month heading (23px + its 8px padding),
+     itself under the shell's mobile top bar. */
+  top: calc(var(--shell-topbar-h) + 39px);
   z-index: 1;
   display: flex;
   align-items: center;

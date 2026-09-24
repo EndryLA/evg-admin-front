@@ -19,9 +19,8 @@
 .alert { margin: 16px 0 0; }
 
 @media (max-width: 720px) {
-  /* Bottom padding clears the FAB (56px + its 20px inset) so it never covers
-     the last row or the card's "Voir tout" footer. */
-  :host { padding: 18px 16px calc(96px + env(safe-area-inset-bottom)); }
+  /* The app shell adds the bottom clearance for the FAB (styles.scss). */
+  :host { padding: 18px 16px 16px; }
 
   .page-head { flex-direction: column; align-items: stretch; }
   /* The inline add button gives way to the FAB. */
