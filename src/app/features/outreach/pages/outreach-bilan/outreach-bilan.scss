@@ -15,6 +15,8 @@
 }
 
 .panel {
+  /* Let grid columns shrink below their content on narrow screens. */
+  min-width: 0;
   padding: 22px;
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
@@ -53,10 +55,13 @@
 .controls__download { margin-top: 22px; }
 
 @media (max-width: 900px) {
-  .bilan-body { grid-template-columns: 1fr; }
+  /* minmax(0, …): a bare 1fr can't shrink below its content's width. */
+  .bilan-body { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 720px) {
   :host { padding: 18px 16px 40px; }
   .panel { padding: 18px; }
+  /* One figure per row: two number fields side by side are cramped on a phone. */
+  .controls__grid { grid-template-columns: minmax(0, 1fr); }
 }

@@ -39,8 +39,11 @@
 }
 .summary__row--last { border-bottom: none; }
 .summary__row dt { font-size: 13px; color: var(--text-faint); }
+.summary__row dt { flex: none; }
 .summary__row dd {
+  min-width: 0;
   margin: 0;
+  overflow-wrap: anywhere;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
@@ -69,5 +72,16 @@
     gap: 14px;
   }
   .detail-actions .btn { flex: 1; justify-content: center; }
+
+  /* Label above value: long lieux and the UUID no longer squeeze into a
+     right-aligned column beside the label. */
+  .summary { padding: 2px 16px; }
+  .summary__row {
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+  }
+  .summary__row dt { font-size: 12px; }
+  .summary__row dd { text-align: left; }
 }
 

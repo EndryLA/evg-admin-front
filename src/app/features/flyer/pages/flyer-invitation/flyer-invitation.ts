@@ -16,6 +16,10 @@ import {
   type FlyerBadge,
   type InviteValues,
 } from '../../flyer-invitation.util';
+import {
+  ImageSearchDialog,
+  type PickedImage,
+} from '../../components/image-search-dialog/image-search-dialog';
 import { TransitService, type TransitLine, type TransitStop } from '../../transit.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import {
@@ -114,7 +118,7 @@ type DragMode = 'none' | 'photo' | 'badge';
  */
 @Component({
   selector: 'app-flyer-invitation',
-  imports: [RouterLink],
+  imports: [RouterLink, ImageSearchDialog],
   templateUrl: './flyer-invitation.html',
   styleUrls: ['./flyer-invitation.scss', './flyer-transit.scss'],
 })
@@ -214,6 +218,9 @@ export class FlyerInvitation {
     () => this.badges().find((b) => b.id === this.selectedBadgeId()) ?? null,
   );
 
+  /** Whether the web image picker modal is open. */
+  protected readonly imageDialogOpen = signal(false);
+
   // ---- Transport search ----
   protected readonly transitQuery = signal('');
   protected readonly stops = signal<TransitStop[]>([]);
@@ -233,6 +240,8 @@ export class FlyerInvitation {
   );
   /** The line whose logo is being fetched — its chip shows a busy state. */
   protected readonly pendingLineId = signal<string | null>(null);
+  /** The stop the placed badges came from — switching stops clears them. */
+  private badgesStopId: string | null = null;
   private searchTimer?: ReturnType<typeof setTimeout>;
   private searchSub?: Subscription;
 
@@ -334,28 +343,45 @@ export class FlyerInvitation {
     return STATUS_TONES[status];
   }
 
-  /** Load the chosen image file into an off-DOM `Image` for the canvas draw. */
-  protected onPhoto(input: HTMLInputElement): void {
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      this.photo.set(image);
-      this.photoName.set(file.name);
-      // Start from a centred, un-zoomed placement for the new photo.
-      this.scale.set(MIN_SCALE);
-      this.offsetX.set(0);
-      this.offsetY.set(0);
-      URL.revokeObjectURL(url);
-    };
-    image.onerror = () => {
-      this.renderError.set('Image illisible. Choisissez un autre fichier.');
-      URL.revokeObjectURL(url);
-    };
-    image.src = url;
+  /** Decode `blob` and make it the centre photo, reset to a centred, un-zoomed placement. */
+  private setPhotoFromBlob(blob: Blob, name: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        this.photo.set(image);
+        this.photoName.set(name);
+        this.scale.set(MIN_SCALE);
+        this.offsetX.set(0);
+        this.offsetY.set(0);
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('unreadable image'));
+      };
+      image.src = url;
+    });
+  }
+
+  // ---- Web image search ----
+
+  protected openImageDialog(): void {
+    this.imageDialogOpen.set(true);
+  }
+
+  protected closeImageDialog(): void {
+    this.imageDialogOpen.set(false);
+  }
+
+  /** An image was picked in the modal (from the web, or imported from the device
+   *  when the web search fails): make it the centre photo and close. */
+  protected onImagePicked(picked: PickedImage): void {
+    this.setPhotoFromBlob(picked.blob, picked.name).then(
+      () => this.imageDialogOpen.set(false),
+      () => this.renderError.set('Image illisible. Choisissez-en une autre.'),
+    );
   }
 
   protected clearPhoto(): void {
@@ -419,8 +445,14 @@ export class FlyerInvitation {
     this.selectedStop.set(null);
   }
 
-  /** Open a stop's lines; the result list folds away behind it. */
+  /** Open a stop's lines; the result list folds away behind it. Picking a
+   *  different stop clears the logos placed from the previous one. */
   protected selectStop(stop: TransitStop): void {
+    if (this.badgesStopId !== null && this.badgesStopId !== stop.stopId) {
+      this.badges.set([]);
+      this.selectedBadgeId.set(null);
+    }
+    this.badgesStopId = stop.stopId;
     this.selectedStop.set(stop);
   }
 

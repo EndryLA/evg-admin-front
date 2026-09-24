@@ -56,12 +56,12 @@
                 (click)="chooseOutreach(o)">
                 <span class="sortie-row__main">
                   <span class="sortie-row__name">
-                    {{ o.name }}
+                    <span class="sortie-row__title">{{ o.name }}</span>
                     @if (isNext(o)) { <span class="sortie-row__flag">Prochaine</span> }
                   </span>
                   <span class="sortie-row__meta">{{ o.cityName || '—' }} · {{ fmtDate(o.date) }}</span>
                 </span>
-                <span class="pill pill--{{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+                <span class="pill pill--{{ statusTone(o.status) }} sortie-row__status">{{ statusLabel(o.status) }}</span>
                 <svg class="sortie-row__go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
               </button>
             </li>
@@ -151,15 +151,14 @@
       <div class="field controls__wide">
         <span class="field__label">Photo (au centre)</span>
         <div class="photo-pick">
-          <label class="btn photo-pick__btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
-            Choisir une photo
-            <input
-              type="file"
-              accept="image/*"
-              class="photo-pick__input"
-              (change)="onPhoto($any($event.target))" />
-          </label>
+          <button
+            type="button"
+            class="btn photo-pick__btn"
+            aria-haspopup="dialog"
+            (click)="openImageDialog()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            Rechercher sur le web
+          </button>
           @if (photoName(); as name) {
             <span class="photo-pick__name">{{ name }}</span>
             <button type="button" class="photo-pick__clear" (click)="clearPhoto()">Retirer</button>
@@ -318,4 +317,8 @@
     </button>
   </section>
 </div>
+}
+
+@if (imageDialogOpen()) {
+  <app-image-search-dialog (picked)="onImagePicked($event)" (close)="closeImageDialog()" />
 }
