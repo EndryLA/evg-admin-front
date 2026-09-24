@@ -1,3 +1,4 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
   NavigationEnd,
@@ -6,7 +7,7 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { catchError, filter, map, of, switchMap, type Observable } from 'rxjs';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import { ACCESS } from '../../auth/access';
@@ -14,6 +15,22 @@ import { primaryRole, ROLE_LABELS } from '../../auth/auth.models';
 import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../theme/theme.service';
 import { BrandLogo } from '../../../shared/ui/brand-logo/brand-logo';
+
+/** `ProfileResponse`, narrowed to the name. */
+interface RawProfileName {
+  firstname?: string | null;
+  lastname?: string | null;
+}
+
+interface ProfileName {
+  firstname: string;
+  lastname: string;
+}
+
+function toProfileName(raw: RawProfileName): ProfileName | null {
+  const firstname = raw.firstname?.trim() ?? '';
+  return firstname ? { firstname, lastname: raw.lastname?.trim() ?? '' } : null;
+}
 
 /**
  * Authenticated layout: a dark sidebar (brand, grouped nav, user card) plus a
@@ -35,6 +52,7 @@ export class AppShell {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly theme = inject(ThemeService);
+  private readonly http = inject(HttpClient);
 
   protected readonly user = this.auth.currentUser;
 
@@ -88,6 +106,48 @@ export class AppShell {
 
     // Persist the desktop collapsed preference.
     effect(() => this.writeCollapsed(this.collapsed()));
+
+    // Look the user's name up whenever the signed-in account changes.
+    effect((onCleanup) => {
+      const user = this.user();
+      this.profileName.set(null);
+      if (!user) {
+        return;
+      }
+      const sub = this.lookUpName(user.profileUuid, user.email).subscribe((name) =>
+        this.profileName.set(name),
+      );
+      onCleanup(() => sub.unsubscribe());
+    });
+  }
+
+  /**
+   * The token carries no name, so the linked profile is fetched: by its uuid
+   * when the claim is present, else by searching the roster for the e-mail.
+   * Best-effort — `null` when neither resolves.
+   */
+  private lookUpName(profileUuid: string | null, email: string | null): Observable<ProfileName | null> {
+    const byUuid = profileUuid
+      ? this.http.get<RawProfileName>(`/api/profiles/${profileUuid}`).pipe(
+          map(toProfileName),
+          catchError(() => of(null)),
+        )
+      : of(null);
+
+    return byUuid.pipe(
+      switchMap((name) => {
+        if (name || !email?.includes('@')) {
+          return of(name);
+        }
+        const params = new HttpParams().set('page', 0).set('size', 1).set('search', email);
+        return this.http
+          .get<{ content?: RawProfileName[] }>('/api/profiles', { params })
+          .pipe(
+            map((page) => (page.content?.[0] ? toProfileName(page.content[0]) : null)),
+            catchError(() => of(null)),
+          );
+      }),
+    );
   }
 
   protected toggleSidebar(): void {
@@ -128,7 +188,15 @@ export class AppShell {
     return role ? ROLE_LABELS[role] : 'Membre';
   });
 
+  /** The signed-in member's profile name, once looked up (see the constructor). */
+  private readonly profileName = signal<ProfileName | null>(null);
+
+  /** `Marie Dupont` from the profile; the e-mail's local part until it's known. */
   protected readonly displayName = computed(() => {
+    const name = this.profileName();
+    if (name?.firstname) {
+      return `${name.firstname} ${name.lastname}`.trim();
+    }
     const email = this.user()?.email;
     if (!email) {
       return 'Utilisateur';
@@ -137,6 +205,10 @@ export class AppShell {
   });
 
   protected readonly initials = computed(() => {
+    const name = this.profileName();
+    if (name?.firstname) {
+      return (name.firstname.charAt(0) + name.lastname.charAt(0)).toUpperCase();
+    }
     const source = this.displayName();
     const parts = source.split(/[.\-_\s]+/).filter(Boolean);
     const letters = (parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '');

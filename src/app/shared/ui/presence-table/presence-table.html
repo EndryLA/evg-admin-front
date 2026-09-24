@@ -17,7 +17,7 @@
     } @else if (presences().length === 0) {
       <div class="state">
         <div class="state__title">Aucune présence</div>
-        <div class="state__hint">Personne n'a encore marqué sa présence à cette sortie.</div>
+        <div class="state__hint">{{ emptyHint() }}</div>
       </div>
     } @else {
       <table>

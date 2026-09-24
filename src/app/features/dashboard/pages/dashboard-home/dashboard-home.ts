@@ -4,28 +4,18 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { formatDateFr, formatLongDateFr, formatTimeFr } from '../../../../shared/util/date.util';
+import { PreAttendanceMonth } from '../../components/pre-attendance-month/pre-attendance-month';
 import { DashboardService } from '../../dashboard.service';
-import {
-  STATUS_LABELS,
-  STATUS_TONES,
-  type DashboardCounts,
-  type DashboardOutreach,
-} from '../../dashboard.models';
-
-const EMPTY_COUNTS: DashboardCounts = {
-  members: 0,
-  ouvriers: 0,
-  aides: 0,
-};
+import { STATUS_LABELS, STATUS_TONES, type DashboardOutreach } from '../../dashboard.models';
 
 /**
  * Landing page of the admin space (`/tableau-de-bord`) — a read-only overview
  * built around the next sortie: when it is and how to jump straight into its
- * gestion page, plus the roster's headline count.
+ * gestion page, plus the month's pre-registrations.
  */
 @Component({
   selector: 'app-dashboard-home',
-  imports: [RouterLink],
+  imports: [RouterLink, PreAttendanceMonth],
   templateUrl: './dashboard-home.html',
   styleUrl: './dashboard-home.scss',
 })
@@ -38,7 +28,6 @@ export class DashboardHome implements OnInit {
 
   /** The sortie the page is built around: the soonest one still ahead. */
   protected readonly nextOutreach = signal<DashboardOutreach | null>(null);
-  protected readonly counts = signal<DashboardCounts>(EMPTY_COUNTS);
 
   /** Today as `YYYY-MM-DD`, read once so the page stays stable while open. */
   private readonly today = toIsoDate(new Date());
@@ -113,7 +102,6 @@ export class DashboardHome implements OnInit {
         next: (data) => {
           this.firstname.set(data.firstname);
           this.nextOutreach.set(data.next);
-          this.counts.set(data.counts);
           this.loading.set(false);
         },
         error: (error: unknown) => {

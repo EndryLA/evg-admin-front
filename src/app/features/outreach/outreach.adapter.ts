@@ -1,16 +1,11 @@
 import type {
-  AttendanceReason,
-  AttendanceType,
   City,
   CivilState,
   ContactEntry,
   ContactType,
   Outreach,
-  OutreachAttendance,
-  OutreachAttendanceInput,
   OutreachInput,
   OutreachPage,
-  OutreachPreAttendance,
   OutreachStatus,
 } from './outreach.models';
 
@@ -57,37 +52,16 @@ export interface RawOutreachRequest {
   managedByUuid: string | null;
 }
 
-/** Raw `AttendanceResponse` from the backend (only the fields we display). */
-export interface RawOutreachAttendance {
-  uuid?: string;
-  firstname?: string;
-  lastname?: string;
-  invitedBy?: string;
-  type?: string | null;
-  reason?: string | null;
-  /** Linked department profile — present for MEMBER presences, and where their
-   *  name lives (the top-level name fields are only filled for guests). */
-  profile?: { firstname?: string; lastname?: string } | null;
-  outreachUuid?: string;
-}
-
-/** Raw `AttendanceRequest` sent when creating or editing a presence. */
-export interface RawAttendanceRequest {
-  type: AttendanceType;
-  outreachUuid: string;
-  profileUuid?: string;
-  firstname?: string;
-  lastname?: string;
-  reason?: AttendanceReason;
-  invitedBy?: string;
-}
-
-/** Raw `PreAttendanceResponse` — an attendance plus its confirmation state. */
-export interface RawOutreachPreAttendance extends RawOutreachAttendance {
-  confirmed?: boolean;
-  attendanceUuid?: string | null;
-  createdAt?: string | null;
-}
+// Presence and sign-up shapes and mapping are shared with calendar events.
+export type {
+  RawPresence as RawOutreachAttendance,
+  RawPreRegistration as RawOutreachPreAttendance,
+} from '../../shared/attendance/attendance.adapter';
+export {
+  toPresence as toOutreachAttendance,
+  toPreRegistration as toOutreachPreAttendance,
+  toRawAttendanceRequest,
+} from '../../shared/attendance/attendance.adapter';
 
 /** Raw `CityResponse`, as nested in `OutreachResponse.city` and
  *  `ContactEntryResponse.city`. */
@@ -131,29 +105,6 @@ function toStatus(value: string | null | undefined): OutreachStatus {
   return STATUSES.includes(value as OutreachStatus)
     ? (value as OutreachStatus)
     : 'SCHEDULED';
-}
-
-const ATTENDANCE_TYPES: readonly AttendanceType[] = ['GUEST', 'MEMBER'];
-
-function toAttendanceType(value: string | null | undefined): AttendanceType {
-  return ATTENDANCE_TYPES.includes(value as AttendanceType)
-    ? (value as AttendanceType)
-    : 'GUEST';
-}
-
-const ATTENDANCE_REASONS: readonly AttendanceReason[] = [
-  'INVITATION',
-  'INFO_GROUP',
-  'INSTAGRAM',
-  'BLOC',
-  'SECTOR',
-  'OTHER',
-];
-
-function toAttendanceReason(value: string | null | undefined): AttendanceReason | null {
-  return ATTENDANCE_REASONS.includes(value as AttendanceReason)
-    ? (value as AttendanceReason)
-    : null;
 }
 
 const CONTACT_TYPES: readonly ContactType[] = ['CONTACT', 'CONVERSION'];
@@ -236,63 +187,6 @@ export function toRawOutreachRequest(input: OutreachInput): RawOutreachRequest {
   }
 
   return request;
-}
-
-/**
- * Map a raw attendance to the outreach feature's presence model. A member is
- * only linked by profile — the top-level name fields stay empty for them — so
- * the profile's name takes precedence when there is one.
- */
-export function toOutreachAttendance(raw: RawOutreachAttendance): OutreachAttendance {
-  const profile = raw.profile;
-  return {
-    uuid: raw.uuid ?? '',
-    firstname: profile?.firstname || raw.firstname || '',
-    lastname: profile?.lastname || raw.lastname || '',
-    invitedBy: raw.invitedBy ?? '',
-    type: toAttendanceType(raw.type),
-    reason: toAttendanceReason(raw.reason),
-  };
-}
-
-/**
- * Map a new presence to the raw `AttendanceRequest`. Optional fields are
- * omitted when empty so the backend only receives what applies to the type.
- */
-export function toRawAttendanceRequest(
-  outreachUuid: string,
-  input: OutreachAttendanceInput,
-): RawAttendanceRequest {
-  const request: RawAttendanceRequest = { type: input.type, outreachUuid };
-
-  if (input.type === 'MEMBER') {
-    if (input.profileUuid) {
-      request.profileUuid = input.profileUuid;
-    }
-    return request;
-  }
-
-  const firstname = input.firstname?.trim();
-  if (firstname) request.firstname = firstname;
-
-  const lastname = input.lastname?.trim();
-  if (lastname) request.lastname = lastname;
-
-  const invitedBy = input.invitedBy?.trim();
-  if (invitedBy) request.invitedBy = invitedBy;
-
-  if (input.reason) request.reason = input.reason;
-
-  return request;
-}
-
-/** Map a raw pre-attendance to the outreach feature's sign-up model. */
-export function toOutreachPreAttendance(raw: RawOutreachPreAttendance): OutreachPreAttendance {
-  return {
-    ...toOutreachAttendance(raw),
-    confirmed: raw.confirmed ?? false,
-    createdAt: raw.createdAt ?? null,
-  };
 }
 
 /** Map the raw nested `city` object to a clean {@link City}, or `null`. */

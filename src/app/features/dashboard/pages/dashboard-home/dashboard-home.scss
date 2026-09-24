@@ -55,33 +55,10 @@
 .hero__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .hero__actions .btn { text-decoration: none; }
 
-/* ---- Roster card ---- */
-.roster {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 22px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  background: var(--bg-card);
-}
-.roster__figures { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.roster__value {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-}
-.roster__split { font-size: 13px; color: var(--text-muted); }
-.roster .btn { flex: none; text-decoration: none; }
-
 /* ---- Mobile ---- */
 @media (max-width: 720px) {
   :host { padding: 18px 16px 40px; }
   .hero { padding: 18px 16px; }
   .hero__title { font-size: 19px; }
   .hero__actions .btn { flex: 1; justify-content: center; }
-  .roster { padding: 16px; }
-  .roster__value { font-size: 24px; }
 }

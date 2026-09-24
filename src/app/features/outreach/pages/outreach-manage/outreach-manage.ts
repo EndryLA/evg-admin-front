@@ -7,8 +7,8 @@ import { messageFromError } from '../../../../core/http/http-error.util';
 import { OutreachCloseDialog } from '../../components/outreach-close-dialog/outreach-close-dialog';
 import { OutreachStartDialog } from '../../components/outreach-start-dialog/outreach-start-dialog';
 import { OutreachContacts } from '../../components/outreach-contacts/outreach-contacts';
-import { OutreachPreAttendances } from '../../components/outreach-pre-attendances/outreach-pre-attendances';
-import { OutreachPresences } from '../../components/outreach-presences/outreach-presences';
+import { PreRegistrationTable } from '../../../../shared/ui/pre-registration-table/pre-registration-table';
+import { PresenceTable } from '../../../../shared/ui/presence-table/presence-table';
 import { OutreachService } from '../../outreach.service';
 import {
   STATUS_LABELS,
@@ -35,8 +35,8 @@ import {
     OutreachCloseDialog,
     OutreachStartDialog,
     OutreachContacts,
-    OutreachPreAttendances,
-    OutreachPresences,
+    PreRegistrationTable,
+    PresenceTable,
   ],
   host: { class: 'manage-page', '(document:keydown.escape)': 'closeQr()' },
   templateUrl: './outreach-manage.html',

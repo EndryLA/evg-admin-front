@@ -1,0 +1,19 @@
+:host { display: inline-block; flex: none; }
+
+.msl-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-tertiary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.msl-compact:hover { background: var(--bg-sunken); color: var(--text-primary); }
+.msl-compact svg { width: 13px; height: 13px; }

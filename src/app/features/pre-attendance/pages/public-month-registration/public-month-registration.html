@@ -1,0 +1,234 @@
+<main class="public-shell public-shell--center">
+  <section class="public-card" role="region" aria-label="Inscriptions du mois">
+    <div class="public-brand">
+      <app-brand-logo [priority]="true" />
+    </div>
+
+    @if (loading()) {
+      <p class="page-state" role="status">Chargement des dates…</p>
+    } @else if (loadError(); as message) {
+      <div class="notice">
+        <div class="notice__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        </div>
+        <h1>Lien indisponible</h1>
+        <p>{{ message }}</p>
+        <button type="button" class="btn btn--primary btn--block" (click)="load()">Réessayer</button>
+      </div>
+    } @else {
+      <header class="public-head">
+        <h1>{{ hasEvents() ? 'Inscriptions du mois' : 'Inscription aux sorties' }}</h1>
+        <p class="public-sub">{{ monthLabel() }}</p>
+      </header>
+
+      @if (doneName() !== null) {
+        <div class="notice notice--success" role="status">
+          <div class="notice__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h2>{{ doneTitle() }}</h2>
+          <p>Votre présence sera confirmée sur place, le jour même.</p>
+        </div>
+
+        <ul class="done-list">
+          @for (row of doneRows(); track row.uuid) {
+            <li class="done-row">
+              <span class="done-row__body">
+                <span class="done-row__name">{{ row.name }}</span>
+                @if (row.when) {
+                  <span class="done-row__when">{{ row.when }}</span>
+                }
+              </span>
+              <span class="done-row__badge done-row__badge--{{ row.outcome }}">{{ row.outcomeLabel }}</span>
+            </li>
+          }
+        </ul>
+      } @else if (slots().length === 0) {
+        <div class="notice">
+          <div class="notice__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
+          <h2>Aucune date ouverte</h2>
+          <p>Rien n'est encore ouvert aux inscriptions pour {{ monthLabel() }}.</p>
+        </div>
+      } @else if (step() === 'pick') {
+        <!-- Step 1 — which dates -->
+        <p class="step-count">Étape 1 sur 2</p>
+        <div class="step-head">
+          <p class="question">{{ hasEvents() ? 'Choisissez vos dates' : 'Choisissez vos sorties' }}</p>
+          @if (slots().length > 1) {
+            <button type="button" class="link-btn" (click)="toggleAll()">
+              {{ allSelected() ? 'Tout désélectionner' : 'Tout sélectionner' }}
+            </button>
+          }
+        </div>
+
+        <ul class="slots" [class.slots--invalid]="selectionError()">
+          @for (o of slots(); track o.uuid) {
+            <li>
+              <label class="slot" [class.slot--checked]="isSelected(o.uuid)">
+                <input type="checkbox" class="slot__input" [checked]="isSelected(o.uuid)" (change)="toggle(o.uuid)" />
+                @if (o.day) {
+                  <span class="event__tile slot__tile" aria-hidden="true">
+                    <span class="event__day">{{ o.day }}</span>
+                    <span class="event__month">{{ o.monthShort }}</span>
+                  </span>
+                }
+                <span class="slot__body">
+                  <span class="slot__name">
+                    {{ o.name || (o.kind === 'EVENT' ? o.typeLabel : 'Sortie évangélisation') }}
+                    @if (o.typeLabel) {
+                      <span class="slot__tag">{{ o.typeLabel }}</span>
+                    }
+                  </span>
+                  <span class="slot__when">{{ o.when }}</span>
+                  @if (o.where) {
+                    <span class="slot__where">{{ o.where }}</span>
+                  }
+                </span>
+                <span class="slot__check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                </span>
+              </label>
+            </li>
+          }
+        </ul>
+        @if (selectionError()) {
+          <p class="field__error slots__error" role="alert">Choisissez au moins une date.</p>
+        }
+
+        <button type="button" class="btn btn--primary btn--block" (click)="next()">
+          @if (selectedCount() > 0) {
+            Continuer · {{ selectionLabel() }}
+          } @else {
+            Continuer
+          }
+        </button>
+      } @else {
+        <!-- Step 2 — who -->
+        <p class="step-count">Étape 2 sur 2</p>
+        <button type="button" class="picked" (click)="editSelection()">
+          <span class="picked__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </span>
+          <span class="picked__text">
+            {{ selectionLabel() }} sélectionnée{{ selectedCount() > 1 ? 's' : '' }}
+          </span>
+          <span class="picked__edit">Modifier</span>
+        </button>
+
+        @if (error(); as message) {
+          <p class="alert alert--error" role="alert">{{ message }}</p>
+        }
+
+        @if (kind() === null) {
+          <p class="question">Vous participez en tant que&nbsp;?</p>
+          <div class="choices">
+            <button type="button" class="choice" (click)="choose('MEMBER')">
+              <span class="choice__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <span class="choice__body">
+                <span class="choice__title">Je suis du département</span>
+                <span class="choice__hint">Retrouvez votre nom dans la liste.</span>
+              </span>
+              <svg class="choice__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+
+            <button type="button" class="choice" (click)="choose('GUEST')">
+              <span class="choice__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+              </span>
+              <span class="choice__body">
+                <span class="choice__title">Je suis invité(e)</span>
+                <span class="choice__hint">Quelques infos et c'est bon.</span>
+              </span>
+              <svg class="choice__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        } @else {
+          <button type="button" class="back-link" (click)="back()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            {{ kind() === 'MEMBER' ? 'Membre du département' : 'Invité(e)' }} · Changer
+          </button>
+        }
+
+        @if (kind() === 'MEMBER') {
+          <form class="signup-form" [formGroup]="memberForm" (ngSubmit)="submit()" novalidate>
+            <div class="field">
+              <label class="field__label" for="member">Votre nom</label>
+              <app-member-autocomplete
+                inputId="member"
+                formControlName="member"
+                placeholder="Commencez à taper votre nom…"
+                [ariaInvalid]="memberForm.controls.member.touched && memberForm.controls.member.invalid" />
+              @if (memberForm.controls.member.touched && memberForm.controls.member.invalid) {
+                <span class="field__error">Sélectionnez votre nom dans la liste.</span>
+              }
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+              {{ submitLabel() }}
+            </button>
+          </form>
+        }
+
+        @if (kind() === 'GUEST') {
+          <form class="signup-form" [formGroup]="guestForm" (ngSubmit)="submit()" novalidate>
+            <div class="grid">
+              <div class="field">
+                <label class="field__label" for="firstname">Prénom</label>
+                <input id="firstname" class="field__control" formControlName="firstname" autocomplete="given-name"
+                  (blur)="capitalize('firstname')"
+                  [attr.aria-invalid]="guestForm.controls.firstname.touched && guestForm.controls.firstname.invalid" />
+                @if (guestForm.controls.firstname.touched && guestForm.controls.firstname.invalid) {
+                  <span class="field__error">Le prénom est requis.</span>
+                }
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="lastname">Nom</label>
+                <input id="lastname" class="field__control" formControlName="lastname" autocomplete="family-name"
+                  (blur)="capitalize('lastname')"
+                  [attr.aria-invalid]="guestForm.controls.lastname.touched && guestForm.controls.lastname.invalid" />
+                @if (guestForm.controls.lastname.touched && guestForm.controls.lastname.invalid) {
+                  <span class="field__error">Le nom est requis.</span>
+                }
+              </div>
+
+              <div class="field field--span">
+                <label class="field__label" for="reason">Comment avez-vous connu les sorties&nbsp;?</label>
+                <select id="reason" class="field__control" formControlName="reason"
+                  [attr.aria-invalid]="guestForm.controls.reason.touched && guestForm.controls.reason.invalid">
+                  <option value="" disabled>Choisissez…</option>
+                  @for (option of reasonOptions; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+                @if (guestForm.controls.reason.touched && guestForm.controls.reason.invalid) {
+                  <span class="field__error">Ce champ est requis.</span>
+                }
+              </div>
+
+              @if (showInvitedBy) {
+                <div class="field field--span">
+                  <label class="field__label" for="invitedBy">Invité(e) par</label>
+                  <input id="invitedBy" class="field__control" formControlName="invitedBy" autocomplete="off"
+                    placeholder="Nom de la personne qui vous a invité(e)"
+                    [attr.aria-invalid]="guestForm.controls.invitedBy.touched && guestForm.controls.invitedBy.invalid" />
+                  @if (guestForm.controls.invitedBy.touched && guestForm.controls.invitedBy.invalid) {
+                    <span class="field__error">Indiquez qui vous a invité(e).</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
+              {{ submitLabel() }}
+            </button>
+          </form>
+        }
+      }
+    }
+  </section>
+</main>

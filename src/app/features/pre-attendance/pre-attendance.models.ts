@@ -43,6 +43,41 @@ export interface SignUpOutreach {
   status: SignUpOutreachStatus;
 }
 
+/** What a monthly slot points at: a sortie, or a calendar event open to sign-ups. */
+export type SlotKind = 'OUTREACH' | 'EVENT';
+
+/** Labels for the calendar event types that can open sign-ups. */
+export const EVENT_TYPE_LABELS: Record<string, string> = {
+  REUNION: 'Réunion',
+  AGAPE: 'Agapé',
+  OTHER: 'Événement',
+};
+
+/** A sortie or an event offered on the monthly sign-up page (`PublicSignupSlot`). */
+export interface MonthSlot {
+  kind: SlotKind;
+  uuid: string;
+  name: string;
+  /** Calendar day, `YYYY-MM-DD`, or `null` when unset. */
+  date: string | null;
+  /** Wall-clock times, `HH:mm:ss`, or `null` when unset. */
+  startTime: string | null;
+  endTime: string | null;
+  location: string;
+  cityName: string;
+  /** `Agapé`, `Réunion`… for an event; empty for a sortie. */
+  typeLabel: string;
+}
+
+/** What became of one ticked slot once the monthly sign-up was sent. */
+export type MonthRegistrationOutcome = 'REGISTERED' | 'ALREADY_REGISTERED' | 'CLOSED';
+
+export interface MonthRegistrationResult {
+  kind: SlotKind;
+  uuid: string;
+  outcome: MonthRegistrationOutcome;
+}
+
 /**
  * A public sign-up (`PublicAttendanceRequest`). A MEMBER is identified by their
  * profile; a GUEST gives a name, how they heard of it and — for an invitation —

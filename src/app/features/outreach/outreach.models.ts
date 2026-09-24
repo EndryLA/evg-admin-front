@@ -188,98 +188,22 @@ export const CIVIL_STATE_OPTIONS: readonly { value: CivilState; label: string }[
   { value: 'MISSING_INFORMATION', label: CIVIL_STATE_LABELS.MISSING_INFORMATION },
 ];
 
-/** Whether an attendee is a first-time guest or an existing department member. */
-export type AttendanceType = 'GUEST' | 'MEMBER';
-
-/** French labels for {@link AttendanceType}. */
-export const ATTENDANCE_TYPE_LABELS: Record<AttendanceType, string> = {
-  GUEST: 'Invité',
-  MEMBER: 'Membre',
-};
-
-/** Badge tone (see global `.pill--*`) per attendance type. */
-export const ATTENDANCE_TYPE_TONES: Record<AttendanceType, string> = {
-  GUEST: 'grey',
-  MEMBER: 'red',
-};
-
-/** How a guest came to the outreach (mirrors the backend `AttendanceReason`). */
-export type AttendanceReason =
-  | 'INVITATION'
-  | 'INFO_GROUP'
-  | 'INSTAGRAM'
-  | 'BLOC'
-  | 'SECTOR'
-  | 'OTHER';
-
-/** French labels for {@link AttendanceReason}. */
-export const ATTENDANCE_REASON_LABELS: Record<AttendanceReason, string> = {
-  INVITATION: 'Invitation',
-  INFO_GROUP: "Groupe d'info",
-  INSTAGRAM: 'Instagram',
-  BLOC: 'Bloc',
-  SECTOR: 'Secteur',
-  OTHER: 'Autre',
-};
-
-/**
- * A presence recorded at an outreach, mapped from the backend
- * `AttendanceResponse`. A local subset — the outreach feature reads the
- * attendance endpoint directly rather than importing the attendance feature.
- */
-export interface OutreachAttendance {
-  uuid: string;
-  firstname: string;
-  lastname: string;
-  invitedBy: string;
-  type: AttendanceType;
-  /** How a guest came — present for GUEST presences, null for members. */
-  reason: AttendanceReason | null;
-}
-
-/**
- * Fields sent when adding a presence (`AttendanceRequest` minus the outreach,
- * which the page already knows). A MEMBER carries `profileUuid`; a GUEST carries
- * a name, optionally how they came, and who invited them.
- */
-export interface OutreachAttendanceInput {
-  type: AttendanceType;
-  profileUuid: string | null;
-  firstname: string | null;
-  lastname: string | null;
-  reason: AttendanceReason | null;
-  invitedBy: string | null;
-}
-
-/** French labels for {@link AttendanceReason}, in the order offered in the form. */
-export const ATTENDANCE_REASON_OPTIONS: readonly {
-  value: AttendanceReason;
-  label: string;
-}[] = [
-  { value: 'INVITATION', label: ATTENDANCE_REASON_LABELS.INVITATION },
-  { value: 'INFO_GROUP', label: ATTENDANCE_REASON_LABELS.INFO_GROUP },
-  { value: 'INSTAGRAM', label: ATTENDANCE_REASON_LABELS.INSTAGRAM },
-  { value: 'BLOC', label: ATTENDANCE_REASON_LABELS.BLOC },
-  { value: 'SECTOR', label: ATTENDANCE_REASON_LABELS.SECTOR },
-  { value: 'OTHER', label: ATTENDANCE_REASON_LABELS.OTHER },
-];
-
-/** Full name of a presence row, or an em dash when it has none. */
-export function presenceName(p: Pick<OutreachAttendance, 'firstname' | 'lastname'>): string {
-  return `${p.firstname} ${p.lastname}`.trim() || '—';
-}
-
-/**
- * Someone who announced, before the outreach started, that they would come —
- * mapped from `PreAttendanceResponse`. Staff confirm it on the day, which turns
- * it into an actual {@link OutreachAttendance}.
- */
-export interface OutreachPreAttendance extends OutreachAttendance {
-  /** Whether it has already been turned into a presence. */
-  confirmed: boolean;
-  /** ISO datetime of the sign-up, or `null` when unknown. */
-  createdAt: string | null;
-}
+// Presences and pre-registrations are shared with calendar events; the outreach
+// slice keeps its own names for them so its pages read naturally.
+export {
+  ATTENDANCE_REASON_LABELS,
+  ATTENDANCE_REASON_OPTIONS,
+  ATTENDANCE_TYPE_LABELS,
+  ATTENDANCE_TYPE_TONES,
+  presenceName,
+} from '../../shared/attendance/attendance.models';
+export type {
+  AttendanceReason,
+  AttendanceType,
+  Presence as OutreachAttendance,
+  PresenceInput as OutreachAttendanceInput,
+  PreRegistration as OutreachPreAttendance,
+} from '../../shared/attendance/attendance.models';
 
 /** A person met during an outreach, mapped from `ContactEntryResponse`. */
 export interface ContactEntry {

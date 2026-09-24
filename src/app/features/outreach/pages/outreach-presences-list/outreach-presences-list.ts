@@ -5,8 +5,8 @@ import { ACCESS } from '../../../../core/auth/access';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
-import { OutreachAttendanceForm } from '../../components/outreach-attendance-form/outreach-attendance-form';
-import { OutreachPresences } from '../../components/outreach-presences/outreach-presences';
+import { AttendanceForm } from '../../../../shared/ui/attendance-form/attendance-form';
+import { PresenceTable } from '../../../../shared/ui/presence-table/presence-table';
 import { OutreachService } from '../../outreach.service';
 import {
   STATUS_LABELS,
@@ -20,14 +20,14 @@ import {
 /**
  * Full-list page for an outreach's presences (`/sorties/:uuid/presences`) —
  * reached from the manage page. Shows every entry through the shared
- * {@link OutreachPresences} table in expanded mode.
+ * {@link PresenceTable} table in expanded mode.
  *
  * Admins can add a missing person and remove a wrong one; there is no editing —
  * a bad record is removed and re-added. Everyone else sees the list read-only.
  */
 @Component({
   selector: 'app-outreach-presences-list',
-  imports: [RouterLink, OutreachPresences, OutreachAttendanceForm, ConfirmDialog],
+  imports: [RouterLink, PresenceTable, AttendanceForm, ConfirmDialog],
   host: { class: 'list-page' },
   templateUrl: './outreach-presences-list.html',
   styleUrl: './outreach-presences-list.scss',

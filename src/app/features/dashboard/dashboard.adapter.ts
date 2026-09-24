@@ -1,4 +1,4 @@
-import type { DashboardOutreach, OutreachStatus } from './dashboard.models';
+import type { DashboardOutreach, MonthPreAttendance, OutreachStatus } from './dashboard.models';
 
 /** Raw Spring `Page<T>` wrapper (only the fields the dashboard reads). */
 export interface RawPage<T> {
@@ -63,7 +63,46 @@ export function toDashboardOutreach(raw: RawOutreach): DashboardOutreach {
   };
 }
 
-/** Total row count of a raw Spring page — the tiles only need the count. */
-export function toTotal(raw: RawPage<unknown>): number {
-  return raw.totalElements ?? 0;
+/** Raw `MonthlyPreAttendanceSummary`. */
+export interface RawMonthPreAttendance {
+  kind?: string;
+  uuid?: string;
+  name?: string;
+  date?: string | null;
+  startTime?: string | null;
+  /** An `OutreachStatus`, or an `EventStatus` for an event. */
+  status?: string | null;
+  eventType?: string | null;
+  total?: number;
+  members?: number;
+  guests?: number;
+  confirmed?: number;
+}
+
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  REUNION: 'Réunion',
+  AGAPE: 'Agapé',
+  OTHER: 'Événement',
+};
+
+/** A calendar event's `PLANNED` reads as a sortie's `SCHEDULED`; the rest match. */
+function toEventStatus(value: string | null | undefined): OutreachStatus {
+  return value === 'PLANNED' ? 'SCHEDULED' : toStatus(value);
+}
+
+export function toMonthPreAttendance(raw: RawMonthPreAttendance): MonthPreAttendance {
+  const kind = raw.kind === 'EVENT' ? 'EVENT' : 'OUTREACH';
+  return {
+    kind,
+    uuid: raw.uuid ?? '',
+    name: raw.name ?? '',
+    typeLabel: kind === 'EVENT' ? (EVENT_TYPE_LABELS[raw.eventType ?? ''] ?? 'Événement') : '',
+    date: raw.date ?? null,
+    startTime: raw.startTime ?? null,
+    status: kind === 'EVENT' ? toEventStatus(raw.status) : toStatus(raw.status),
+    total: raw.total ?? 0,
+    members: raw.members ?? 0,
+    guests: raw.guests ?? 0,
+    confirmed: raw.confirmed ?? 0,
+  };
 }

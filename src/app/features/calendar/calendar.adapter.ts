@@ -30,6 +30,7 @@ export interface RawCalendarItem {
   cityLabel?: string | null;
   managedBy?: RawManager | null;
   outreachUuid?: string | null;
+  attendanceEnabled?: boolean;
 }
 
 /** Raw `CalendarEventResponse` from the backend. */
@@ -44,6 +45,7 @@ export interface RawCalendarEvent {
   type?: string | null;
   status?: string | null;
   managedBy?: RawManager | null;
+  attendanceEnabled?: boolean;
 }
 
 /** Raw `CalendarEventRequest` sent to the backend. */
@@ -56,6 +58,7 @@ export interface RawCalendarEventRequest {
   endTime: string;
   type: CalendarEventType;
   managedByUuid: string | null;
+  attendanceEnabled: boolean;
 }
 
 /** Raw `OutreachRequest` sent when the agenda plans a sortie. */
@@ -126,6 +129,7 @@ export function toCalendarItem(raw: RawCalendarItem): CalendarItem {
     cityLabel: raw.cityLabel ?? '',
     managedBy: toManager(raw.managedBy),
     outreachUuid: raw.outreachUuid ?? null,
+    attendanceEnabled: raw.attendanceEnabled ?? false,
   };
 }
 
@@ -142,6 +146,7 @@ export function toCalendarEvent(raw: RawCalendarEvent): CalendarEvent {
     type: toType(raw.type),
     status: toEventStatus(raw.status),
     managedBy: toManager(raw.managedBy),
+    attendanceEnabled: raw.attendanceEnabled ?? false,
   };
 }
 
@@ -182,5 +187,6 @@ export function toRawCalendarEventRequest(
     endTime: input.endTime,
     type: input.type,
     managedByUuid: input.managedByUuid || null,
+    attendanceEnabled: input.attendanceEnabled,
   };
 }

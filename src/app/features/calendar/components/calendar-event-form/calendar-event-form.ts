@@ -83,6 +83,7 @@ export class CalendarEventForm implements OnInit {
     location: [''],
     description: [''],
     managedByUuid: [''],
+    attendanceEnabled: [false],
   });
 
   ngOnInit(): void {
@@ -97,6 +98,7 @@ export class CalendarEventForm implements OnInit {
         location: e.location,
         description: e.description,
         managedByUuid: e.managedBy?.uuid ?? '',
+        attendanceEnabled: e.attendanceEnabled,
       });
       return;
     }
@@ -122,6 +124,7 @@ export class CalendarEventForm implements OnInit {
       location: v.location,
       description: v.description,
       managedByUuid: v.managedByUuid || null,
+      attendanceEnabled: v.attendanceEnabled,
     });
   }
 }

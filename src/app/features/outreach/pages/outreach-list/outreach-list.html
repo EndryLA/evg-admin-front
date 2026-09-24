@@ -139,6 +139,9 @@
         <div class="month-section__head">
           <span class="month-section__label">{{ group.label }}</span>
           <span class="month-section__rule" aria-hidden="true"></span>
+          @if (group.signupOpen) {
+            <app-month-signup-link [month]="group.key" />
+          }
           <span class="month-section__count">{{ group.rows.length }} sortie{{ group.rows.length > 1 ? 's' : '' }}</span>
         </div>
 

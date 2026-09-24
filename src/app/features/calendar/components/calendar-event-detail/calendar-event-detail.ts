@@ -36,6 +36,8 @@ export class CalendarEventDetail {
   readonly statusChange = output<EventStatus>();
   /** Mirrored outreaches only: navigate to `/sorties/:uuid`. */
   readonly openOutreach = output<string>();
+  /** Events open to sign-ups only: navigate to their presences page. */
+  readonly openAttendance = output<string>();
 
   protected readonly statusOptions = EVENT_STATUS_OPTIONS;
 

@@ -33,7 +33,7 @@
   <p class="alert alert--error" role="alert">{{ message }}</p>
 }
 
-<app-outreach-presences
+<app-presence-table
   [presences]="presences()"
   [loading]="loading()"
   [error]="error()"
@@ -44,7 +44,7 @@
   (retry)="load()" />
 
 @if (formOpen()) {
-  <app-outreach-attendance-form
+  <app-attendance-form
     [busy]="saving()"
     [error]="saveError()"
     (save)="onSave($event)"

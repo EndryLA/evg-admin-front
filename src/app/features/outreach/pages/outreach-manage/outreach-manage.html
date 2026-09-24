@@ -133,7 +133,7 @@
     </div>
   </div>
 
-  <app-outreach-pre-attendances
+  <app-pre-registration-table
     [items]="preAttendances()"
     [loading]="preLoading()"
     [error]="preError()"
@@ -147,7 +147,7 @@
     [seeAllLink]="['/sorties', uuid(), 'contacts']"
     (retry)="load()" />
 
-  <app-outreach-presences
+  <app-presence-table
     [presences]="presences()"
     [loading]="presencesLoading()"
     [error]="presencesError()"

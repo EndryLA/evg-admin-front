@@ -43,14 +43,24 @@ export interface DashboardOutreach {
   managerName: string;
 }
 
-/** Headline totals shown in the roster card. */
-export interface DashboardCounts {
-  /** Members on the roster, both membership types together. */
+/** One sortie — or calendar event open to sign-ups — of the month with its pre-registration counts. */
+export interface MonthPreAttendance {
+  kind: 'OUTREACH' | 'EVENT';
+  uuid: string;
+  name: string;
+  /** `Agapé`, `Réunion`… for an event; empty for a sortie. */
+  typeLabel: string;
+  /** Calendar day, `YYYY-MM-DD`. */
+  date: string | null;
+  startTime: string | null;
+  /** An event's own status, read in outreach terms (planned → `SCHEDULED`). */
+  status: OutreachStatus;
+  /** Everyone pre-registered, members and guests together. */
+  total: number;
   members: number;
-  /** Of which ouvriers. */
-  ouvriers: number;
-  /** Of which aides. */
-  aides: number;
+  guests: number;
+  /** Of which already confirmed as present. */
+  confirmed: number;
 }
 
 /** Everything one dashboard render needs, loaded in a single pass. */
@@ -59,5 +69,4 @@ export interface DashboardData {
   firstname: string;
   /** The soonest sortie still ahead, or `null` when none is planned. */
   next: DashboardOutreach | null;
-  counts: DashboardCounts;
 }

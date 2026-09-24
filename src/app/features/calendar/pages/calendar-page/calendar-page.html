@@ -1,7 +1,7 @@
 <header class="topbar">
   <div>
     <h1>Planning</h1>
-    <p class="topbar__sub">Sorties, réunions et agapès du département.</p>
+    <p class="topbar__sub">Sorties, réunions et agapés du département.</p>
   </div>
 </header>
 
@@ -113,7 +113,8 @@
     (edit)="openEdit()"
     (remove)="askDelete()"
     (statusChange)="onStatusChange($event)"
-    (openOutreach)="openOutreach($event)" />
+    (openOutreach)="openOutreach($event)"
+    (openAttendance)="openAttendance($event)" />
 }
 
 @if (formOpen()) {

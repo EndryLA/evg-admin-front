@@ -1,0 +1,93 @@
+<a routerLink="/planning" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  Planning
+</a>
+
+<header class="page-head">
+  <div class="page-head__main">
+    <span class="eyebrow">{{ typeLabel() }}</span>
+    <h1>{{ event()?.name || 'Événement' }}</h1>
+    @if (event()) {
+      <p class="page-head__sub">
+        <span>{{ scheduleLabel() }}</span>
+        <span class="pill pill--{{ statusTone() }}">{{ statusLabel() }}</span>
+        @if (!event()!.attendanceEnabled) {
+          <span class="pill pill--grey">Inscriptions fermées</span>
+        }
+      </p>
+    }
+  </div>
+
+  @if (canManage) {
+    <button type="button" class="btn btn--primary add-btn" (click)="openAdd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Ajouter une présence
+    </button>
+  }
+</header>
+
+@if (eventError(); as message) {
+  <p class="alert alert--error" role="alert">{{ message }}</p>
+}
+
+<div class="block">
+  @if (!canConfirm() && !preLoading() && preRegistrations().length > 0) {
+    <p class="notice" role="status">
+      La confirmation des présences sera disponible le jour de l'événement.
+    </p>
+  }
+
+  <app-pre-registration-table
+    [items]="preRegistrations()"
+    [loading]="preLoading()"
+    [error]="preError()"
+    [expanded]="true"
+    [canConfirm]="canConfirm()"
+    confirmHint="Disponible le jour de l'événement"
+    emptyHint="Personne ne s'est encore inscrit à cet événement."
+    [busyUuid]="busyUuid()"
+    [actionError]="confirmError()"
+    (confirm)="confirm($event)"
+    (retry)="loadPreRegistrations()" />
+</div>
+
+<div class="block">
+  @if (actionError(); as message) {
+    <p class="alert alert--error" role="alert">{{ message }}</p>
+  }
+
+  <app-presence-table
+    [presences]="presences()"
+    [loading]="presencesLoading()"
+    [error]="presencesError()"
+    [expanded]="true"
+    [deletable]="canManage"
+    emptyHint="Personne n'a encore été marqué présent à cet événement."
+    (remove)="askRemove($event)"
+    (retry)="loadPresences()" />
+</div>
+
+@if (canManage) {
+  <!-- Mobile-only floating action button — the inline button gives way to it. -->
+  <button type="button" class="fab" (click)="openAdd()" aria-label="Ajouter une présence">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+}
+
+@if (formOpen()) {
+  <app-attendance-form
+    [busy]="saving()"
+    [error]="saveError()"
+    (save)="onSave($event)"
+    (cancel)="closeForm()" />
+}
+
+@if (toRemove(); as p) {
+  <app-confirm-dialog
+    title="Retirer cette présence ?"
+    [busy]="removing()"
+    (confirm)="confirmRemove()"
+    (cancel)="cancelRemove()">
+    La présence de <strong>{{ name(p) }}</strong> à cet événement sera supprimée.
+  </app-confirm-dialog>
+}

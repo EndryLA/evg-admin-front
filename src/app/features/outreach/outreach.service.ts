@@ -139,7 +139,7 @@ export class OutreachService {
     return this.http
       .post<RawOutreachAttendance>(
         '/api/attendances',
-        toRawAttendanceRequest(outreachUuid, input),
+        toRawAttendanceRequest({ outreachUuid }, input),
       )
       .pipe(map(toOutreachAttendance));
   }

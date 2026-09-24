@@ -3,6 +3,18 @@ import { inject, Injectable } from '@angular/core';
 import { map, type Observable } from 'rxjs';
 
 import {
+  toPreRegistration,
+  toPresence,
+  toRawAttendanceRequest,
+  type RawPreRegistration,
+  type RawPresence,
+} from '../../shared/attendance/attendance.adapter';
+import type {
+  PreRegistration,
+  Presence,
+  PresenceInput,
+} from '../../shared/attendance/attendance.models';
+import {
   toCalendarEvent,
   toCalendarItem,
   toRawCalendarEventRequest,
@@ -37,7 +49,9 @@ const BASE = '/api/calendar';
  * is the read-only merged feed the grid renders (calendar events *and*
  * outreaches), while `/api/calendar/events` is CRUD over standalone events
  * only. {@link managers} feeds the "responsable" selectors — it reads the
- * profiles endpoint directly to avoid a cross-feature import.
+ * profiles endpoint directly to avoid a cross-feature import. Events open to
+ * sign-ups also carry pre-registrations and presences, read and written
+ * through the shared attendance endpoints.
  */
 @Injectable({ providedIn: 'root' })
 export class CalendarService {
@@ -112,6 +126,39 @@ export class CalendarService {
 
   removeEvent(uuid: string): Observable<void> {
     return this.http.delete(`${BASE}/events/${uuid}`).pipe(map(() => undefined));
+  }
+
+  /** People who signed up for the event ahead of time, oldest first. */
+  preRegistrations(eventUuid: string): Observable<PreRegistration[]> {
+    return this.http
+      .get<RawPreRegistration[]>(`${BASE}/events/${eventUuid}/pre-attendances`)
+      .pipe(map((list) => (list ?? []).map(toPreRegistration)));
+  }
+
+  /** Turn a sign-up into an actual presence (creates the attendance server-side). */
+  confirmPreRegistration(uuid: string): Observable<PreRegistration> {
+    return this.http
+      .post<RawPreRegistration>(`/api/pre-attendances/${uuid}/confirm`, null)
+      .pipe(map(toPreRegistration));
+  }
+
+  /** Everyone marked present at the event, oldest first. */
+  presences(eventUuid: string): Observable<Presence[]> {
+    return this.http
+      .get<RawPresence[]>(`${BASE}/events/${eventUuid}/attendances`)
+      .pipe(map((list) => (list ?? []).map(toPresence)));
+  }
+
+  /** Record someone present at the event, whatever its status. */
+  addPresence(eventUuid: string, input: PresenceInput): Observable<Presence> {
+    return this.http
+      .post<RawPresence>('/api/attendances', toRawAttendanceRequest({ eventUuid }, input))
+      .pipe(map(toPresence));
+  }
+
+  /** Remove a presence recorded by mistake. */
+  removePresence(uuid: string): Observable<void> {
+    return this.http.delete(`/api/attendances/${uuid}`).pipe(map(() => undefined));
   }
 
   /** Members selectable as an event's responsible person. */

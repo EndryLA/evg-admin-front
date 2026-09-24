@@ -24,7 +24,7 @@
     } @else if (items().length === 0) {
       <div class="state">
         <div class="state__title">Aucune pré-inscription</div>
-        <div class="state__hint">Personne ne s'est encore inscrit à cette sortie.</div>
+        <div class="state__hint">{{ emptyHint() }}</div>
       </div>
     } @else {
       <table>
@@ -59,7 +59,7 @@
                       type="button"
                       class="row-btn row-btn--confirm"
                       [disabled]="!canConfirm() || busyUuid() !== null"
-                      [attr.title]="canConfirm() ? null : 'Disponible une fois la sortie démarrée'"
+                      [attr.title]="canConfirm() ? null : confirmHint()"
                       [attr.aria-label]="'Confirmer la présence de ' + name(p)"
                       (click)="confirm.emit(p)">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>

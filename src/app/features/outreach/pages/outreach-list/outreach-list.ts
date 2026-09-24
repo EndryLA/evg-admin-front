@@ -9,6 +9,7 @@ import {
   formatTimeFr,
   monthYearLabel,
 } from '../../../../shared/util/date.util';
+import { MonthSignupLink } from '../../../../shared/ui/month-signup-link/month-signup-link';
 import { OutreachForm } from '../../components/outreach-form/outreach-form';
 import { OutreachService } from '../../outreach.service';
 import {
@@ -39,6 +40,14 @@ interface MonthGroup {
   key: string;
   label: string;
   rows: Outreach[];
+  /** Whether a planned sortie is still ahead, so the month's sign-up link is worth sharing. */
+  signupOpen: boolean;
+}
+
+/** `YYYY-MM-DD` for today, local time. */
+function todayKey(): string {
+  const now = new Date();
+  return `${currentMonthKey()}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 /**
@@ -52,7 +61,7 @@ interface MonthGroup {
  */
 @Component({
   selector: 'app-outreach-list',
-  imports: [OutreachForm],
+  imports: [OutreachForm, MonthSignupLink],
   host: { class: 'data-list' },
   templateUrl: './outreach-list.html',
   styleUrl: './outreach-list.scss',
@@ -136,14 +145,23 @@ export class OutreachList {
    *  moves forward through the year), skipping empty months. */
   protected readonly groups = computed<MonthGroup[]>(() => {
     const byKey = new Map<string, MonthGroup>();
+    const today = todayKey();
     for (const row of this.rows()) {
       const key = row.date ? row.date.slice(0, 7) : ''; // YYYY-MM, or '' when undated
       let group = byKey.get(key);
       if (!group) {
-        group = { key, label: row.date ? monthYearLabel(row.date) : 'SANS DATE', rows: [] };
+        group = {
+          key,
+          label: row.date ? monthYearLabel(row.date) : 'SANS DATE',
+          rows: [],
+          signupOpen: false,
+        };
         byKey.set(key, group);
       }
       group.rows.push(row);
+      if (row.status === 'SCHEDULED' && row.date && row.date >= today) {
+        group.signupOpen = true;
+      }
     }
     return [...byKey.values()];
   });

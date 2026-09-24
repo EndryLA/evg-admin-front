@@ -2,7 +2,7 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
-import { OutreachPreAttendances } from '../../components/outreach-pre-attendances/outreach-pre-attendances';
+import { PreRegistrationTable } from '../../../../shared/ui/pre-registration-table/pre-registration-table';
 import { OutreachService } from '../../outreach.service';
 import {
   STATUS_LABELS,
@@ -21,7 +21,7 @@ import {
  */
 @Component({
   selector: 'app-outreach-pre-attendances-list',
-  imports: [RouterLink, OutreachPreAttendances],
+  imports: [RouterLink, PreRegistrationTable],
   host: { class: 'list-page' },
   templateUrl: './outreach-pre-attendances-list.html',
   styleUrl: './outreach-pre-attendances-list.scss',

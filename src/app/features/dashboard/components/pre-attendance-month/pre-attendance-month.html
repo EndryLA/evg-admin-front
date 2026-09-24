@@ -1,0 +1,88 @@
+<section class="pam" aria-labelledby="pam-title">
+  <div class="pam__head">
+    <span class="eyebrow" id="pam-title">Pré-inscriptions</span>
+    @if (isCurrentMonth()) {
+      <span class="pam__badge">Mois en cours</span>
+    } @else {
+      <button type="button" class="pam__badge pam__badge--action" (click)="goToCurrent()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+        Revenir au mois en cours
+      </button>
+    }
+  </div>
+
+  <div class="year-nav pam__nav">
+    <button type="button" class="year-nav__arrow" (click)="shift(-1)" aria-label="Mois précédent">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="year-nav__label pam__month">{{ monthLabel() }}</span>
+    <button type="button" class="year-nav__arrow" (click)="shift(1)" aria-label="Mois suivant">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="pam__state">Chargement…</p>
+  } @else if (error(); as err) {
+    <p class="pam__state pam__state--error">
+      {{ err }}
+      <button type="button" class="btn" (click)="load()">Réessayer</button>
+    </p>
+  } @else if (rows().length === 0) {
+    <p class="pam__state">Aucune sortie ni événement en {{ monthLabel() }}.</p>
+  } @else {
+    <ul class="pam__list">
+      @for (row of rows(); track row.uuid) {
+        <li>
+          <a class="pam-row" [routerLink]="link(row)">
+            <span class="pam-row__tile" aria-hidden="true">
+              <span class="pam-row__day">{{ day(row) }}</span>
+              <span class="pam-row__mon">{{ monthShort(row) }}</span>
+            </span>
+
+            <span class="pam-row__main">
+              <span class="pam-row__name">
+                {{ row.name }}
+                @if (row.typeLabel) {
+                  <span class="pam-row__tag">{{ row.typeLabel }}</span>
+                }
+              </span>
+              <span class="pam-row__meta">
+                {{ time(row) }}
+                <span class="pill pill--{{ statusTones[row.status] }}">{{ statusLabels[row.status] }}</span>
+              </span>
+            </span>
+
+            <span class="pam-row__figures">
+              <span class="pam-row__total" [class.pam-row__total--zero]="row.total === 0">{{ row.total }}</span>
+              <span class="pam-row__split">
+                @if (row.total === 0) {
+                  inscrit
+                } @else if (row.status === 'SCHEDULED') {
+                  {{ row.members }} membre{{ row.members > 1 ? 's' : '' }} · {{ row.guests }} invité{{ row.guests > 1 ? 's' : '' }}
+                } @else {
+                  {{ row.confirmed }} confirmé{{ row.confirmed > 1 ? 's' : '' }}
+                }
+              </span>
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- The picked month's public sign-up link; pointless for a past month. -->
+  @if (!isPastMonth()) {
+    <div class="pam__actions">
+      <button type="button" class="btn btn--primary" (click)="copyLink()">
+        @if (copied()) {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+          Lien copié
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Copier le lien d'inscription
+        }
+      </button>
+    </div>
+  }
+</section>

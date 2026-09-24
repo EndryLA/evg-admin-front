@@ -590,6 +590,10 @@ export class CalendarPage {
     this.router.navigate(['/sorties', uuid, 'gestion']);
   }
 
+  protected openAttendance(uuid: string): void {
+    this.router.navigate(['/planning/evenements', uuid, 'presences']);
+  }
+
   // ---- Creating ----
   /** A click on a day (or the toolbar button): ask what to put on it. */
   protected openCreateOn(date: string): void {

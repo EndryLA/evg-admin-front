@@ -6,6 +6,15 @@ import type { Routes } from '@angular/router';
  */
 export const PUBLIC_PRE_ATTENDANCE_ROUTES: Routes = [
   {
+    // One link per month (`YYYY-MM`), to sign up for several of its sorties at once.
+    path: 'inscription/mois/:month',
+    title: 'Inscription aux sorties du mois · Évangélisation',
+    loadComponent: () =>
+      import('./pages/public-month-registration/public-month-registration').then(
+        (m) => m.PublicMonthRegistration,
+      ),
+  },
+  {
     path: 'inscription/:uuid',
     title: "Inscription à la sortie · Évangélisation",
     loadComponent: () =>

@@ -6,16 +6,16 @@ import {
   ATTENDANCE_TYPE_TONES,
   presenceName,
   type AttendanceType,
-  type OutreachAttendance,
-} from '../../outreach.models';
+  type Presence,
+} from '../../attendance/attendance.models';
 
 /** How many presences show before the "Voir tout" toggle reveals the rest. */
 const PREVIEW_COUNT = 5;
 
 /**
- * Presences card for an outreach — a compact list capped at {@link PREVIEW_COUNT}
- * rows with a "Voir tout / Voir moins" toggle. Purely presentational: the parent
- * loads the data and handles retry. Shared by the detail and manage pages.
+ * Presences card for an outreach or a calendar event — a compact list capped
+ * at {@link PREVIEW_COUNT} rows with a "Voir tout / Voir moins" toggle. Purely
+ * presentational: the parent loads the data and handles retry.
  *
  * Two optional modes tweak the footer:
  * - `seeAllLink` turns the footer into a navigation to a dedicated full-list
@@ -23,13 +23,13 @@ const PREVIEW_COUNT = 5;
  * - `expanded` shows every row with no footer, for that full-list page itself.
  */
 @Component({
-  selector: 'app-outreach-presences',
+  selector: 'app-presence-table',
   imports: [RouterLink],
-  templateUrl: './outreach-presences.html',
-  styleUrl: './outreach-presences.scss',
+  templateUrl: './presence-table.html',
+  styleUrl: './presence-table.scss',
 })
-export class OutreachPresences {
-  readonly presences = input<OutreachAttendance[]>([]);
+export class PresenceTable {
+  readonly presences = input<Presence[]>([]);
   readonly loading = input(false);
   readonly error = input<string | null>(null);
   /**
@@ -44,14 +44,16 @@ export class OutreachPresences {
   readonly deletable = input(false);
   /** Show the count chip beside the title. Off on the full-list page. */
   readonly showCount = input(true);
+  /** Hint under "Aucune présence". */
+  readonly emptyHint = input("Personne n'a encore marqué sa présence à cette sortie.");
 
   readonly retry = output<void>();
   /** A row was picked for removal; only ever emitted when {@link deletable}. */
-  readonly remove = output<OutreachAttendance>();
+  readonly remove = output<Presence>();
 
   protected readonly showAll = signal(false);
 
-  protected readonly visible = computed<OutreachAttendance[]>(() => {
+  protected readonly visible = computed<Presence[]>(() => {
     const all = this.presences();
     return this.showAll() || this.expanded() ? all : all.slice(0, PREVIEW_COUNT);
   });

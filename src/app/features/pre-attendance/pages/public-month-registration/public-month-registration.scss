@@ -1,0 +1,174 @@
+/* Monthly sign-up specifics. Notices, choice rows, the step-2 forms and the
+   calendar tile (`.event__*`) come from the single-sortie page's stylesheet,
+   loaded alongside this one. */
+
+.step-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.step-head .question { margin: 0; text-align: left; }
+
+.step-count {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Step 2: reminder of what was ticked, and the way back to change it. */
+.picked {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 8px 0 22px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.picked:hover { border-color: var(--accent); }
+.picked:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.picked__icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+}
+.picked__icon svg { width: 18px; height: 18px; }
+.picked__text { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+.picked__edit { flex: none; font-size: 13px; font-weight: 600; color: var(--accent); }
+
+.link-btn {
+  flex: none;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+.link-btn:hover { text-decoration: underline; }
+
+/* ---- Sortie checklist ---- */
+.slots {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 26px;
+  padding: 0;
+  list-style: none;
+}
+.slots--invalid { margin-bottom: 8px; }
+.slots__error { display: block; margin: 0 0 22px; }
+
+.slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.slot:hover { border-color: var(--accent); }
+.slot--checked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+/* The native box stays focusable for keyboards; the round check draws it. */
+.slot__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.slot:has(.slot__input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.slot__tile { width: 50px; height: 54px; }
+.slot__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.slot__name { font-size: 15px; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+/* Marks an event (agape, réunion…) among the sorties. */
+.slot__tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: 2px;
+}
+.slot__when { font-size: 13px; color: var(--text-secondary); }
+.slot__where { font-size: 12.5px; line-height: 1.4; color: var(--text-muted); }
+
+.slot__check {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.slot__check svg { width: 14px; height: 14px; }
+.slot--checked .slot__check {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.back-link { margin-bottom: 18px; }
+
+/* ---- Confirmation ---- */
+.done-list {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.done-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-elevated);
+}
+.done-row__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.done-row__name { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.done-row__when { font-size: 12.5px; color: var(--text-muted); }
+.done-row__badge {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.done-row__badge--REGISTERED { background: var(--pill-green-bg); color: var(--pill-green-text); }
+.done-row__badge--ALREADY_REGISTERED { background: var(--pill-blue-bg); color: var(--pill-blue-text); }
+.done-row__badge--CLOSED { background: var(--pill-grey-bg); color: var(--pill-grey-text); }

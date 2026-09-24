@@ -4,14 +4,15 @@ import { catchError, forkJoin, map, of, switchMap, type Observable } from 'rxjs'
 
 import {
   toDashboardOutreach,
-  toTotal,
+  toMonthPreAttendance,
+  type RawMonthPreAttendance,
   type RawOutreach,
   type RawPage,
 } from './dashboard.adapter';
 import type {
-  DashboardCounts,
   DashboardData,
   DashboardOutreach,
+  MonthPreAttendance,
 } from './dashboard.models';
 
 /**
@@ -38,9 +39,8 @@ export interface Account {
  *
  * The dashboard is a read-only overview stitched from collections that belong
  * to other features, so it reads their endpoints directly rather than importing
- * their services — features never depend on each other. Everything but the
- * sorties call is best-effort: a failing name lookup or count degrades to an
- * empty string / a zero rather than blanking the page.
+ * their services — features never depend on each other. The name lookup is
+ * best-effort: it degrades to an empty string rather than blanking the page.
  */
 @Service()
 export class DashboardService {
@@ -55,15 +55,14 @@ export class DashboardService {
     return forkJoin({
       firstname: this.firstname(account),
       next: this.nextOutreach(today),
-      members: this.count('/api/profiles'),
-      ouvriers: this.count('/api/profiles', { membershipType: 'OUVRIER' }),
-      aides: this.count('/api/profiles', { membershipType: 'AIDE' }),
-    }).pipe(
-      map(({ firstname, next, members, ouvriers, aides }) => {
-        const counts: DashboardCounts = { members, ouvriers, aides };
-        return { firstname, next, counts };
-      }),
-    );
+    });
+  }
+
+  /** Every sortie of `month` (`YYYY-MM`) with its pre-registration counts. */
+  preAttendanceMonth(month: string): Observable<MonthPreAttendance[]> {
+    return this.http
+      .get<RawMonthPreAttendance[]>(`/api/pre-attendances/months/${month}/summary`)
+      .pipe(map((list) => list.map(toMonthPreAttendance)));
   }
 
   /**
@@ -124,21 +123,6 @@ export class DashboardService {
             .sort(byScheduleAsc)[0] ?? null,
       ),
     );
-  }
-
-  /**
-   * Total rows of a paginated collection, read from the page envelope — a
-   * one-row page is enough to get the count. Best-effort: 0 on failure.
-   */
-  private count(url: string, filters: Record<string, string> = {}): Observable<number> {
-    let params = new HttpParams().set('page', 0).set('size', 1);
-    for (const [key, value] of Object.entries(filters)) {
-      params = params.set(key, value);
-    }
-
-    return this.http
-      .get<RawPage<unknown>>(url, { params })
-      .pipe(map(toTotal), catchError(() => of(0)));
   }
 }
 

@@ -1,8 +1,13 @@
-import type {
-  PreAttendanceReason,
-  PreRegistrationInput,
-  SignUpOutreach,
-  SignUpOutreachStatus,
+import {
+  EVENT_TYPE_LABELS,
+  type MonthRegistrationOutcome,
+  type MonthRegistrationResult,
+  type MonthSlot,
+  type PreAttendanceReason,
+  type PreRegistrationInput,
+  type SignUpOutreach,
+  type SignUpOutreachStatus,
+  type SlotKind,
 } from './pre-attendance.models';
 
 /** Raw `OutreachResponse` — only the fields the sign-up page reads. */
@@ -28,6 +33,32 @@ export interface RawPreRegistrationRequest {
   invitedBy?: string;
 }
 
+/** Raw `PublicSignupSlot` from `/api/pre-attendances/months/{month}/slots`. */
+export interface RawMonthSlot {
+  kind?: string;
+  uuid?: string;
+  name?: string;
+  location?: string | null;
+  cityName?: string | null;
+  date?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  eventType?: string | null;
+}
+
+/** Raw `MonthlyPreAttendanceResult`, one per ticked slot. */
+export interface RawMonthRegistrationResult {
+  kind?: string;
+  uuid?: string;
+  outcome?: string;
+}
+
+function toSlotKind(value: string | undefined): SlotKind {
+  return value === 'EVENT' ? 'EVENT' : 'OUTREACH';
+}
+
+const OUTCOMES: readonly MonthRegistrationOutcome[] = ['REGISTERED', 'ALREADY_REGISTERED', 'CLOSED'];
+
 const STATUSES: readonly SignUpOutreachStatus[] = [
   'SCHEDULED',
   'IN_PROGRESS',
@@ -51,6 +82,32 @@ export function toSignUpOutreach(raw: RawSignUpOutreach): SignUpOutreach {
     location: raw.location ?? '',
     cityName: raw.city?.officialName || raw.cityLabel || '',
     status: toStatus(raw.status),
+  };
+}
+
+export function toMonthSlot(raw: RawMonthSlot): MonthSlot {
+  const kind = toSlotKind(raw.kind);
+  return {
+    kind,
+    uuid: raw.uuid ?? '',
+    name: raw.name ?? '',
+    date: raw.date ?? null,
+    startTime: raw.startTime ?? null,
+    endTime: raw.endTime ?? null,
+    location: raw.location ?? '',
+    cityName: raw.cityName ?? '',
+    typeLabel: kind === 'EVENT' ? (EVENT_TYPE_LABELS[raw.eventType ?? ''] ?? 'Événement') : '',
+  };
+}
+
+/** An unrecognised outcome is read as `CLOSED` — it was not recorded as a sign-up. */
+export function toMonthRegistrationResult(raw: RawMonthRegistrationResult): MonthRegistrationResult {
+  return {
+    kind: toSlotKind(raw.kind),
+    uuid: raw.uuid ?? '',
+    outcome: OUTCOMES.includes(raw.outcome as MonthRegistrationOutcome)
+      ? (raw.outcome as MonthRegistrationOutcome)
+      : 'CLOSED',
   };
 }
 

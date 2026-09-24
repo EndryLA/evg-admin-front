@@ -8,6 +8,12 @@ export const CALENDAR_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/calendar-page/calendar-page').then((m) => m.CalendarPage),
   },
+  {
+    path: 'planning/evenements/:uuid/presences',
+    title: 'Présences · Évangélisation',
+    loadComponent: () =>
+      import('./pages/event-attendance/event-attendance').then((m) => m.EventAttendance),
+  },
   // The page lived at `/agenda` until it was renamed. Kept so links and
   // bookmarks handed around before the rename still land on it.
   { path: 'agenda', pathMatch: 'full', redirectTo: 'planning' },

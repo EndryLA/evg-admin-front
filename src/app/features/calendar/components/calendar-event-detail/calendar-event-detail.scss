@@ -16,6 +16,19 @@
   white-space: pre-wrap;
 }
 
+/* Way into the event's sign-ups and presences, right under its details. */
+.detail__attendance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 18px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+}
+.detail__attendance svg { width: 16px; height: 16px; flex-shrink: 0; }
+
 .detail__status {
   margin-top: 20px;
   padding-top: 18px;

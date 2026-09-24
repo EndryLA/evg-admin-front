@@ -44,14 +44,5 @@
     }
   </section>
 
-  <section class="roster" aria-labelledby="roster-title">
-    <div class="roster__figures">
-      <span class="eyebrow" id="roster-title">Effectif</span>
-      <span class="roster__value">{{ counts().members }}</span>
-      <span class="roster__split">
-        {{ counts().ouvriers }} ouvriers · {{ counts().aides }} aides
-      </span>
-    </div>
-    <a class="btn" routerLink="/profils">Voir l'effectif</a>
-  </section>
+  <app-pre-attendance-month />
 }

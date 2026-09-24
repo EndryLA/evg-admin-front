@@ -6,7 +6,7 @@ export type CalendarEventType = 'OUTREACH' | 'REUNION' | 'AGAPE' | 'OTHER';
 export const EVENT_TYPE_LABELS: Record<CalendarEventType, string> = {
   OUTREACH: 'Sortie',
   REUNION: 'Réunion',
-  AGAPE: 'Agapè',
+  AGAPE: 'Agapé',
   OTHER: 'Autre',
 };
 
@@ -81,6 +81,8 @@ export interface CalendarItem {
   managedBy: EventManager | null;
   /** Set when this entry mirrors an outreach — links to `/sorties/:uuid`. */
   outreachUuid: string | null;
+  /** Takes pre-registrations and presences: always for an outreach, opt-in for an event. */
+  attendanceEnabled: boolean;
 }
 
 /** A standalone calendar event, mapped from `CalendarEventResponse`. */
@@ -95,6 +97,8 @@ export interface CalendarEvent {
   type: CalendarEventType;
   status: EventStatus;
   managedBy: EventManager | null;
+  /** Open to pre-registrations (monthly sign-up page) and presences. */
+  attendanceEnabled: boolean;
 }
 
 /**
@@ -114,6 +118,7 @@ export interface CalendarEventInput {
   endTime: string;
   type: CalendarEventType;
   managedByUuid: string | null;
+  attendanceEnabled: boolean;
 }
 
 /**

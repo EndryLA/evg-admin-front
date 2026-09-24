@@ -9,15 +9,12 @@ import {
 } from '@angular/forms';
 
 import {
-  MemberAutocomplete,
-  type MemberValue,
-} from '../../../../shared/ui/member-autocomplete/member-autocomplete';
-import { toNameCase } from '../../../../shared/util/text.util';
-import {
   ATTENDANCE_REASON_OPTIONS,
   type AttendanceType,
-  type OutreachAttendanceInput,
-} from '../../outreach.models';
+  type PresenceInput,
+} from '../../attendance/attendance.models';
+import { toNameCase } from '../../util/text.util';
+import { MemberAutocomplete, type MemberValue } from '../member-autocomplete/member-autocomplete';
 
 const EMPTY_MEMBER: MemberValue = { uuid: null, label: '' };
 
@@ -38,8 +35,8 @@ function setRequired(control: AbstractControl, required: boolean): void {
 }
 
 /**
- * Modal for adding one presence to a sortie (design.md §3 "Create/Edit modal").
- * The sortie is implied by the page, so it has no picker. A member is searched
+ * Modal for adding one presence to a sortie or an event (design.md §3
+ * "Create/Edit modal"). Which one is implied by the page, so it has no picker. A member is searched
  * by name through the shared autocomplete and linked to their profile; a guest
  * gives a name, optionally how they came, and who invited them — required only
  * for an invitation.
@@ -48,19 +45,19 @@ function setRequired(control: AbstractControl, required: boolean): void {
  * no edit mode — a wrong presence is removed from its row and added again.
  */
 @Component({
-  selector: 'app-outreach-attendance-form',
+  selector: 'app-attendance-form',
   imports: [ReactiveFormsModule, MemberAutocomplete],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
-  templateUrl: './outreach-attendance-form.html',
+  templateUrl: './attendance-form.html',
 })
-export class OutreachAttendanceForm implements OnInit {
+export class AttendanceForm implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   readonly busy = input(false);
   /** Backend refusal for the last save (e.g. member already recorded). */
   readonly error = input<string | null>(null);
 
-  readonly save = output<OutreachAttendanceInput>();
+  readonly save = output<PresenceInput>();
   readonly cancel = output<void>();
 
   protected readonly reasonOptions = ATTENDANCE_REASON_OPTIONS;
@@ -111,7 +108,7 @@ export class OutreachAttendanceForm implements OnInit {
       profileUuid: member ? v.member.uuid : null,
       firstname: member ? null : v.firstname,
       lastname: member ? null : v.lastname,
-      reason: member || !v.reason ? null : (v.reason as OutreachAttendanceInput['reason']),
+      reason: member || !v.reason ? null : (v.reason as PresenceInput['reason']),
       invitedBy: member ? null : v.invitedBy,
     });
   }
