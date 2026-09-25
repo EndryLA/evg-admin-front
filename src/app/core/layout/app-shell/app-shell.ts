@@ -62,6 +62,7 @@ export class AppShell {
   protected readonly canSeeTeamLeaders = computed(() => this.auth.hasAnyRole(ACCESS.teamLeaders));
   protected readonly canSeeCities = computed(() => this.auth.hasAnyRole(ACCESS.cities));
   protected readonly canSeeFlyers = computed(() => this.auth.hasAnyRole(ACCESS.flyers));
+  protected readonly canSeeSuggestions = computed(() => this.auth.hasAnyRole(ACCESS.suggestions));
 
   /** Reflects the active theme so the toggle can show the right icon/label. */
   protected readonly isDark = this.theme.isDark;

@@ -1,0 +1,103 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Créer un ticket" (click)="$event.stopPropagation()">
+    <header class="modal__head">
+      <span class="eyebrow">
+        {{ suggestions().length }} suggestion{{ suggestions().length > 1 ? 's' : '' }}
+      </span>
+      <h2 class="modal__title">Créer un ticket</h2>
+    </header>
+
+    @if (result(); as ticket) {
+      <div class="grid">
+        <div class="done field--span" role="status">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>
+          <div>
+            <p class="done__title">Ticket {{ ticket.key }} créé</p>
+            <p class="done__text">
+              Il prend en compte {{ suggestions().length }} suggestion{{ suggestions().length > 1 ? 's' : '' }}.
+              Elles passeront en « Réalisée » quand le ticket sera terminé.
+            </p>
+          </div>
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="close.emit()">Fermer</button>
+        <a class="btn btn--primary" [routerLink]="['/projets', ticket.projectUuid]">Voir le projet</a>
+      </footer>
+    } @else {
+      <form (submit)="$event.preventDefault(); submit()" novalidate>
+        <div class="grid">
+          <div class="field field--span">
+            <span class="field__label">Suggestions prises en compte</span>
+            <ul class="sources">
+              @for (s of suggestions(); track s.uuid) {
+                <li>{{ s.title }}</li>
+              }
+            </ul>
+          </div>
+
+          <label class="field field--span">
+            <span class="field__label">Projet</span>
+            <select class="field__control" [disabled]="loadingProjects()"
+              (change)="selectProject($any($event.target).value)"
+              [attr.aria-invalid]="tried() && !projectUuid()">
+              <option value="" [selected]="!projectUuid()">
+                {{ loadingProjects() ? 'Chargement…' : 'Choisir un projet' }}
+              </option>
+              @for (p of projects(); track p.uuid) {
+                <option [value]="p.uuid" [selected]="p.uuid === projectUuid()">{{ p.name }} ({{ p.key }})</option>
+              }
+            </select>
+            @if (tried() && !projectUuid()) {
+              <span class="field__error">Choisissez le projet du ticket.</span>
+            }
+          </label>
+
+          <label class="field field--span">
+            <span class="field__label">Titre</span>
+            <input class="field__control" type="text" maxlength="200" autocomplete="off" [value]="title()"
+              (input)="title.set($any($event.target).value)" placeholder="Titre du ticket"
+              [attr.aria-invalid]="tried() && !title().trim()" />
+            @if (tried() && !title().trim()) {
+              <span class="field__error">Le titre est requis.</span>
+            }
+          </label>
+
+          <label class="field field--span">
+            <span class="field__label">Description</span>
+            <textarea class="field__control" rows="5" [value]="description()"
+              (input)="description.set($any($event.target).value)"></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Type</span>
+            <select class="field__control" [disabled]="!project()" (change)="typeUuid.set($any($event.target).value)">
+              <option value="" [selected]="!typeUuid()">Sans type</option>
+              @for (t of project()?.types ?? []; track t.uuid) {
+                <option [value]="t.uuid" [selected]="t.uuid === typeUuid()">{{ t.name }}</option>
+              }
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">Priorité</span>
+            <select class="field__control" (change)="priority.set($any($event.target).value)">
+              @for (p of priorities; track p) {
+                <option [value]="p" [selected]="p === priority()">{{ priorityLabels[p] }}</option>
+              }
+            </select>
+          </label>
+
+          @if (error(); as err) {
+            <p class="modal__error field--span" role="alert">{{ err }}</p>
+          }
+        </div>
+        <footer class="modal__foot">
+          <button type="button" class="btn modal__cancel" (click)="close.emit()" [disabled]="busy()">Annuler</button>
+          <button type="submit" class="btn btn--primary" [disabled]="busy() || loadingProjects()">
+            {{ busy() ? 'Création…' : 'Créer le ticket' }}
+          </button>
+        </footer>
+      </form>
+    }
+  </div>
+</div>

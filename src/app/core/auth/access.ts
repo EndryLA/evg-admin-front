@@ -19,4 +19,10 @@ export const ACCESS = {
   attendances: ['ADMIN', 'SUPER_ADMIN'],
   /** The "Génération de flyers" hub and its generators (restricted for now). */
   flyers: ['SUPER_ADMIN', 'ADMIN'],
+  /** Reading every member's suggestion (everyone can still submit and follow their own). */
+  suggestions: ['SUPER_ADMIN', 'ADMIN'],
+  /** Accepting/rejecting suggestions and linking them to tickets. */
+  suggestionReview: ['SUPER_ADMIN'],
+  /** Creating projects (members then work on those they belong to). */
+  projectCreate: ['SUPER_ADMIN', 'ADMIN'],
 } as const satisfies Record<string, readonly UserRole[]>;

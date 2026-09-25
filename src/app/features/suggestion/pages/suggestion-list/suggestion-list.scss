@@ -1,0 +1,57 @@
+/* Column widths only; the table shell is the global `.data-list` block. */
+.col-title { width: 40%; }
+.col-author { width: 18%; }
+.col-status { width: 16%; }
+.col-tickets { width: 9%; }
+.col-date { width: 13%; }
+.col-chevron { width: 44px; }
+
+/* Row selection (super admin): accepted suggestions → one ticket. */
+.cell-select { position: relative; width: 44px; padding-right: 0; text-align: center; }
+.cell-select input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
+tbody tr.row--selected { background: var(--row-hover); }
+
+.select-bar { display: flex; align-items: center; gap: 12px; margin-left: auto; flex: 0 0 auto; }
+.select-bar__count { font-size: 13px; font-weight: 600; color: var(--accent-soft-text); white-space: nowrap; }
+.select-bar__count--empty { font-weight: 500; color: var(--text-faint); }
+.select-bar__clear {
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.select-bar__action { gap: 7px; padding: 9px 14px; white-space: nowrap; }
+.select-bar__action svg { width: 15px; height: 15px; }
+
+.cell-head { max-width: 0; }
+.new-btn svg { width: 16px; height: 16px; }
+.tab__count {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+.tabs { flex-wrap: wrap; }
+
+.clip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+  vertical-align: middle;
+}
+.clip svg { width: 13px; height: 13px; }
+
+@media (max-width: 720px) {
+  .new-btn { display: none; }
+  .select-bar { width: 100%; margin-left: 0; justify-content: space-between; }
+  .cell-head { max-width: none; }
+  .tabs { overflow-x: auto; flex-wrap: nowrap; }
+}

@@ -1,0 +1,210 @@
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="search" [value]="query()" (input)="query.set($any($event.target).value)"
+      placeholder="Rechercher un ticket (titre, EVG-12…)" aria-label="Rechercher un ticket" />
+  </div>
+  <button type="button" class="filters-btn" [class.filters-btn--open]="filtersOpen()"
+    [attr.aria-expanded]="filtersOpen()" aria-controls="ticket-filters" (click)="filtersOpen.set(!filtersOpen())">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+    Filtres
+    @if (activeFilterCount() > 0) {
+      <span class="filters-btn__badge">{{ activeFilterCount() }}<span class="sr-only"> actif(s)</span></span>
+    }
+  </button>
+  <button type="button" class="btn btn--primary tt-new" (click)="create.emit()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span class="tt-new__label">Nouveau ticket</span>
+  </button>
+</div>
+
+@if (filtersOpen()) {
+  <div class="filter-panel" id="ticket-filters" role="group" aria-label="Filtres des tickets">
+    <label class="filter-panel__field">
+      <span>Type</span>
+      <select class="filter-select" (change)="typeFilter.set($any($event.target).value)">
+        <option value="" [selected]="!typeFilter()">Tous</option>
+        <option [value]="none" [selected]="typeFilter() === none">Sans type</option>
+        @for (t of types(); track t.uuid) {
+          <option [value]="t.uuid" [selected]="typeFilter() === t.uuid">{{ t.name }}</option>
+        }
+      </select>
+    </label>
+    <label class="filter-panel__field">
+      <span>Priorité</span>
+      <select class="filter-select" (change)="priorityFilter.set($any($event.target).value)">
+        <option value="" [selected]="!priorityFilter()">Toutes</option>
+        @for (p of priorities; track p) {
+          <option [value]="p" [selected]="priorityFilter() === p">{{ priorityLabels[p] }}</option>
+        }
+      </select>
+    </label>
+    <label class="filter-panel__field">
+      <span>Assigné</span>
+      <select class="filter-select" (change)="assigneeFilter.set($any($event.target).value)">
+        <option value="" [selected]="!assigneeFilter()">Tout le monde</option>
+        <option [value]="none" [selected]="assigneeFilter() === none">Non assigné</option>
+        @for (p of members(); track p.uuid) {
+          <option [value]="p.uuid" [selected]="assigneeFilter() === p.uuid">{{ personName(p) }}</option>
+        }
+      </select>
+    </label>
+    @if (tags().length) {
+      <label class="filter-panel__field">
+        <span>Tag</span>
+        <select class="filter-select" (change)="tagFilter.set($any($event.target).value)">
+          <option value="" [selected]="!tagFilter()">Tous</option>
+          @for (t of tags(); track t) {
+            <option [value]="t.toLowerCase()" [selected]="tagFilter() === t.toLowerCase()">{{ t }}</option>
+          }
+        </select>
+      </label>
+    }
+    <div class="filter-panel__chips">
+      <button type="button" class="chip" [class.chip--active]="hideClosed()" [attr.aria-pressed]="hideClosed()"
+        (click)="hideClosed.set(!hideClosed())">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Masquer les clos @if (closedCount()) { ({{ closedCount() }}) }
+      </button>
+      @if (hasPhases()) {
+        <button type="button" class="chip" [class.chip--active]="grouped()" [attr.aria-pressed]="grouped()"
+          (click)="grouped.set(!grouped())">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Grouper par phase
+        </button>
+      }
+      @if (activeFilterCount() > 0) {
+        <button type="button" class="filter-reset" (click)="resetFilters()">Réinitialiser</button>
+      }
+    </div>
+  </div>
+}
+
+@if (error(); as err) {
+  <p class="alert alert--error table-error" role="alert">
+    {{ err }}
+    <button type="button" class="table-error__close" (click)="error.set(null)" aria-label="Fermer">×</button>
+  </p>
+}
+
+<!-- Own markup (tt-*) instead of the global table shell: that one forces fixed
+     columns and turns rows into cards on phones — this table just scrolls. -->
+<div class="tt-region">
+  <div class="tt-scroll" tabindex="0" role="region" aria-label="Tickets (défilement horizontal)">
+    <table class="tt tt--wide">
+      <thead>
+        <tr>
+          <th class="tt-sticky tt-col-ticket" [attr.aria-sort]="ariaSort('key')">
+            <button type="button" class="tt-sort" (click)="sortBy('key')">Ticket <span class="tt-ind">{{ sortIndicator('key') }}</span></button>
+          </th>
+          <th [attr.aria-sort]="ariaSort('type')"><button type="button" class="tt-sort" (click)="sortBy('type')">Type <span class="tt-ind">{{ sortIndicator('type') }}</span></button></th>
+          <th [attr.aria-sort]="ariaSort('status')"><button type="button" class="tt-sort" (click)="sortBy('status')">Statut <span class="tt-ind">{{ sortIndicator('status') }}</span></button></th>
+          <th [attr.aria-sort]="ariaSort('priority')"><button type="button" class="tt-sort" (click)="sortBy('priority')">Priorité <span class="tt-ind">{{ sortIndicator('priority') }}</span></button></th>
+          <th [attr.aria-sort]="ariaSort('assignee')"><button type="button" class="tt-sort" (click)="sortBy('assignee')">Assigné <span class="tt-ind">{{ sortIndicator('assignee') }}</span></button></th>
+          @if (hasPhases()) {
+            <th [attr.aria-sort]="ariaSort('phase')"><button type="button" class="tt-sort" (click)="sortBy('phase')">Phase <span class="tt-ind">{{ sortIndicator('phase') }}</span></button></th>
+          }
+          <th [attr.aria-sort]="ariaSort('due')"><button type="button" class="tt-sort" (click)="sortBy('due')">Échéance <span class="tt-ind">{{ sortIndicator('due') }}</span></button></th>
+        </tr>
+      </thead>
+
+      @for (g of groups(); track g.id) {
+        <tbody>
+          @if (g.label) {
+            <tr class="tt-group">
+              <th class="tt-sticky" scope="rowgroup">{{ g.label }} <span class="tt-group__count">{{ g.tickets.length }}</span></th>
+              <td [attr.colspan]="hasPhases() ? 6 : 5"></td>
+            </tr>
+          }
+          @for (t of g.tickets; track t.uuid) {
+            <tr class="tt-row" [class.tt-row--pending]="isPending(t)">
+              <td class="tt-sticky tt-col-ticket">
+                <button type="button" class="tt-open" (click)="open.emit(t)">
+                  <span class="tt-key">{{ t.key }}</span>
+                  <span class="tt-text">
+                    <span class="tt-title">{{ t.title }}</span>
+                    @if (t.tags.length) {
+                      <span class="tt-tags">
+                        @for (tag of t.tags; track tag) { <span class="tt-tag">{{ tag }}</span> }
+                      </span>
+                    }
+                  </span>
+                  @if (t.suggestions?.length) {
+                    <span class="tt-sugg" [title]="t.suggestions!.length + ' suggestion(s) prise(s) en compte'">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg>{{ t.suggestions!.length }}
+                      <span class="sr-only">suggestion(s)</span>
+                    </span>
+                  }
+                </button>
+              </td>
+              <td>
+                <select class="pill-select pill--{{ t.type?.color ?? 'grey' }}" [class.pill-select--empty]="!t.type"
+                  [disabled]="isPending(t)" [attr.aria-label]="'Type de ' + t.key" (change)="onCellChange(t, 'typeUuid', $event)">
+                  <option value="" [selected]="!t.type">Sans type</option>
+                  @for (ty of types(); track ty.uuid) {
+                    <option [value]="ty.uuid" [selected]="ty.uuid === t.type?.uuid">{{ ty.name }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <select class="pill-select pill--{{ statusTones[t.status] }}" [disabled]="isPending(t)"
+                  [attr.aria-label]="'Statut de ' + t.key" (change)="onCellChange(t, 'status', $event)">
+                  @for (s of statuses; track s) {
+                    <option [value]="s" [selected]="s === t.status">{{ statusLabels[s] }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <select class="pill-select pill--{{ priorityTones[t.priority] }}" [disabled]="isPending(t)"
+                  [attr.aria-label]="'Priorité de ' + t.key" (change)="onCellChange(t, 'priority', $event)">
+                  @for (p of priorities; track p) {
+                    <option [value]="p" [selected]="p === t.priority">{{ priorityLabels[p] }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <select class="cell-select" [class.cell-select--empty]="!t.assignee" [disabled]="isPending(t)"
+                  [attr.aria-label]="'Personne assignée à ' + t.key" (change)="onCellChange(t, 'assigneeUuid', $event)">
+                  <option value="" [selected]="!t.assignee">Non assigné</option>
+                  @for (m of members(); track m.uuid) {
+                    <option [value]="m.uuid" [selected]="m.uuid === t.assignee?.uuid">{{ personName(m) }}</option>
+                  }
+                </select>
+              </td>
+              @if (hasPhases()) {
+                <td>
+                  <select class="cell-select" [class.cell-select--empty]="!t.phase" [disabled]="isPending(t)"
+                    [attr.aria-label]="'Phase de ' + t.key" (change)="onCellChange(t, 'phaseUuid', $event)">
+                    <option value="" [selected]="!t.phase">Sans phase</option>
+                    @for (ph of phases(); track ph.uuid) {
+                      <option [value]="ph.uuid" [selected]="ph.uuid === t.phase?.uuid">{{ ph.name }}</option>
+                    }
+                  </select>
+                </td>
+              }
+              <td>
+                <input type="date" class="cell-date" [class.cell-date--overdue]="isOverdue(t)"
+                  [class.cell-select--empty]="!t.dueDate" [value]="t.dueDate" [disabled]="isPending(t)"
+                  [attr.aria-label]="'Échéance de ' + t.key" (change)="onCellChange(t, 'dueDate', $event)" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      }
+    </table>
+
+    @if (filtered().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucun ticket</div>
+        <div class="state__hint">
+          @if (tickets().length === 0) {
+            Rien pour l’instant : créez le premier avec « Nouveau ticket ».
+          } @else {
+            Aucun ticket ne correspond aux filtres.
+          }
+        </div>
+      </div>
+    }
+  </div>
+  <p class="tt-foot">{{ filtered().length }} ticket{{ filtered().length > 1 ? 's' : '' }} affiché{{ filtered().length > 1 ? 's' : '' }} sur {{ tickets().length }}</p>
+</div>

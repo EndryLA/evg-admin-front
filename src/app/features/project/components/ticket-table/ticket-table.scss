@@ -1,0 +1,131 @@
+@use '../project-table';
+
+/* Ticket table. Search/tabs/chips come from the global `.data-list` block
+   (the host page carries it); the table itself is `.tt`, styled here with
+   scoped selectors that outrank the global table rules — so it keeps real
+   columns and scrolls sideways on phones instead of becoming cards. */
+:host { display: contents; }
+
+/* Ticket column stays visible while the other columns scroll (see .tt-sticky). */
+.tt-col-ticket { width: 38%; min-width: 260px; max-width: 420px; padding-left: 14px; }
+.tt-open {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 4px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.tt-open:hover .tt-title { color: var(--accent); }
+.tt-open:focus-visible { outline: 2px solid var(--accent); }
+.tt-key {
+  flex: 0 0 auto;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.tt-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tt-title { font-weight: 600; white-space: normal; overflow-wrap: anywhere; }
+.tt-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tt-tag {
+  padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--pill-blue-text) 35%, transparent);
+  border-radius: 999px;
+  background: var(--pill-blue-bg);
+  color: var(--pill-blue-text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tt-sugg {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.tt-sugg svg { width: 13px; height: 13px; }
+
+.tt-group th,
+.tt-group td {
+  padding: 14px 14px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-sunken);
+}
+.tt-group__count { margin-left: 6px; color: var(--text-faint); }
+
+/* ---- In-place editors: look like their value until hovered/focused ---- */
+.pill-select,
+.cell-select,
+.cell-date {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color 0.1s ease;
+}
+.pill-select {
+  appearance: none;
+  padding: 4px 24px 4px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--pill-grey-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center / 11px;
+  color: var(--pill-grey-text);
+}
+.pill-select--empty { font-weight: 500; opacity: 0.75; }
+.pill-select.pill--green { background-color: var(--pill-green-bg); color: var(--pill-green-text); }
+.pill-select.pill--amber { background-color: var(--pill-amber-bg); color: var(--pill-amber-text); }
+.pill-select.pill--blue { background-color: var(--pill-blue-bg); color: var(--pill-blue-text); }
+.pill-select.pill--violet { background-color: var(--pill-violet-bg); color: var(--pill-violet-text); }
+.pill-select.pill--red { background-color: var(--pill-red-bg); color: var(--pill-red-text); }
+.cell-select,
+.cell-date {
+  padding: 5px 6px;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+.cell-select { width: 170px; }
+.cell-date { width: 140px; }
+.cell-select--empty { color: var(--text-faint); }
+.cell-date--overdue { color: var(--accent); font-weight: 600; }
+.pill-select:hover,
+.cell-select:hover,
+.cell-date:hover { border-color: var(--border-input); }
+.pill-select:focus-visible,
+.cell-select:focus-visible,
+.cell-date:focus-visible,
+.filters-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.pill-select:disabled,
+.cell-select:disabled,
+.cell-date:disabled { cursor: progress; }
+
+.table-error {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 32px 12px;
+}
+.table-error__close { border: none; background: none; font-size: 18px; color: inherit; cursor: pointer; }
+
+@media (max-width: 720px) {
+  .table-error { margin: 0 16px 12px; }
+  /* Narrower sticky column so the scrolling cells stay in view. */
+  .tt-col-ticket { min-width: 190px; width: 190px; }
+}

@@ -1,0 +1,36 @@
+<input class="field__control picker__search" type="search" [value]="query()"
+  (input)="query.set($any($event.target).value)" placeholder="Rechercher une suggestion acceptée…"
+  aria-label="Rechercher une suggestion" />
+
+@if (loading()) {
+  <p class="picker__state">Chargement…</p>
+} @else if (visible().length === 0) {
+  <p class="picker__state">Aucune suggestion acceptée à lier.</p>
+} @else {
+  <ul class="picker__list">
+    @for (o of visible(); track o.uuid) {
+      <li>
+        <label class="picker__item">
+          <input type="checkbox" [checked]="selected().has(o.uuid)" (change)="toggle(o.uuid)" />
+          <span class="picker__text">
+            <span class="picker__title">{{ o.title }}</span>
+            @if (o.authorName) {
+              <span class="picker__sub">{{ o.authorName }}@if (o.description) { · {{ o.description }}}</span>
+            }
+          </span>
+        </label>
+      </li>
+    }
+  </ul>
+}
+
+@if (error(); as err) {
+  <p class="field__error" role="alert">{{ err }}</p>
+}
+
+<div class="picker__actions">
+  <button type="button" class="btn" (click)="cancel.emit()" [disabled]="busy()">Annuler</button>
+  <button type="button" class="btn btn--primary" (click)="save()" [disabled]="busy() || loading()">
+    {{ busy() ? 'Enregistrement…' : 'Enregistrer (' + selected().size + ')' }}
+  </button>
+</div>

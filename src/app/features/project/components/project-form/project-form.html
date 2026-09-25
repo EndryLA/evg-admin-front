@@ -1,0 +1,84 @@
+<div class="modal-overlay" (click)="cancel.emit()">
+  <div class="modal" role="dialog" aria-modal="true"
+    [attr.aria-label]="isEdit() ? 'Modifier le projet' : 'Nouveau projet'"
+    (click)="$event.stopPropagation()">
+    <header class="modal__head">
+      <span class="eyebrow">{{ isEdit() ? 'Modifier le projet' : 'Projet' }}</span>
+      <h2 class="modal__title">{{ isEdit() ? project()!.name : 'Nouveau projet' }}</h2>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        <label class="field field--span">
+          <span class="field__label">Nom</span>
+          <input class="field__control" formControlName="name" autocomplete="off" (input)="onNameInput()"
+            placeholder="Ex. Application évangélisation"
+            [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <span class="field__error">Le nom du projet est requis.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Clé</span>
+          <input class="field__control" formControlName="key" autocomplete="off" maxlength="10"
+            [attr.aria-invalid]="form.controls.key.touched && form.controls.key.invalid" />
+          @if (form.controls.key.touched && form.controls.key.invalid) {
+            <span class="field__error">2 à 10 lettres ou chiffres, commençant par une lettre.</span>
+          } @else {
+            <span class="field__hint">Préfixe des tickets : {{ (form.controls.key.value || 'EVG').toUpperCase() }}-1</span>
+          }
+        </label>
+
+        @if (!isEdit()) {
+          <div class="field field--span">
+            <span class="field__label" id="project-category-label">Catégorie</span>
+            <div class="categories" role="radiogroup" aria-labelledby="project-category-label">
+              @for (c of categories; track c) {
+                <label class="category" [class.category--active]="form.controls.category.value === c">
+                  <input type="radio" formControlName="category" [value]="c" />
+                  <span class="category__name">{{ categoryLabels[c] }}</span>
+                  <span class="category__types">{{ categoryStarters[c] }}</span>
+                </label>
+              }
+            </div>
+            <span class="field__hint">Définit les types de tickets de départ ; ils restent modifiables ensuite.</span>
+          </div>
+        }
+
+        <label class="field">
+          <span class="field__label">Statut</span>
+          <select class="field__control" formControlName="status">
+            @for (s of statuses; track s) { <option [value]="s">{{ statusLabels[s] }}</option> }
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Début</span>
+          <input class="field__control" type="date" formControlName="startDate" />
+        </label>
+        <label class="field">
+          <span class="field__label">Échéance</span>
+          <input class="field__control" type="date" formControlName="targetDate" />
+        </label>
+
+        <label class="field field--span">
+          <span class="field__label">Description</span>
+          <textarea class="field__control" formControlName="description" rows="4"
+            placeholder="Objectif du projet, périmètre…"></textarea>
+        </label>
+
+        @if (error(); as err) {
+          <p class="field__error field--span" role="alert">{{ err }}</p>
+        }
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn modal__cancel" (click)="cancel.emit()" [disabled]="busy()">Annuler</button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">
+          {{ busy() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer') }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

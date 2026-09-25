@@ -1,0 +1,23 @@
+/* Modal shell comes from the global `.modal-form` block. */
+.modal { width: 600px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+textarea.field__control { resize: vertical; min-height: 110px; line-height: 1.5; }
+
+.sources {
+  margin: 0;
+  padding: 10px 12px 10px 28px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9px;
+  background: var(--bg-sunken);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.done { display: flex; gap: 12px; align-items: flex-start; }
+.done svg { width: 28px; height: 28px; flex: 0 0 auto; color: var(--pill-green-text); }
+.done__title { margin: 2px 0 4px; font-size: 16px; font-weight: 700; }
+.done__text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-muted); }
+a.btn { text-decoration: none; }

@@ -1,0 +1,95 @@
+/* Shared table shell for the project page tabs (tickets, phases, types,
+   members), so they all read as the same screen. Scoped selectors outrank the
+   global `.data-list` table rules: real columns, horizontal scroll on phones.
+   Used via `@use '../project-table';` from each component stylesheet. */
+
+/* ---- Table ---- */
+.tt-region { padding: 0 32px 28px; }
+.tt-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  -webkit-overflow-scrolling: touch;
+}
+.tt-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tt {
+  display: table;
+  width: 100%;
+  min-width: 560px;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+.tt thead { display: table-header-group; }
+.tt tbody { display: table-row-group; }
+.tt tr { display: table-row; }
+.tt tbody tr,
+.tt tbody tr:hover { padding: 0; border: none; border-radius: 0; box-shadow: none; background: none; cursor: default; }
+.tt th,
+.tt td {
+  display: table-cell;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-faint);
+  background: var(--bg-card);
+}
+.tt th {
+  padding: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border-bottom-color: var(--border-subtle);
+}
+.tt tbody:last-of-type tr:last-child td { border-bottom: none; }
+.tt .tt-row:hover td { background: var(--row-hover); }
+.tt-row--pending { opacity: 0.55; }
+
+.tt-sort {
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.tt-sort:hover { color: var(--text-secondary); }
+.tt-ind { color: var(--accent); }
+
+.tt .tt-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: 1px 0 0 var(--border-faint);
+}
+
+/* Wide tables (tickets) scroll sooner rather than squeezing columns. */
+.tt--wide { min-width: 940px; }
+
+.tt-muted { color: var(--text-faint); }
+.tt-foot { margin: 10px 2px 0; font-size: 12.5px; color: var(--text-muted); }
+
+/* Toolbar button next to the search (primary action of the tab). */
+.tt-new svg { width: 16px; height: 16px; }
+
+@media (max-width: 720px) {
+  .tt-region { padding: 0 16px 24px; }
+}
+
+/* On phones the toolbar button keeps only its "+" so it fits beside the search,
+   and the toolbar stays on one row. */
+@media (max-width: 720px) {
+  .filters { flex-wrap: nowrap; }
+  .filters .search { flex: 1 1 auto; min-width: 0; }
+  .tt-new { flex: 0 0 auto; }
+  .tt-new { padding-left: 12px; padding-right: 12px; }
+  .tt-new__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}

@@ -1,0 +1,98 @@
+<header class="topbar">
+  <div>
+    <h1>Projets</h1>
+    <p class="topbar__sub">Les projets dont vous êtes membre, leurs phases et leurs tickets.</p>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="search" [value]="query()" (input)="query.set($any($event.target).value)"
+      placeholder="Rechercher un projet…" aria-label="Rechercher un projet" />
+  </div>
+  @if (archivedCount()) {
+    <button type="button" class="chip" [class.chip--active]="showArchived()" [attr.aria-pressed]="showArchived()"
+      (click)="showArchived.set(!showArchived())">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      Archivés ({{ archivedCount() }})
+    </button>
+  }
+  @if (canCreate()) {
+    <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nouveau projet
+    </button>
+  }
+</div>
+
+<div class="table-region">
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-name">Projet</th>
+          <th class="col-status">Statut</th>
+          <th class="col-progress">Avancement</th>
+          <th class="col-members center">Membres</th>
+          <th class="col-date">Échéance</th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of rows(); track p.uuid) {
+          <tr (click)="view(p)">
+            <td class="cell-head">
+              <div class="cell-main">{{ p.name }}</div>
+              <div class="cell-sub">{{ p.key }} · {{ categoryLabels[p.category] }}@if (p.phases.length) { · {{ p.phases.length }} phase{{ p.phases.length > 1 ? 's' : '' }}}</div>
+            </td>
+            <td data-label="Statut">
+              <span class="pill pill--{{ statusTones[p.status] }}">{{ statusLabels[p.status] }}</span>
+            </td>
+            <td data-label="Avancement">
+              <div class="progress">
+                <div class="progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                  [attr.aria-valuenow]="progress(p.doneTicketCount, p.ticketCount)"
+                  [attr.aria-label]="'Avancement de ' + p.name">
+                  <div class="progress__bar" [style.width.%]="progress(p.doneTicketCount, p.ticketCount)"></div>
+                </div>
+                <span class="progress__label">{{ p.doneTicketCount }}/{{ p.ticketCount }}</span>
+              </div>
+            </td>
+            <td class="center" data-label="Membres">{{ p.members.length }}</td>
+            <td class="cell-contact" data-label="Échéance">{{ formatDate(p.targetDate) }}</td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement des projets…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucun projet</div>
+        <div class="state__hint">
+          @if (canCreate()) { Créez un projet pour commencer. } @else { Vous n’êtes membre d’aucun projet pour l’instant. }
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (canCreate()) {
+  <button type="button" class="fab" (click)="openCreate()" aria-label="Nouveau projet">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+}
+
+@if (formOpen()) {
+  <app-project-form [busy]="saving()" [error]="saveError()" (save)="onSave($event)" (cancel)="formOpen.set(false)" />
+}

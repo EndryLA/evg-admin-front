@@ -1,0 +1,38 @@
+<ul class="gallery">
+  @for (t of tiles(); track t.attachment.uuid) {
+    <li class="tile" [class.tile--video]="t.attachment.kind === 'VIDEO'">
+      @if (t.failed) {
+        <div class="tile__state">Fichier indisponible</div>
+      } @else if (!t.url) {
+        <div class="tile__state tile__state--loading">Chargement…</div>
+      } @else if (t.attachment.kind === 'VIDEO') {
+        <video class="tile__media" [src]="t.url" controls preload="metadata" playsinline></video>
+      } @else {
+        <button type="button" class="tile__open" (click)="lightbox.set(t)"
+          [attr.aria-label]="'Agrandir ' + t.attachment.fileName">
+          <img class="tile__media" [src]="t.url" [alt]="t.attachment.fileName" />
+        </button>
+      }
+      <div class="tile__caption">
+        <span class="tile__name" [title]="t.attachment.fileName">{{ t.attachment.fileName }}</span>
+        <span class="tile__size">{{ formatSize(t.attachment.size) }}</span>
+      </div>
+      @if (removable()) {
+        <button type="button" class="tile__remove" (click)="remove.emit(t.attachment)"
+          [attr.aria-label]="'Supprimer ' + t.attachment.fileName">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      }
+    </li>
+  }
+</ul>
+
+@if (lightbox(); as t) {
+  <div class="lightbox" (click)="lightbox.set(null)" role="dialog" aria-modal="true"
+    [attr.aria-label]="t.attachment.fileName">
+    <img [src]="t.url" [alt]="t.attachment.fileName" (click)="$event.stopPropagation()" />
+    <button type="button" class="lightbox__close" (click)="lightbox.set(null)" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+}

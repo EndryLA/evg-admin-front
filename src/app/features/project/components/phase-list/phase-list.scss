@@ -1,0 +1,35 @@
+@use '../project-table';
+@use '../project-table-actions';
+
+/* Toolbar (.filters/.search) comes from the global `.data-list` block on the page. */
+:host { display: contents; }
+
+.list-error { margin: 0 32px 12px; }
+
+.col-index { width: 44px; padding-left: 16px; }
+.col-name { min-width: 220px; white-space: normal; }
+.col-actions { width: 1%; }
+.name { font-weight: 600; color: var(--text-primary); }
+.sub {
+  margin-top: 2px;
+  max-width: 420px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: normal;
+}
+
+.progress { display: flex; align-items: center; gap: 10px; }
+.progress__track {
+  width: 120px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  overflow: hidden;
+}
+.progress__bar { height: 100%; border-radius: inherit; background: var(--pill-green-text); }
+.progress__label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 720px) {
+  .list-error { margin: 0 16px 12px; }
+  .col-name { min-width: 170px; }
+}

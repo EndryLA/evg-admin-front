@@ -1,0 +1,80 @@
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="search" [value]="query()" (input)="query.set($any($event.target).value)"
+      placeholder="Rechercher un type…" aria-label="Rechercher un type" />
+  </div>
+  @if (project().canManage) {
+    <button type="button" class="btn btn--primary tt-new" (click)="openCreate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="tt-new__label">Nouveau type</span>
+    </button>
+  }
+</div>
+
+@if (error() && editing() === null && deleting() === null) {
+  <p class="alert alert--error list-error" role="alert">{{ error() }}</p>
+}
+
+<div class="tt-region">
+  <div class="tt-scroll" tabindex="0" role="region" aria-label="Types de tickets (défilement horizontal)">
+    <table class="tt">
+      <thead>
+        <tr>
+          <th class="tt-sticky col-name">Type</th>
+          <th>Couleur</th>
+          <th>Tickets</th>
+          @if (project().canManage) {
+            <th class="col-actions"><span class="sr-only">Actions</span></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of rows(); track t.uuid) {
+          <tr class="tt-row">
+            <td class="tt-sticky col-name"><span class="pill pill--{{ t.color }}">{{ t.name }}</span></td>
+            <td class="tt-muted">{{ colorLabels[t.color] }}</td>
+            <td>{{ t.ticketCount }}</td>
+            @if (project().canManage) {
+              <td class="col-actions">
+                <div class="tt-actions">
+                  <button type="button" class="tt-icon" (click)="openEdit(t)" [disabled]="busy()"
+                    [attr.aria-label]="'Modifier ' + t.name" title="Modifier">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                  </button>
+                  <button type="button" class="tt-icon tt-icon--danger" (click)="error.set(null); deleting.set(t)"
+                    [disabled]="busy() || t.ticketCount > 0" [attr.aria-label]="'Supprimer ' + t.name"
+                    [title]="t.ticketCount > 0 ? 'Utilisé par des tickets : impossible à supprimer' : 'Supprimer'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                  </button>
+                </div>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">{{ project().ticketTypes.length ? 'Aucun type ne correspond' : 'Aucun type' }}</div>
+        @if (!project().ticketTypes.length) {
+          <div class="state__hint">Les tickets seront « Sans type ».</div>
+        }
+      </div>
+    }
+  </div>
+  <p class="tt-foot">Catégorie {{ categoryLabels[project().category] }} · {{ project().ticketTypes.length }} type{{ project().ticketTypes.length > 1 ? 's' : '' }}</p>
+</div>
+
+@if (editing() !== null) {
+  <app-ticket-type-form [type]="editedType()" [busy]="busy()" [error]="error()"
+    (save)="onSave($event)" (cancel)="editing.set(null)" />
+}
+
+@if (deleting(); as t) {
+  <app-confirm-dialog title="Supprimer le type ?" [busy]="busy()"
+    (confirm)="onDelete()" (cancel)="deleting.set(null)">
+    Le type « {{ t.name }} » sera supprimé de ce projet.
+  </app-confirm-dialog>
+}

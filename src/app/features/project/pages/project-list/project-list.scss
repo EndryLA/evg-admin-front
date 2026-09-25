@@ -1,0 +1,29 @@
+/* Column widths only; the table shell is the global `.data-list` block. */
+.col-name { width: 34%; }
+.col-status { width: 14%; }
+.col-progress { width: 24%; }
+.col-members { width: 10%; }
+.col-date { width: 14%; }
+.col-chevron { width: 44px; }
+
+.new-btn svg { width: 16px; height: 16px; }
+@media (max-width: 720px) {
+  .new-btn { display: none; }
+}
+
+.progress { display: flex; align-items: center; gap: 10px; }
+.progress__track {
+  flex: 1;
+  height: 6px;
+  max-width: 160px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  overflow: hidden;
+}
+.progress__bar { height: 100%; border-radius: inherit; background: var(--pill-green-text); }
+.progress__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}

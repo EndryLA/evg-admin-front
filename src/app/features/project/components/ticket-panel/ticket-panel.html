@@ -1,0 +1,134 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal" role="dialog" aria-modal="true"
+    [attr.aria-label]="isNew() ? 'Nouveau ticket' : ticket()!.key + ' ' + ticket()!.title"
+    (click)="$event.stopPropagation()">
+    <header class="modal__head">
+      <div class="head-row">
+        <span class="eyebrow">{{ isNew() ? 'Nouveau ticket' : ticket()!.key }}</span>
+        <button type="button" class="close" (click)="close.emit()" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      @if (!isNew()) {
+        <p class="subtitle">Créé par {{ personName(ticket()!.createdBy) }} le {{ formatDate(ticket()!.createdAt) }}</p>
+      }
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid">
+        <label class="field field--span">
+          <span class="field__label">Titre</span>
+          <input class="field__control field__control--title" formControlName="title" autocomplete="off"
+            [attr.aria-invalid]="form.controls.title.touched && form.controls.title.invalid" />
+          @if (form.controls.title.touched && form.controls.title.invalid) {
+            <span class="field__error">Le titre est requis.</span>
+          }
+        </label>
+
+        <label class="field field--span">
+          <span class="field__label">Description</span>
+          <textarea class="field__control" formControlName="description" rows="5"
+            placeholder="Contexte, étapes, critères de fin…"></textarea>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Type</span>
+          <select class="field__control" formControlName="typeUuid">
+            <option value="">Sans type</option>
+            @for (t of project().ticketTypes; track t.uuid) { <option [value]="t.uuid">{{ t.name }}</option> }
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">Statut</span>
+          <select class="field__control" formControlName="status">
+            @for (s of statuses; track s) { <option [value]="s">{{ statusLabels[s] }}</option> }
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">Priorité</span>
+          <select class="field__control" formControlName="priority">
+            @for (p of priorities; track p) { <option [value]="p">{{ priorityLabels[p] }}</option> }
+          </select>
+        </label>
+        <label class="field">
+          <span class="field__label">Échéance</span>
+          <input class="field__control" type="date" formControlName="dueDate" />
+        </label>
+        <label class="field">
+          <span class="field__label">Assigné à</span>
+          <select class="field__control" formControlName="assigneeUuid">
+            <option value="">Non assigné</option>
+            @for (m of project().members; track m.person.uuid) {
+              <option [value]="m.person.uuid">{{ personName(m.person) }}</option>
+            }
+          </select>
+        </label>
+        @if (project().phases.length) {
+          <label class="field">
+            <span class="field__label">Phase</span>
+            <select class="field__control" formControlName="phaseUuid">
+              <option value="">Sans phase</option>
+              @for (ph of project().phases; track ph.uuid) {
+                <option [value]="ph.uuid">{{ ph.name }}</option>
+              }
+            </select>
+          </label>
+        }
+
+        <div class="field field--span">
+          <label class="field__label" for="ticket-tags">Tags</label>
+          <app-tag-input inputId="ticket-tags" formControlName="tags" [suggestions]="tagSuggestions()"
+            placeholder="Ex. Accueil, Mobile… puis Entrée" />
+        </div>
+
+        @if (ticket()?.suggestions; as links) {
+          <section class="links field--span">
+            <div class="links__head">
+              <h3 class="links__title">Suggestions prises en compte</h3>
+              @if (canLink() && !linking()) {
+                <button type="button" class="link-btn" (click)="linking.set(true)">Modifier</button>
+              }
+            </div>
+            @if (linking()) {
+              <app-suggestion-picker [ticket]="ticket()!" (saved)="onLinked($event)" (cancel)="linking.set(false)" />
+            } @else if (links.length) {
+              <ul class="links__list">
+                @for (s of links; track s.uuid) {
+                  <li>
+                    <a [routerLink]="['/suggestions', s.uuid]">{{ s.title }}</a>
+                    <span class="pill pill--{{ suggestionTones[s.status] }}">{{ suggestionLabels[s.status] }}</span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="links__empty">Aucune suggestion liée.</p>
+            }
+          </section>
+        }
+
+        @if (error(); as err) {
+          <p class="modal__error field--span" role="alert">{{ err }}</p>
+        }
+      </div>
+
+      <footer class="modal__foot">
+        @if (canDelete()) {
+          <button type="button" class="btn btn--danger" (click)="confirmDelete.set(true)" [disabled]="busy()">Supprimer</button>
+        }
+        <button type="button" class="btn modal__cancel" (click)="close.emit()" [disabled]="busy()">
+          {{ isNew() || form.dirty ? 'Annuler' : 'Fermer' }}
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="busy() || (!isNew() && form.pristine)">
+          {{ busy() ? 'Enregistrement…' : (isNew() ? 'Créer le ticket' : 'Enregistrer') }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+@if (confirmDelete()) {
+  <app-confirm-dialog title="Supprimer le ticket ?" [busy]="busy()"
+    (confirm)="onDelete()" (cancel)="confirmDelete.set(false)">
+    {{ ticket()!.key }} « {{ ticket()!.title }} » sera supprimé. Les suggestions liées seront libérées.
+  </app-confirm-dialog>
+}

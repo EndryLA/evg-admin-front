@@ -1,0 +1,80 @@
+<header class="topbar">
+  <div>
+    <h1>Mes suggestions</h1>
+    <p class="topbar__sub">Proposez une idée d’amélioration et suivez la réponse qui y est donnée.</p>
+  </div>
+  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nouvelle suggestion
+  </button>
+</header>
+
+@if (justSent(); as title) {
+  <p class="alert alert--success sent" role="status">
+    Merci ! « {{ title }} » a été envoyée, les administrateurs l’examineront.
+    <button type="button" class="sent__close" (click)="justSent.set(null)" aria-label="Fermer">×</button>
+  </p>
+}
+
+<div class="table-region">
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-title">Suggestion</th>
+          <th class="col-status">Statut</th>
+          <th class="col-reply">Réponse</th>
+          <th class="col-date">Envoyée le</th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of items(); track s.uuid) {
+          <tr (click)="view(s)">
+            <td class="cell-head">
+              <div class="cell-main">{{ s.title }}</div>
+              @if (s.attachments.length) {
+                <div class="cell-sub">{{ s.attachments.length }} pièce(s) jointe(s)</div>
+              }
+            </td>
+            <td data-label="Statut">
+              <span class="pill pill--{{ statusTones[s.status] }}">{{ statusLabels[s.status] }}</span>
+            </td>
+            <td class="cell-reply" data-label="Réponse">{{ s.reviewMessage || '—' }}</td>
+            <td class="cell-contact" data-label="Envoyée le">{{ formatDate(s.createdAt) }}</td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement de vos suggestions…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (items().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucune suggestion pour l’instant</div>
+        <div class="state__hint">Une idée pour améliorer l’application ou le département ? Proposez-la.</div>
+        <button type="button" class="btn btn--primary state__cta" (click)="openCreate()">Faire une suggestion</button>
+      </div>
+    }
+  </div>
+</div>
+
+<button type="button" class="fab" (click)="openCreate()" aria-label="Nouvelle suggestion">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+@if (formOpen()) {
+  <app-suggestion-form
+    [busy]="saving()"
+    [error]="saveError()"
+    (save)="onSave($event)"
+    (cancel)="formOpen.set(false)" />
+}

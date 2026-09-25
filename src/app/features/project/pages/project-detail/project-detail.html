@@ -1,0 +1,89 @@
+<div class="head">
+  <a routerLink="/projets" class="back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    Projets
+  </a>
+</div>
+
+@if (loading()) {
+  <div class="state">Chargement du projet…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (project(); as p) {
+  <header class="topbar">
+    <div class="topbar__main">
+      <span class="eyebrow">Projet · {{ p.key }}</span>
+      <h1>{{ p.name }}</h1>
+      <p class="topbar__sub">
+        <span class="pill pill--{{ statusTones[p.status] }}">{{ statusLabels[p.status] }}</span>
+        <span>{{ p.doneTicketCount }}/{{ p.ticketCount }} tickets terminés ({{ percent() }} %)</span>
+        @if (p.targetDate) { <span>· échéance {{ formatDate(p.targetDate) }}</span> }
+      </p>
+      @if (p.description) {
+        <p class="description">{{ p.description }}</p>
+      }
+    </div>
+  </header>
+
+  <nav class="section-tabs" aria-label="Sections du projet">
+    <div class="section-tabs__list" role="tablist">
+      <button type="button" role="tab" class="section-tab" [class.section-tab--active]="tab() === 'tickets'"
+        [attr.aria-selected]="tab() === 'tickets'" (click)="tab.set('tickets')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tickets
+        <span class="section-tab__count">{{ openCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="section-tab" [class.section-tab--active]="tab() === 'phases'"
+        [attr.aria-selected]="tab() === 'phases'" (click)="tab.set('phases')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M3 12h12M3 18h6"/></svg>
+        Phases
+        <span class="section-tab__count">{{ p.phases.length }}</span>
+      </button>
+      <button type="button" role="tab" class="section-tab" [class.section-tab--active]="tab() === 'types'"
+        [attr.aria-selected]="tab() === 'types'" (click)="tab.set('types')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Types
+        <span class="section-tab__count">{{ p.ticketTypes.length }}</span>
+      </button>
+      <button type="button" role="tab" class="section-tab" [class.section-tab--active]="tab() === 'members'"
+        [attr.aria-selected]="tab() === 'members'" (click)="tab.set('members')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Membres
+        <span class="section-tab__count">{{ p.members.length }}</span>
+      </button>
+    </div>
+  </nav>
+
+  @switch (tab()) {
+    @case ('tickets') {
+      <app-ticket-table
+        [tickets]="tickets()"
+        [project]="p"
+        (updated)="onTicketSaved($event)"
+        (open)="panel.set($event)"
+        (create)="panel.set('new')" />
+    }
+    @case ('phases') {
+      <app-phase-list [project]="p" (changed)="onPhasesChanged()" />
+    }
+    @case ('types') {
+      <app-ticket-type-list [project]="p" (changed)="onTypesChanged()" />
+    }
+    @case ('members') {
+      <app-member-list [project]="p" [tickets]="tickets()" (changed)="onMembersChanged($event)" />
+    }
+  }
+
+  @if (panel() !== null) {
+    <app-ticket-panel
+      [ticket]="panelTicket()"
+      [project]="p"
+      [tagSuggestions]="ticketTags()"
+      (saved)="onTicketSaved($event)"
+      (deleted)="onTicketDeleted($event)"
+      (close)="panel.set(null)" />
+  }
+}

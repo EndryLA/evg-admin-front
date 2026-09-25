@@ -1,0 +1,13 @@
+@use '../project-table';
+@use '../project-table-actions';
+
+/* Toolbar (.filters/.search) comes from the global `.data-list` block on the page. */
+:host { display: contents; }
+
+.list-error { margin: 0 32px 12px; }
+.col-name { width: 40%; padding-left: 16px; }
+.col-actions { width: 1%; }
+
+@media (max-width: 720px) {
+  .list-error { margin: 0 16px 12px; }
+}

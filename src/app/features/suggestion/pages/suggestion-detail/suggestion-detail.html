@@ -1,0 +1,149 @@
+<a [routerLink]="backLink()" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  {{ backLabel() }}
+</a>
+
+@if (loading()) {
+  <div class="state">Chargement de la suggestion…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (suggestion(); as s) {
+  <header class="page-head">
+    <div class="page-head__main">
+      <span class="eyebrow">Suggestion</span>
+      <h1>{{ s.title }}</h1>
+      <p class="page-head__sub">
+        <span class="pill pill--{{ statusTones[s.status] }}">{{ statusLabels[s.status] }}</span>
+        Proposée par {{ personName(s.author) }} le {{ formatDate(s.createdAt) }}
+      </p>
+    </div>
+
+    @if (canReview() || canCreateTicket()) {
+      <div class="page-head__actions">
+        @if (canCreateTicket()) {
+          <button type="button" class="btn btn--primary" (click)="creatingTicket.set(true)" [disabled]="busy()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Créer un ticket
+          </button>
+        }
+        @if (canReview() && s.status !== 'ACCEPTED') {
+          <button type="button" class="btn btn--primary" (click)="openReview('ACCEPT')" [disabled]="busy()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Accepter
+          </button>
+        }
+        @if (canReview() && s.status !== 'REJECTED') {
+          <button type="button" class="btn btn--danger" (click)="openReview('REJECT')" [disabled]="busy()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Refuser
+          </button>
+        }
+      </div>
+    } @else if (authorCanEdit()) {
+      <div class="page-head__actions">
+        <button type="button" class="btn" (click)="openEdit()" [disabled]="busy()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          Modifier
+        </button>
+        <button type="button" class="btn btn--danger" (click)="confirmDelete.set(true)" [disabled]="busy()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          Supprimer
+        </button>
+      </div>
+    }
+  </header>
+
+  @if (actionError(); as err) {
+    <p class="alert alert--error" role="alert">{{ err }}</p>
+  }
+
+  <div class="columns">
+    <div class="main-col">
+      <section class="card">
+        <h2 class="card__title">Description</h2>
+        <p class="description">{{ s.description }}</p>
+      </section>
+
+      @if (s.attachments.length || canAddFiles()) {
+        <section class="card">
+          <div class="card__head">
+            <h2 class="card__title">Images et vidéos</h2>
+            @if (canAddFiles()) {
+              <label class="btn btn--small add-files">
+                <input type="file" multiple [accept]="accept" (change)="onAddFiles($any($event.target))" [disabled]="busy()" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Ajouter
+              </label>
+            }
+          </div>
+          @if (s.attachments.length) {
+            <app-attachment-gallery
+              [suggestionUuid]="s.uuid"
+              [attachments]="s.attachments"
+              [removable]="authorCanEdit()"
+              (remove)="onRemoveAttachment($event)" />
+          } @else {
+            <p class="muted">Aucun fichier pour l’instant.</p>
+          }
+        </section>
+      }
+    </div>
+
+    <aside class="side-col">
+      <section class="card reply" [class.reply--empty]="!s.reviewMessage">
+        <h2 class="card__title">Réponse</h2>
+        @if (s.reviewMessage) {
+          <p class="reply__message">{{ s.reviewMessage }}</p>
+          <p class="muted">{{ personName(s.reviewedBy) }} · {{ formatDate(s.reviewedAt) }}</p>
+        } @else {
+          <p class="muted">Pas encore de réponse. La suggestion sera examinée prochainement.</p>
+        }
+      </section>
+
+      @if (s.ticketCount > 0) {
+        <section class="card">
+          <h2 class="card__title">Prise en compte</h2>
+          <p class="muted">
+            Prise en compte dans {{ s.ticketCount }} ticket{{ s.ticketCount > 1 ? 's' : '' }}.
+            @if (s.status === 'IMPLEMENTED') { Tous sont terminés : la suggestion est réalisée. }
+          </p>
+        </section>
+      }
+    </aside>
+  </div>
+
+  @if (creatingTicket()) {
+    <app-create-ticket-dialog [suggestions]="[s]" (created)="refresh()" (close)="creatingTicket.set(false)" />
+  }
+
+  @if (reviewing(); as decision) {
+    <app-review-dialog
+      [decision]="decision"
+      [busy]="busy()"
+      [error]="actionError()"
+      (confirm)="onReview($event)"
+      (cancel)="reviewing.set(null)" />
+  }
+
+  @if (editing()) {
+    <app-suggestion-form
+      [suggestion]="s"
+      [busy]="busy()"
+      [error]="actionError()"
+      (save)="onEdit($event)"
+      (cancel)="editing.set(false)" />
+  }
+
+  @if (confirmDelete()) {
+    <app-confirm-dialog
+      title="Supprimer la suggestion ?"
+      [busy]="busy()"
+      (confirm)="onDelete()"
+      (cancel)="confirmDelete.set(false)">
+      « {{ s.title }} » sera supprimée, ainsi que ses fichiers.
+    </app-confirm-dialog>
+  }
+}

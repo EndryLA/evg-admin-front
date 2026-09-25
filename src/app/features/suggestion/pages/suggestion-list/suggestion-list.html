@@ -1,0 +1,137 @@
+<header class="topbar">
+  <div>
+    <h1>Suggestions</h1>
+    <p class="topbar__sub">Idées proposées par les membres · {{ counts()['PENDING'] ?? 0 }} en attente de réponse.</p>
+  </div>
+  <button type="button" class="btn btn--primary new-btn" (click)="openCreate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nouvelle suggestion
+  </button>
+</header>
+
+<div class="filters">
+  <div class="tabs" role="tablist" aria-label="Filtrer par statut">
+    @for (st of statuses; track st) {
+      <button type="button" role="tab" class="tab" [class.tab--active]="tab() === st"
+        [attr.aria-selected]="tab() === st" (click)="tab.set(st)">
+        {{ statusLabels[st] }} <span class="tab__count">{{ counts()[st] ?? 0 }}</span>
+      </button>
+    }
+    <button type="button" role="tab" class="tab" [class.tab--active]="tab() === 'ALL'"
+      [attr.aria-selected]="tab() === 'ALL'" (click)="tab.set('ALL')">
+      Toutes <span class="tab__count">{{ counts()['ALL'] }}</span>
+    </button>
+  </div>
+
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="search" [value]="query()" (input)="query.set($any($event.target).value)"
+      placeholder="Rechercher une suggestion, un auteur…" aria-label="Rechercher une suggestion" />
+  </div>
+
+  @if (canCreateTickets()) {
+    <!-- Selection → ticket, as the tail of the filter row (same pattern as Contacts). -->
+    <div class="select-bar">
+      <span class="select-bar__count" [class.select-bar__count--empty]="!selection().length">
+        @if (selection().length) {
+          {{ selection().length }} sélectionnée{{ selection().length > 1 ? 's' : '' }}
+          <button type="button" class="select-bar__clear" (click)="clearSelection()">Effacer</button>
+        } @else {
+          Cochez des suggestions acceptées
+        }
+      </span>
+      <button type="button" class="btn btn--primary select-bar__action" [disabled]="!selection().length"
+        (click)="openTicketDialog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Créer un ticket
+      </button>
+    </div>
+  }
+</div>
+
+<div class="table-region">
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          @if (canCreateTickets()) {
+            <th class="cell-select"><span class="visually-hidden">Sélection</span></th>
+          }
+          <th class="col-title">Suggestion</th>
+          <th class="col-author">Auteur</th>
+          <th class="col-status">Statut</th>
+          <th class="col-tickets center">Tickets</th>
+          <th class="col-date">Reçue le</th>
+          <th class="col-chevron"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of rows(); track s.uuid) {
+          <tr (click)="view(s)" [class.row--selected]="selected().has(s.uuid)">
+            @if (canCreateTickets()) {
+              <td class="cell-select" (click)="$event.stopPropagation()">
+                @if (isLinkable(s)) {
+                  <input type="checkbox" [checked]="selected().has(s.uuid)" (change)="toggle(s)"
+                    [attr.aria-label]="'Sélectionner « ' + s.title + ' » pour un ticket'" />
+                }
+              </td>
+            }
+            <td class="cell-head">
+              <div class="cell-main">{{ s.title }}</div>
+              <div class="cell-sub">
+                {{ s.description }}
+              </div>
+            </td>
+            <td class="cell-contact" data-label="Auteur">{{ personName(s.author) }}</td>
+            <td data-label="Statut">
+              <span class="pill pill--{{ statusTones[s.status] }}">{{ statusLabels[s.status] }}</span>
+              @if (s.attachments.length) {
+                <span class="clip" [attr.aria-label]="s.attachments.length + ' pièce(s) jointe(s)'" [title]="s.attachments.length + ' pièce(s) jointe(s)'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>{{ s.attachments.length }}
+                </span>
+              }
+            </td>
+            <td class="center" data-label="Tickets">{{ s.ticketCount || '—' }}</td>
+            <td class="cell-contact" data-label="Reçue le">{{ formatDate(s.createdAt) }}</td>
+            <td class="chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="state">Chargement des suggestions…</div>
+    } @else if (loadError(); as err) {
+      <div class="state state--error">
+        {{ err }}
+        <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="state">
+        <div class="state__title">Aucune suggestion</div>
+        <div class="state__hint">Rien dans cette catégorie pour le moment.</div>
+      </div>
+    }
+  </div>
+</div>
+
+<button type="button" class="fab" (click)="openCreate()" aria-label="Nouvelle suggestion">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+@if (formOpen()) {
+  <app-suggestion-form
+    [busy]="saving()"
+    [error]="saveError()"
+    (save)="onSave($event)"
+    (cancel)="formOpen.set(false)" />
+}
+
+@if (ticketSources(); as sources) {
+  <app-create-ticket-dialog
+    [suggestions]="sources"
+    (created)="onTicketCreated()"
+    (close)="ticketSources.set(null)" />
+}

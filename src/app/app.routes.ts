@@ -16,7 +16,9 @@ import { INVENTORY_ROUTES } from './features/inventory/inventory.routes';
 import { OUTREACH_ROUTES } from './features/outreach/outreach.routes';
 import { PUBLIC_PRE_ATTENDANCE_ROUTES } from './features/pre-attendance/pre-attendance.routes';
 import { PROFILE_ROUTES } from './features/profile/profile.routes';
+import { PROJECT_ROUTES } from './features/project/project.routes';
 import { PUBLIC_SORTIE_ROUTES } from './features/sortie/sortie.routes';
+import { SUGGESTION_ROUTES } from './features/suggestion/suggestion.routes';
 import { USER_ROUTES } from './features/user/user.routes';
 
 export const routes: Routes = [
@@ -42,6 +44,8 @@ export const routes: Routes = [
       ...INVENTORY_ROUTES,
       ...FLYER_ROUTES,
       ...USER_ROUTES,
+      ...PROJECT_ROUTES,
+      ...SUGGESTION_ROUTES,
     ],
   },
   { path: '**', redirectTo: '' },

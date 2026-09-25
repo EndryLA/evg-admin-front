@@ -1,0 +1,82 @@
+<div class="filters">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="search" [value]="query()" (input)="query.set($any($event.target).value)"
+      placeholder="Rechercher un membre…" aria-label="Rechercher un membre" />
+  </div>
+  @if (project().canManage) {
+    <button type="button" class="btn btn--primary tt-new" (click)="openAdd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="tt-new__label">Ajouter un membre</span>
+    </button>
+  }
+</div>
+
+@if (error() && !adding() && !removing()) {
+  <p class="alert alert--error list-error" role="alert">{{ error() }}</p>
+}
+
+<div class="tt-region">
+  <div class="tt-scroll" tabindex="0" role="region" aria-label="Membres (défilement horizontal)">
+    <table class="tt">
+      <thead>
+        <tr>
+          <th class="tt-sticky col-name">Membre</th>
+          <th>Rôle</th>
+          <th>Tickets en cours</th>
+          <th>Ajouté le</th>
+          @if (project().canManage) {
+            <th class="col-actions"><span class="sr-only">Actions</span></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of rows(); track m.person.uuid) {
+          <tr class="tt-row">
+            <td class="tt-sticky col-name">
+              <div class="person">
+                <span class="avatar" aria-hidden="true">{{ initials(m) }}</span>
+                <span class="person__name">{{ personName(m.person) }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="pill" [class.pill--red]="m.creator" [class.pill--grey]="!m.creator">
+                {{ m.creator ? 'Créateur' : 'Membre' }}
+              </span>
+            </td>
+            <td>{{ openTickets().get(m.person.uuid) ?? 0 }}</td>
+            <td class="tt-muted">{{ formatDate(m.addedAt) }}</td>
+            @if (project().canManage) {
+              <td class="col-actions">
+                <div class="tt-actions">
+                  @if (!m.creator) {
+                    <button type="button" class="tt-icon tt-icon--danger" (click)="error.set(null); removing.set(m)"
+                      [disabled]="busy()" [attr.aria-label]="'Retirer ' + personName(m.person) + ' du projet'" title="Retirer du projet">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 11h6"/></svg>
+                    </button>
+                  }
+                </div>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (rows().length === 0) {
+      <div class="state"><div class="state__title">Aucun membre ne correspond</div></div>
+    }
+  </div>
+  <p class="tt-foot">{{ project().members.length }} membre{{ project().members.length > 1 ? 's' : '' }}</p>
+</div>
+
+@if (adding()) {
+  <app-member-add-dialog [busy]="busy()" [error]="error()" (save)="onAdd($event)" (cancel)="adding.set(false)" />
+}
+
+@if (removing(); as m) {
+  <app-confirm-dialog title="Retirer ce membre ?" confirmLabel="Retirer" busyLabel="Retrait…" [busy]="busy()"
+    (confirm)="onRemove()" (cancel)="removing.set(null)">
+    {{ personName(m.person) }} n’aura plus accès au projet. Ses tickets deviendront non assignés.
+  </app-confirm-dialog>
+}
