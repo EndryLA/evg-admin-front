@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, type OnInit, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import {
   PROJECT_CATEGORIES,
   PROJECT_CATEGORY_LABELS,
@@ -21,7 +22,7 @@ import {
  */
 @Component({
   selector: 'app-project-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   templateUrl: './project-form.html',
   styleUrl: './project-form.scss',

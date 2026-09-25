@@ -1,5 +1,5 @@
 <div class="modal-overlay" (click)="cancel.emit()">
-  <div class="modal" role="dialog" aria-modal="true"
+  <div class="modal" appDialogFocus role="dialog" aria-modal="true"
     [attr.aria-label]="isEdit() ? 'Modifier le projet' : 'Nouveau projet'"
     (click)="$event.stopPropagation()">
     <header class="modal__head">

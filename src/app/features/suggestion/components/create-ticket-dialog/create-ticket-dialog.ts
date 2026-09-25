@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, type OnInit, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { SuggestionService } from '../../suggestion.service';
 import {
@@ -21,7 +22,7 @@ import {
  */
 @Component({
   selector: 'app-create-ticket-dialog',
-  imports: [RouterLink],
+  imports: [RouterLink, DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'close.emit()' },
   templateUrl: './create-ticket-dialog.html',
   styleUrl: './create-ticket-dialog.scss',

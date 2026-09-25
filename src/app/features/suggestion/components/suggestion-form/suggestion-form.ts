@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import {
   ATTACHMENT_ACCEPT,
   ATTACHMENT_RULES,
@@ -30,7 +31,7 @@ export interface SuggestionFormValue {
  */
 @Component({
   selector: 'app-suggestion-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   templateUrl: './suggestion-form.html',
   styleUrl: './suggestion-form.scss',

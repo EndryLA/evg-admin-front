@@ -1,6 +1,7 @@
 import { Component, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import {
   MemberAutocomplete,
   type MemberValue,
@@ -21,11 +22,11 @@ export interface NewMember {
 /** Modal picking a person to add to a project, and their role. Presentational: the parent saves. */
 @Component({
   selector: 'app-member-add-dialog',
-  imports: [ReactiveFormsModule, MemberAutocomplete],
+  imports: [ReactiveFormsModule, MemberAutocomplete, DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   template: `
     <div class="modal-overlay" (click)="cancel.emit()">
-      <div class="modal" role="dialog" aria-modal="true" aria-label="Ajouter un membre"
+      <div class="modal" appDialogFocus role="dialog" aria-modal="true" aria-label="Ajouter un membre"
         (click)="$event.stopPropagation()">
         <header class="modal__head">
           <span class="eyebrow">Membres du projet</span>

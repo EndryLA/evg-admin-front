@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, type OnInit, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import {
   PHASE_STATUSES,
   PHASE_STATUS_LABELS,
@@ -12,11 +13,11 @@ import {
 /** Create/edit modal for a project phase. Presentational: the parent saves. */
 @Component({
   selector: 'app-phase-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   template: `
     <div class="modal-overlay" (click)="cancel.emit()">
-      <div class="modal" role="dialog" aria-modal="true"
+      <div class="modal" appDialogFocus role="dialog" aria-modal="true"
         [attr.aria-label]="isEdit() ? 'Modifier la phase' : 'Nouvelle phase'"
         (click)="$event.stopPropagation()">
         <header class="modal__head">

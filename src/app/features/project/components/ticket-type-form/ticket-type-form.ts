@@ -1,5 +1,6 @@
 import { Component, computed, input, type OnInit, output, signal } from '@angular/core';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import {
   TYPE_COLORS,
   TYPE_COLOR_LABELS,
@@ -11,10 +12,11 @@ import {
 /** Create/edit modal for a ticket type: a name and a pill colour, with a live preview. */
 @Component({
   selector: 'app-ticket-type-form',
+  imports: [DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   template: `
     <div class="modal-overlay" (click)="cancel.emit()">
-      <div class="modal" role="dialog" aria-modal="true"
+      <div class="modal" appDialogFocus role="dialog" aria-modal="true"
         [attr.aria-label]="isEdit() ? 'Modifier le type' : 'Nouveau type'" (click)="$event.stopPropagation()">
         <header class="modal__head">
           <span class="eyebrow">Type de ticket</span>

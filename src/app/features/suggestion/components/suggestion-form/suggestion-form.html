@@ -1,6 +1,6 @@
 <div class="modal-overlay" (click)="cancel.emit()">
   <div
-    class="modal"
+    class="modal" appDialogFocus
     role="dialog"
     aria-modal="true"
     [attr.aria-label]="isEdit() ? 'Modifier la suggestion' : 'Nouvelle suggestion'"

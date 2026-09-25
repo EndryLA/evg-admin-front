@@ -1,5 +1,6 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import type { ReviewDecision } from '../../suggestion.models';
 
 /**
@@ -8,10 +9,11 @@ import type { ReviewDecision } from '../../suggestion.models';
  */
 @Component({
   selector: 'app-review-dialog',
+  imports: [DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'cancel.emit()' },
   template: `
     <div class="modal-overlay" (click)="cancel.emit()">
-      <div class="modal" role="dialog" aria-modal="true" [attr.aria-label]="title()"
+      <div class="modal" appDialogFocus role="dialog" aria-modal="true" [attr.aria-label]="title()"
         (click)="$event.stopPropagation()">
         <header class="modal__head">
           <span class="eyebrow">Réponse à l’auteur</span>

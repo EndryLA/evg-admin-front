@@ -1,5 +1,5 @@
 <div class="modal-overlay" (click)="close.emit()">
-  <div class="modal" role="dialog" aria-modal="true"
+  <div class="modal" appDialogFocus role="dialog" aria-modal="true"
     [attr.aria-label]="isNew() ? 'Nouveau ticket' : current()!.key + ' ' + current()!.title"
     (click)="$event.stopPropagation()">
     <header class="modal__head">

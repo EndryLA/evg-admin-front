@@ -1,5 +1,5 @@
 <div class="modal-overlay" (click)="close.emit()">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Créer un ticket" (click)="$event.stopPropagation()">
+  <div class="modal" appDialogFocus role="dialog" aria-modal="true" aria-label="Créer un ticket" (click)="$event.stopPropagation()">
     <header class="modal__head">
       <span class="eyebrow">
         {{ suggestions().length }} suggestion{{ suggestions().length > 1 ? 's' : '' }}

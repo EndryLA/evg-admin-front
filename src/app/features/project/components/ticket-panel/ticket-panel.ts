@@ -2,6 +2,7 @@ import { Component, computed, inject, input, type OnInit, output, signal } from 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { DialogFocus } from '../../../../shared/ui/dialog-focus/dialog-focus';
 import { ACCESS } from '../../../../core/auth/access';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
@@ -33,7 +34,7 @@ import { TicketAttachments } from '../ticket-attachments/ticket-attachments';
  */
 @Component({
   selector: 'app-ticket-panel',
-  imports: [ReactiveFormsModule, RouterLink, ConfirmDialog, SuggestionPicker, TagInput, TicketAttachments],
+  imports: [ReactiveFormsModule, RouterLink, ConfirmDialog, SuggestionPicker, TagInput, TicketAttachments, DialogFocus],
   host: { class: 'modal-form', '(keydown.escape)': 'close.emit()' },
   templateUrl: './ticket-panel.html',
   styleUrl: './ticket-panel.scss',
