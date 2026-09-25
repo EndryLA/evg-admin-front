@@ -17,16 +17,21 @@ import {
   type Ticket,
 } from '../../project.models';
 import { MemberAddDialog, type NewMember } from '../member-add-dialog/member-add-dialog';
+import { OwnerTransferDialog } from '../owner-transfer-dialog/owner-transfer-dialog';
+
+const ROLE_ORDER: readonly ProjectRole[] = ['OWNER', 'MANAGER', 'CONTRIBUTOR', 'VIEWER'];
 
 /**
  * Membres tab: the project's members, their role and open tickets. Managers
- * add people (with a role) in a modal, change roles in place and remove anyone
- * but the creator — who always stays manager. Removed members and members made
- * viewers lose their assignments (the backend does it). Emits the updated project.
+ * add, re-role and remove contributors and viewers; the owner (or a super
+ * admin) also handles managers and hands the project over from the toolbar's
+ * « Transférer la propriété » modal — OWNER is never offered in the role list. Removed members
+ * and members made viewers lose their assignments (the backend does it).
+ * Emits the updated project.
  */
 @Component({
   selector: 'app-member-list',
-  imports: [MemberAddDialog, ConfirmDialog],
+  imports: [MemberAddDialog, OwnerTransferDialog, ConfirmDialog],
   templateUrl: './member-list.html',
   styleUrl: './member-list.scss',
 })
@@ -40,13 +45,17 @@ export class MemberList {
 
   protected readonly adding = signal(false);
   protected readonly removing = signal<ProjectMember | null>(null);
+  protected readonly transferring = signal(false);
   protected readonly query = signal('');
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
   protected readonly personName = personName;
   protected readonly formatDate = formatDateFr;
-  protected readonly roles = PROJECT_ROLES;
+  /** Roles the caller may give: managers can't make managers. */
+  protected readonly roles = computed(() =>
+    this.project().canLead ? PROJECT_ROLES : PROJECT_ROLES.filter((r) => r !== 'MANAGER'),
+  );
   protected readonly roleLabels = PROJECT_ROLE_LABELS;
   protected readonly roleHints = PROJECT_ROLE_HINTS;
   protected readonly roleTones = PROJECT_ROLE_TONES;
@@ -57,7 +66,7 @@ export class MemberList {
       .members.filter((m) => !q || personName(m.person).toLowerCase().includes(q))
       .sort(
         (a, b) =>
-          Number(b.creator) - Number(a.creator) ||
+          ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) ||
           personName(a.person).localeCompare(personName(b.person), 'fr'),
       );
   });
@@ -120,6 +129,12 @@ export class MemberList {
     }
   }
 
+  protected onTransfer(profileUuid: string): void {
+    this.run(this.service.transferOwnership(this.project().uuid, profileUuid), () =>
+      this.transferring.set(false),
+    );
+  }
+
   private run(request: ReturnType<ProjectService['addMember']>, done: () => void): void {
     this.busy.set(true);
     this.error.set(null);
@@ -131,6 +146,8 @@ export class MemberList {
       },
       error: (err) => {
         this.busy.set(false);
+        // The confirm dialog can't show errors: close it so the list's alert does.
+        this.removing.set(null);
         this.error.set(messageFromError(err, 'La mise à jour des membres a échoué.'));
       },
     });

@@ -45,7 +45,7 @@ export interface NewMember {
             <div class="field field--span">
               <span class="field__label" id="member-role-label">Rôle</span>
               <div class="roles" role="radiogroup" aria-labelledby="member-role-label">
-                @for (r of roles; track r) {
+                @for (r of roles(); track r) {
                   <label class="role" [class.role--active]="role() === r">
                     <input type="radio" name="member-role" [value]="r" [checked]="role() === r" (change)="role.set(r)" />
                     <span class="role__name">{{ roleLabels[r] }}</span>
@@ -89,6 +89,8 @@ export interface NewMember {
 export class MemberAddDialog {
   readonly busy = input(false);
   readonly error = input<string | null>(null);
+  /** Roles the caller may give (managers can't make managers). */
+  readonly roles = input<readonly ProjectRole[]>(PROJECT_ROLES);
 
   readonly save = output<NewMember>();
   readonly cancel = output<void>();
@@ -97,7 +99,6 @@ export class MemberAddDialog {
   protected readonly role = signal<ProjectRole>('CONTRIBUTOR');
   protected readonly tried = signal(false);
 
-  protected readonly roles = PROJECT_ROLES;
   protected readonly roleLabels = PROJECT_ROLE_LABELS;
   protected readonly roleHints = PROJECT_ROLE_HINTS;
 

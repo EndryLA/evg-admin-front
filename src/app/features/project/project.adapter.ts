@@ -34,7 +34,7 @@ interface RawPerson {
 interface RawMember {
   profile?: RawPerson | null;
   role?: string | null;
-  creator?: boolean | null;
+  editable?: boolean | null;
   addedAt?: string | null;
 }
 
@@ -48,7 +48,7 @@ interface RawAttachment {
   addedAt?: string | null;
 }
 
-const ROLES: readonly ProjectRole[] = ['MANAGER', 'CONTRIBUTOR', 'VIEWER'];
+const ROLES: readonly ProjectRole[] = ['OWNER', 'MANAGER', 'CONTRIBUTOR', 'VIEWER'];
 
 export interface RawPhase {
   uuid?: string;
@@ -86,6 +86,7 @@ export interface RawProject {
   ticketCount?: number | null;
   doneTicketCount?: number | null;
   canManage?: boolean | null;
+  canLead?: boolean | null;
   canWork?: boolean | null;
   myRole?: string | null;
 }
@@ -169,7 +170,7 @@ export function toProject(raw: RawProject): Project {
         person: toPerson(m.profile),
         // Unknown values fall back to the most restrictive role.
         role: oneOf<ProjectRole>(m.role, ROLES, 'VIEWER'),
-        creator: !!m.creator,
+        editable: !!m.editable,
         addedAt: m.addedAt ?? '',
       }))
       .filter((m): m is Project['members'][number] => m.person !== null),
@@ -181,6 +182,7 @@ export function toProject(raw: RawProject): Project {
     ticketCount: raw.ticketCount ?? 0,
     doneTicketCount: raw.doneTicketCount ?? 0,
     canManage: !!raw.canManage,
+    canLead: !!raw.canLead,
     canWork: !!raw.canWork,
     myRole: raw.myRole ? oneOf<ProjectRole>(raw.myRole, ROLES, 'VIEWER') : null,
   };

@@ -138,20 +138,27 @@ export const LINKED_SUGGESTION_TONES: Record<LinkedSuggestionStatus, string> = {
   IMPLEMENTED: 'green',
 };
 
-/** A member's role in a project — mirrors the backend `ProjectRole`. */
-export type ProjectRole = 'MANAGER' | 'CONTRIBUTOR' | 'VIEWER';
+/**
+ * A member's role in a project — mirrors the backend `ProjectRole`. OWNER
+ * (one per project) is only given by a transfer, never picked in a list.
+ */
+export type ProjectRole = 'OWNER' | 'MANAGER' | 'CONTRIBUTOR' | 'VIEWER';
+/** Roles that can be picked when adding a member or changing a role. */
 export const PROJECT_ROLES: readonly ProjectRole[] = ['MANAGER', 'CONTRIBUTOR', 'VIEWER'];
 export const PROJECT_ROLE_LABELS: Record<ProjectRole, string> = {
+  OWNER: 'Propriétaire',
   MANAGER: 'Gestionnaire',
   CONTRIBUTOR: 'Contributeur',
   VIEWER: 'Lecteur',
 };
 export const PROJECT_ROLE_HINTS: Record<ProjectRole, string> = {
-  MANAGER: 'Gère le projet : phases, types, membres et rôles, tous les tickets.',
+  OWNER: 'Gère tout le projet, y compris les gestionnaires ; peut transférer la propriété.',
+  MANAGER: 'Gère le projet : phases, types, contributeurs et lecteurs, tous les tickets.',
   CONTRIBUTOR: 'Crée, modifie et assigne les tickets, ajoute des pièces jointes.',
   VIEWER: 'Consulte le projet sans rien modifier ; ne peut pas être assigné.',
 };
 export const PROJECT_ROLE_TONES: Record<ProjectRole, string> = {
+  OWNER: 'violet',
   MANAGER: 'red',
   CONTRIBUTOR: 'blue',
   VIEWER: 'grey',
@@ -214,9 +221,10 @@ export function formatSize(bytes: number): string {
 
 export interface ProjectMember {
   person: PersonRef;
-  /** The creator is always MANAGER. */
+  /** Effective role: OWNER for the project's owner. */
   role: ProjectRole;
-  creator: boolean;
+  /** Whether the caller may change this member's role or remove them. */
+  editable: boolean;
   addedAt: string;
 }
 
@@ -279,6 +287,8 @@ export interface Project {
   doneTicketCount: number;
   /** Whether the caller may edit the project, its phases and its members. */
   canManage: boolean;
+  /** Owner or super admin: handles the managers and transfers ownership. */
+  canLead: boolean;
   /** Whether the caller may create/edit tickets and attachments (managers and contributors). */
   canWork: boolean;
   /** The caller's role; `null` for a super admin who isn't a member. */

@@ -58,6 +58,13 @@ export class ProjectService {
       .pipe(map(toProject));
   }
 
+  /** Makes the member the project's owner; the previous owner stays a manager. */
+  transferOwnership(uuid: string, profileUuid: string): Observable<Project> {
+    return this.http
+      .put<RawProject>(`${BASE}/${uuid}/owner`, { profileUuid })
+      .pipe(map(toProject));
+  }
+
   removeMember(uuid: string, profileUuid: string): Observable<Project> {
     return this.http
       .delete<RawProject>(`${BASE}/${uuid}/members/${profileUuid}`)

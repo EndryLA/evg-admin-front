@@ -42,7 +42,6 @@
 .role-select:hover { border-color: var(--border-input); }
 .role-select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
 .role-select:disabled { cursor: progress; }
-.creator-tag { margin-left: 8px; font-size: 12px; color: var(--text-faint); }
 .tt-foot { white-space: normal; }
 
 @media (max-width: 720px) {

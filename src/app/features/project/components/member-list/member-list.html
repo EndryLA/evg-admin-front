@@ -4,6 +4,12 @@
     <input type="search" [value]="query()" (input)="query.set($any($event.target).value)"
       placeholder="Rechercher un membre…" aria-label="Rechercher un membre" />
   </div>
+  @if (project().canLead && project().members.length > 1) {
+    <button type="button" class="btn tt-new" (click)="error.set(null); transferring.set(true)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 7 4.5 4 5.5-7 5.5 7 4.5-4-2 12H4z"/></svg>
+      <span class="tt-new__label">Transférer la propriété</span>
+    </button>
+  }
   @if (project().canManage) {
     <button type="button" class="btn btn--primary tt-new" (click)="openAdd()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -12,7 +18,7 @@
   }
 </div>
 
-@if (error() && !adding() && !removing()) {
+@if (error() && !adding() && !transferring()) {
   <p class="alert alert--error list-error" role="alert">{{ error() }}</p>
 }
 
@@ -40,19 +46,16 @@
               </div>
             </td>
             <td>
-              @if (project().canManage && !m.creator) {
+              @if (m.editable) {
                 <select class="role-select pill--{{ roleTones[m.role] }}" [disabled]="busy()"
                   [attr.aria-label]="'Rôle de ' + personName(m.person)" [title]="roleHints[m.role]"
                   (change)="onRoleChange(m, $event)">
-                  @for (r of roles; track r) {
+                  @for (r of roles(); track r) {
                     <option [value]="r" [selected]="r === m.role">{{ roleLabels[r] }}</option>
                   }
                 </select>
               } @else {
                 <span class="pill pill--{{ roleTones[m.role] }}" [title]="roleHints[m.role]">{{ roleLabels[m.role] }}</span>
-              }
-              @if (m.creator) {
-                <span class="creator-tag">Créateur</span>
               }
             </td>
             <td>{{ openTickets().get(m.person.uuid) ?? 0 }}</td>
@@ -60,7 +63,7 @@
             @if (project().canManage) {
               <td class="col-actions">
                 <div class="tt-actions">
-                  @if (!m.creator) {
+                  @if (m.editable) {
                     <button type="button" class="tt-icon tt-icon--danger" (click)="error.set(null); removing.set(m)"
                       [disabled]="busy()" [attr.aria-label]="'Retirer ' + personName(m.person) + ' du projet'" title="Retirer du projet">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 11h6"/></svg>
@@ -80,12 +83,13 @@
   </div>
   <p class="tt-foot">
     {{ project().members.length }} membre{{ project().members.length > 1 ? 's' : '' }} ·
-    Gestionnaire : gère tout le projet · Contributeur : tickets et pièces jointes · Lecteur : consultation seule
+    Propriétaire : gère tout, y compris les gestionnaires · Gestionnaire : gère le projet, les contributeurs et lecteurs ·
+    Contributeur : tickets et pièces jointes · Lecteur : consultation seule
   </p>
 </div>
 
 @if (adding()) {
-  <app-member-add-dialog [busy]="busy()" [error]="error()" (save)="onAdd($event)" (cancel)="adding.set(false)" />
+  <app-member-add-dialog [busy]="busy()" [error]="error()" [roles]="roles()" (save)="onAdd($event)" (cancel)="adding.set(false)" />
 }
 
 @if (removing(); as m) {
@@ -93,4 +97,9 @@
     (confirm)="onRemove()" (cancel)="removing.set(null)">
     {{ personName(m.person) }} n’aura plus accès au projet. Ses tickets deviendront non assignés.
   </app-confirm-dialog>
+}
+
+@if (transferring()) {
+  <app-owner-transfer-dialog [project]="project()" [busy]="busy()" [error]="error()"
+    (save)="onTransfer($event)" (cancel)="transferring.set(false)" />
 }
