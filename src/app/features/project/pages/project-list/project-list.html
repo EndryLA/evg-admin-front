@@ -26,6 +26,52 @@
   }
 </div>
 
+@if (compact()) {
+<!-- Phones: one compact line per project instead of the global table's tall cards. -->
+<div class="pl-region">
+  @if (rows().length) {
+    <ul class="pl">
+      @for (p of rows(); track p.uuid) {
+        <li>
+          <a class="pl-item" [routerLink]="['/projets', p.uuid]">
+            <span class="pl-item__main">
+              <span class="pl-item__top">
+                <span class="pl-name">{{ p.name }}</span>
+                <span class="pill pill--{{ statusTones[p.status] }} pl-pill">{{ statusLabels[p.status] }}</span>
+              </span>
+              <span class="pl-sub">{{ p.key }} · {{ categoryLabels[p.category] }}</span>
+              <span class="pl-meta">
+                <span class="pl-track" aria-hidden="true">
+                  <span class="pl-track__bar" [style.width.%]="progress(p.doneTicketCount, p.ticketCount)"></span>
+                </span>
+                <span>{{ p.doneTicketCount }}/{{ p.ticketCount }}</span>
+                <span>· {{ p.members.length }} membre{{ p.members.length > 1 ? 's' : '' }}</span>
+                @if (p.targetDate) { <span>· {{ formatDate(p.targetDate) }}</span> }
+              </span>
+            </span>
+            <svg class="pl-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+  @if (loading()) {
+    <div class="state">Chargement des projets…</div>
+  } @else if (loadError(); as err) {
+    <div class="state state--error">
+      {{ err }}
+      <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+    </div>
+  } @else if (rows().length === 0) {
+    <div class="state">
+      <div class="state__title">Aucun projet</div>
+      <div class="state__hint">
+        @if (canCreate()) { Créez un projet pour commencer. } @else { Vous n’êtes membre d’aucun projet pour l’instant. }
+      </div>
+    </div>
+  }
+</div>
+} @else {
 <div class="table-region">
   <div class="table-card">
     <table>
@@ -86,6 +132,7 @@
     }
   </div>
 </div>
+}
 
 @if (canCreate()) {
   <button type="button" class="fab" (click)="openCreate()" aria-label="Nouveau projet">

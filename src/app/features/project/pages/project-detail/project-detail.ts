@@ -5,7 +5,6 @@ import { messageFromError } from '../../../../core/http/http-error.util';
 import { formatDateFr } from '../../../../shared/util/date.util';
 import { MemberList } from '../../components/member-list/member-list';
 import { PhaseList } from '../../components/phase-list/phase-list';
-import { TicketPanel } from '../../components/ticket-panel/ticket-panel';
 import { TicketTable } from '../../components/ticket-table/ticket-table';
 import { TicketTypeList } from '../../components/ticket-type-list/ticket-type-list';
 import { ProjectService } from '../../project.service';
@@ -23,13 +22,14 @@ import { TicketService } from '../../ticket.service';
 type Tab = 'tickets' | 'phases' | 'types' | 'members';
 
 /**
- * One project: its tickets table (the main view), its phases and its members.
- * Ticket changes are merged locally; phase/member changes and ticket status
- * changes refresh the project so the counters stay right.
+ * One project: its tickets (the main view), its phases, types and members.
+ * Tickets open on their own pages; cells edited in the table are merged
+ * locally; phase/member changes and ticket edits refresh the project so the
+ * counters stay right.
  */
 @Component({
   selector: 'app-project-detail',
-  imports: [RouterLink, TicketTable, TicketPanel, PhaseList, TicketTypeList, MemberList],
+  imports: [RouterLink, TicketTable, PhaseList, TicketTypeList, MemberList],
   host: { class: 'data-list' },
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.scss',
@@ -46,8 +46,8 @@ export class ProjectDetail implements OnInit {
   protected readonly loadError = signal<string | null>(null);
 
   protected readonly tab = signal<Tab>('tickets');
-  /** Ticket open in the panel; `'new'` while creating one. */
-  protected readonly panel = signal<Ticket | 'new' | null>(null);
+  /** Phones show two lines of the description until asked for more. */
+  protected readonly descriptionOpen = signal(false);
 
   protected readonly statusLabels = PROJECT_STATUS_LABELS;
   protected readonly statusTones = PROJECT_STATUS_TONES;
@@ -59,19 +59,6 @@ export class ProjectDetail implements OnInit {
     const p = this.project();
     return p ? progress(p.doneTicketCount, p.ticketCount) : 0;
   });
-  /** Every tag used on this project's tickets, offered when tagging a ticket. */
-  protected readonly ticketTags = computed(() => {
-    const seen = new Map<string, string>();
-    for (const ticket of this.tickets()) {
-      for (const tag of ticket.tags) {
-        if (!seen.has(tag.toLowerCase())) {
-          seen.set(tag.toLowerCase(), tag);
-        }
-      }
-    }
-    return [...seen.values()].sort((a, b) => a.localeCompare(b, 'fr'));
-  });
-
   protected readonly openCount = computed(
     () => this.tickets().filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED').length,
   );
@@ -133,26 +120,9 @@ export class ProjectDetail implements OnInit {
     });
   }
 
-  // ---- Tickets ----
+  /** A cell edited in the table: merge the row, refresh the counters. */
   protected onTicketSaved(ticket: Ticket): void {
-    const exists = this.tickets().some((t) => t.uuid === ticket.uuid);
-    this.tickets.update((list) =>
-      exists ? list.map((t) => (t.uuid === ticket.uuid ? ticket : t)) : [ticket, ...list],
-    );
-    if (this.panel() !== null && this.panel() !== 'new') {
-      this.panel.set(ticket);
-    }
+    this.tickets.update((list) => list.map((t) => (t.uuid === ticket.uuid ? ticket : t)));
     this.refreshProject();
-  }
-
-  protected onTicketDeleted(ticket: Ticket): void {
-    this.tickets.update((list) => list.filter((t) => t.uuid !== ticket.uuid));
-    this.panel.set(null);
-    this.refreshProject();
-  }
-
-  protected panelTicket(): Ticket | null {
-    const p = this.panel();
-    return p === 'new' ? null : p;
   }
 }

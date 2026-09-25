@@ -1,10 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { ACCESS } from '../../../../core/auth/access';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { formatDateFr } from '../../../../shared/util/date.util';
+import { mediaMatches } from '../../../../shared/util/media.util';
 import { ProjectForm } from '../../components/project-form/project-form';
 import { ProjectService } from '../../project.service';
 import {
@@ -27,7 +28,7 @@ function normalize(value: string): string {
  */
 @Component({
   selector: 'app-project-list',
-  imports: [ProjectForm],
+  imports: [ProjectForm, RouterLink],
   host: { class: 'data-list' },
   templateUrl: './project-list.html',
   styleUrl: './project-list.scss',
@@ -36,6 +37,9 @@ export class ProjectList {
   private readonly service = inject(ProjectService);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+
+  /** Phones: compact list instead of the table. */
+  protected readonly compact = mediaMatches();
 
   protected readonly items = signal<Project[]>([]);
   protected readonly loading = signal(true);

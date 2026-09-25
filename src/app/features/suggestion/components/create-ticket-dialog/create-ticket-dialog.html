@@ -22,7 +22,7 @@
       </div>
       <footer class="modal__foot">
         <button type="button" class="btn modal__cancel" (click)="close.emit()">Fermer</button>
-        <a class="btn btn--primary" [routerLink]="['/projets', ticket.projectUuid]">Voir le projet</a>
+        <a class="btn btn--primary" [routerLink]="['/projets', ticket.projectUuid, 'tickets', ticket.uuid]">Voir le ticket</a>
       </footer>
     } @else {
       <form (submit)="$event.preventDefault(); submit()" novalidate>

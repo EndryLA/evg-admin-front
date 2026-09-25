@@ -1,35 +1,67 @@
-@use '../project-table';
 @use '../project-table-actions';
 
-/* Toolbar (.filters/.search) comes from the global `.data-list` block on the page. */
+/* Phases as cards, in order: one column on phones, a grid on wider screens.
+   Toolbar (.filters/.search) comes from the global `.data-list` block on the page. */
 :host { display: contents; }
 
 .list-error { margin: 0 32px 12px; }
+.phases { padding: 0 32px 32px; }
 
-.col-index { width: 44px; padding-left: 16px; }
-.col-name { min-width: 220px; white-space: normal; }
-.col-actions { width: 1%; }
-.name { font-weight: 600; color: var(--text-primary); }
-.sub {
-  margin-top: 2px;
-  max-width: 420px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  white-space: normal;
+.phase-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
 }
-
-.progress { display: flex; align-items: center; gap: 10px; }
-.progress__track {
-  width: 120px;
-  height: 6px;
-  border-radius: 999px;
+.phase {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+.phase__head { display: flex; align-items: flex-start; gap: 12px; }
+.phase__index {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
   background: var(--bg-inset);
-  overflow: hidden;
+  color: var(--text-secondary);
 }
-.progress__bar { height: 100%; border-radius: inherit; background: var(--pill-green-text); }
-.progress__label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.phase__title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; padding-top: 2px; }
+.phase__name { margin: 0; font-size: 15.5px; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+.phase__desc { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.phase__period { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--text-muted); }
+.phase__period svg { width: 14px; height: 14px; }
+
+.phase__progress { display: flex; flex-direction: column; gap: 6px; }
+.track { height: 6px; border-radius: 999px; background: var(--bg-inset); overflow: hidden; }
+.track__bar { height: 100%; border-radius: inherit; background: var(--pill-green-text); }
+.phase__count { font-size: 12.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.phase__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+.phase__spacer { flex: 1; }
+.btn--small { padding: 6px 12px; font-size: 13px; }
 
 @media (max-width: 720px) {
   .list-error { margin: 0 16px 12px; }
-  .col-name { min-width: 170px; }
+  .phases { padding: 0 16px 24px; }
+  .phase-grid { grid-template-columns: 1fr; }
 }

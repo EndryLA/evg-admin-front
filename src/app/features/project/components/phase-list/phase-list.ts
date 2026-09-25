@@ -16,7 +16,7 @@ import {
 } from '../../project.models';
 
 /**
- * Phases tab: the project's phases as a table, in order, with their progress.
+ * Phases tab: the project's phases as cards, in order, with their progress.
  * Managers add/edit them in a modal, reorder (up/down) and delete them; any
  * change asks the parent to reload the project through {@link changed}.
  * Phases are optional.

@@ -4,7 +4,7 @@
     <input type="search" [value]="query()" (input)="query.set($any($event.target).value)"
       placeholder="Rechercher un membre…" aria-label="Rechercher un membre" />
   </div>
-  @if (project().canLead && project().members.length > 1) {
+  @if (project().canLead && project().members.length > 1 && !compact()) {
     <button type="button" class="btn tt-new" (click)="error.set(null); transferring.set(true)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 7 4.5 4 5.5-7 5.5 7 4.5-4-2 12H4z"/></svg>
       <span class="tt-new__label">Transférer la propriété</span>
@@ -22,6 +22,48 @@
   <p class="alert alert--error list-error" role="alert">{{ error() }}</p>
 }
 
+@if (compact()) {
+<!-- Phones: one line per member — name and workload on the left, role and removal on the right. -->
+<div class="ml-region">
+  @if (rows().length) {
+    <ul class="ml">
+      @for (m of rows(); track m.person.uuid) {
+        <li class="ml-item">
+          <span class="avatar" aria-hidden="true">{{ initials(m) }}</span>
+          <span class="ml-item__main">
+            <span class="person__name">{{ personName(m.person) }}</span>
+            <span class="ml-item__meta">
+              {{ openTickets().get(m.person.uuid) ?? 0 }} ticket{{ (openTickets().get(m.person.uuid) ?? 0) > 1 ? 's' : '' }} en cours
+            </span>
+          </span>
+          @if (m.editable) {
+            <select class="role-select pill--{{ roleTones[m.role] }}" [disabled]="busy()"
+              [attr.aria-label]="'Rôle de ' + personName(m.person)" (change)="onRoleChange(m, $event)">
+              @for (r of roles(); track r) {
+                <option [value]="r" [selected]="r === m.role">{{ roleLabels[r] }}</option>
+              }
+            </select>
+            <button type="button" class="tt-icon tt-icon--danger" (click)="error.set(null); removing.set(m)"
+              [disabled]="busy()" [attr.aria-label]="'Retirer ' + personName(m.person) + ' du projet'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          } @else {
+            <span class="pill pill--{{ roleTones[m.role] }}">{{ roleLabels[m.role] }}</span>
+          }
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="state"><div class="state__title">Aucun membre ne correspond</div></div>
+  }
+  @if (project().canLead && project().members.length > 1) {
+    <button type="button" class="btn btn--block ml-transfer" (click)="error.set(null); transferring.set(true)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 7 4.5 4 5.5-7 5.5 7 4.5-4-2 12H4z"/></svg>
+      Transférer la propriété
+    </button>
+  }
+</div>
+} @else {
 <div class="tt-region">
   <div class="tt-scroll" tabindex="0" role="region" aria-label="Membres (défilement horizontal)">
     <table class="tt">
@@ -87,6 +129,7 @@
     Contributeur : tickets et pièces jointes · Lecteur : consultation seule
   </p>
 </div>
+}
 
 @if (adding()) {
   <app-member-add-dialog [busy]="busy()" [error]="error()" [roles]="roles()" (save)="onAdd($event)" (cancel)="adding.set(false)" />

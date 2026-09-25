@@ -1,0 +1,176 @@
+/* Ticket page in the style of issue trackers (Linear, Jira, GitHub): a slim
+   top bar, a big title with the description flowing under it, and properties
+   as "label → value" rows in a side column. No stacked cards. */
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  padding: 14px 16px 40px;
+}
+@media (min-width: 721px) {
+  :host { padding: 18px 32px 48px; }
+}
+
+/* ---- Top bar ---- */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  margin-bottom: 18px;
+}
+.crumbs { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13.5px; }
+.crumbs__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.crumbs__back:hover { color: var(--text-primary); }
+.crumbs__back svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.crumbs__project { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crumbs__sep { color: var(--text-faint); }
+.crumbs__key { font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; }
+.bar__actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.btn--small { padding: 7px 12px; font-size: 13px; gap: 6px; text-decoration: none; color: var(--text-primary); }
+.btn--small svg { width: 14px; height: 14px; }
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-input);
+  border-radius: 9px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.icon-btn svg { width: 15px; height: 15px; }
+.icon-btn:not(:disabled):hover { color: var(--accent); border-color: var(--accent-soft-border); }
+
+.alert { margin: 0 0 16px; }
+
+/* ---- Layout ---- */
+.layout { display: flex; flex-direction: column; gap: 24px; }
+.bar, .title, .layout, .alert { max-width: 1120px; }
+@media (min-width: 960px) {
+  .layout { flex-direction: row; align-items: flex-start; gap: 40px; }
+  .main { flex: 1; min-width: 0; }
+  .props { width: 310px; flex: 0 0 auto; position: sticky; top: 0; }
+}
+
+/* ---- Main column ---- */
+.title {
+  margin: 0 0 20px;
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.description {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.description--empty { color: var(--text-faint); font-style: italic; }
+
+.section { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.section__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.section__title { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.count { margin-left: 4px; font-weight: 500; color: var(--text-faint); }
+.muted { margin: 0; font-size: 13.5px; color: var(--text-muted); }
+
+/* The files block brings its own box: flatten it into the page. */
+.files ::ng-deep .att { padding: 0; border: none; background: none; }
+.files ::ng-deep .att__title { font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--text-primary); }
+
+.links { list-style: none; margin: 0; padding: 0; }
+.links li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.links li:last-child { border-bottom: none; }
+.links a { color: var(--text-primary); font-weight: 500; overflow-wrap: anywhere; }
+.links a:hover { color: var(--accent); }
+.link-btn { border: none; background: none; padding: 4px 2px; font: inherit; font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer; }
+
+/* ---- Properties ---- */
+.props {
+  padding: 6px 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+@media (min-width: 960px) {
+  .props { padding: 2px 0 0 24px; border: none; border-left: 1px solid var(--border-subtle); }
+}
+.props dl { margin: 0; }
+.prop { display: flex; align-items: center; gap: 12px; min-height: 38px; }
+.prop--wrap { align-items: flex-start; padding: 8px 0; }
+.prop dt { width: 88px; flex: 0 0 auto; font-size: 13px; color: var(--text-muted); }
+.prop dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+.empty { color: var(--text-faint); font-weight: 400; }
+.overdue { color: var(--accent); font-weight: 600; }
+
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; background: var(--pill-grey-text); }
+.dot--red { background: var(--pill-red-text); }
+.dot--amber { background: var(--pill-amber-text); }
+.dot--green { background: var(--pill-green-text); }
+.dot--blue { background: var(--pill-blue-text); }
+.dot--violet { background: var(--pill-violet-text); }
+
+.avatar {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--accent-disc-bg);
+  color: var(--accent-soft-text);
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--pill-blue-text) 35%, transparent);
+  border-radius: 999px;
+  background: var(--pill-blue-bg);
+  color: var(--pill-blue-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.created { margin: 10px 0 4px; font-size: 12.5px; line-height: 1.5; color: var(--text-faint); }
+
+/* Phones: properties right under the title, before the long text. */
+@media (max-width: 959px) {
+  .props { order: -1; }
+  .title { font-size: 22px; margin-bottom: 16px; }
+}

@@ -1,0 +1,108 @@
+<a [routerLink]="backLink()" class="back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  {{ isNew() ? (project()?.name ?? 'Projet') : 'Retour au ticket' }}
+</a>
+
+@if (loading()) {
+  <div class="state">Chargement…</div>
+} @else if (loadError(); as err) {
+  <div class="state state--error">
+    {{ err }}
+    <button type="button" class="btn state__retry" (click)="load()">Réessayer</button>
+  </div>
+} @else if (project(); as p) {
+  <header class="page-head">
+    <div class="page-head__main">
+      <span class="eyebrow">{{ isNew() ? p.name : ticket()?.key }}</span>
+      <h1>{{ isNew() ? 'Nouveau ticket' : 'Modifier le ticket' }}</h1>
+    </div>
+  </header>
+
+  @if (!p.canWork) {
+    <div class="state">
+      Votre rôle dans ce projet (Lecteur) ne permet pas de modifier les tickets.
+      <a class="btn state__retry" [routerLink]="backLink()">Retour</a>
+    </div>
+  } @else {
+    <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="field field--span">
+        <span class="field__label">Titre</span>
+        <input class="field__control field__control--title" formControlName="title" autocomplete="off"
+          [attr.aria-invalid]="form.controls.title.touched && form.controls.title.invalid" />
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <span class="field__error">Le titre est requis.</span>
+        }
+      </label>
+
+      <label class="field field--span">
+        <span class="field__label">Description</span>
+        <textarea class="field__control" formControlName="description" rows="6"
+          placeholder="Contexte, étapes, critères de fin…"></textarea>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Statut</span>
+        <select class="field__control" formControlName="status">
+          @for (s of statuses; track s) { <option [value]="s">{{ statusLabels[s] }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span class="field__label">Priorité</span>
+        <select class="field__control" formControlName="priority">
+          @for (pr of priorities; track pr) { <option [value]="pr">{{ priorityLabels[pr] }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span class="field__label">Type</span>
+        <select class="field__control" formControlName="typeUuid">
+          <option value="">Sans type</option>
+          @for (t of p.ticketTypes; track t.uuid) { <option [value]="t.uuid">{{ t.name }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span class="field__label">Assigné à</span>
+        <select class="field__control" formControlName="assigneeUuid">
+          <option value="">Non assigné</option>
+          @for (m of assignable(); track m.person.uuid) {
+            <option [value]="m.person.uuid">{{ personName(m.person) }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="field__label">Échéance</span>
+        <input class="field__control" type="date" formControlName="dueDate" />
+      </label>
+      @if (p.phases.length) {
+        <label class="field">
+          <span class="field__label">Phase</span>
+          <select class="field__control" formControlName="phaseUuid">
+            <option value="">Sans phase</option>
+            @for (ph of p.phases; track ph.uuid) { <option [value]="ph.uuid">{{ ph.name }}</option> }
+          </select>
+        </label>
+      }
+
+      <div class="field field--span">
+        <label class="field__label" for="ticket-tags">Tags</label>
+        <app-tag-input inputId="ticket-tags" formControlName="tags" [suggestions]="tagSuggestions()"
+          placeholder="Ex. Accueil, Mobile… puis Entrée" />
+      </div>
+
+      @if (isNew()) {
+        <app-ticket-attachments class="field--span" [ticket]="null" [canEdit]="true"
+          (pendingChange)="onPendingFiles($event)" />
+      }
+
+      @if (error(); as err) {
+        <p class="alert alert--error field--span" role="alert">{{ err }}</p>
+      }
+
+      <footer class="form__foot field--span">
+        <a class="btn" [routerLink]="backLink()">Annuler</a>
+        <button type="submit" class="btn btn--primary" [disabled]="busy() || (!isNew() && form.pristine)">
+          {{ busy() ? 'Enregistrement…' : (isNew() ? 'Créer le ticket' : 'Enregistrer') }}
+        </button>
+      </footer>
+    </form>
+  }
+}

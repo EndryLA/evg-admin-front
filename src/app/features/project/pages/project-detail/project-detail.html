@@ -19,14 +19,20 @@
       <h1>{{ p.name }}</h1>
       <p class="topbar__sub">
         <span class="pill pill--{{ statusTones[p.status] }}">{{ statusLabels[p.status] }}</span>
-        <span>{{ p.doneTicketCount }}/{{ p.ticketCount }} tickets terminés ({{ percent() }} %)</span>
-        @if (p.targetDate) { <span>· échéance {{ formatDate(p.targetDate) }}</span> }
+        <span class="meta">{{ p.doneTicketCount }}/{{ p.ticketCount }} tickets terminés ({{ percent() }} %)</span>
+        @if (p.targetDate) { <span class="meta">· échéance {{ formatDate(p.targetDate) }}</span> }
         @if (p.myRole; as role) {
-          <span class="my-role" [title]="roleHints[role]">· Votre rôle : <strong>{{ roleLabels[role] }}</strong></span>
+          <span class="meta my-role" [title]="roleHints[role]">· Votre rôle : <strong>{{ roleLabels[role] }}</strong></span>
         }
       </p>
       @if (p.description) {
-        <p class="description">{{ p.description }}</p>
+        <p class="description" [class.description--open]="descriptionOpen()">{{ p.description }}</p>
+        @if (p.description.length > 110) {
+          <button type="button" class="more" (click)="descriptionOpen.set(!descriptionOpen())"
+            [attr.aria-expanded]="descriptionOpen()">
+            {{ descriptionOpen() ? 'Voir moins' : 'Voir plus' }}
+          </button>
+        }
       }
     </div>
   </header>
@@ -62,12 +68,7 @@
 
   @switch (tab()) {
     @case ('tickets') {
-      <app-ticket-table
-        [tickets]="tickets()"
-        [project]="p"
-        (updated)="onTicketSaved($event)"
-        (open)="panel.set($event)"
-        (create)="panel.set('new')" />
+      <app-ticket-table [tickets]="tickets()" [project]="p" (updated)="onTicketSaved($event)" />
     }
     @case ('phases') {
       <app-phase-list [project]="p" (changed)="onPhasesChanged()" />
@@ -78,15 +79,5 @@
     @case ('members') {
       <app-member-list [project]="p" [tickets]="tickets()" (changed)="onMembersChanged($event)" />
     }
-  }
-
-  @if (panel() !== null) {
-    <app-ticket-panel
-      [ticket]="panelTicket()"
-      [project]="p"
-      [tagSuggestions]="ticketTags()"
-      (saved)="onTicketSaved($event)"
-      (deleted)="onTicketDeleted($event)"
-      (close)="panel.set(null)" />
   }
 }

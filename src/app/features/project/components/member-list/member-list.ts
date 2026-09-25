@@ -3,6 +3,7 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { formatDateFr } from '../../../../shared/util/date.util';
+import { mediaMatches } from '../../../../shared/util/media.util';
 import { ProjectService } from '../../project.service';
 import {
   CLOSED_TICKET_STATUSES,
@@ -42,6 +43,9 @@ export class MemberList {
   /** The project's tickets, to count what each member has open. */
   readonly tickets = input<Ticket[]>([]);
   readonly changed = output<Project>();
+
+  /** Narrow screen: a list instead of the table. */
+  protected readonly compact = mediaMatches();
 
   protected readonly adding = signal(false);
   protected readonly removing = signal<ProjectMember | null>(null);

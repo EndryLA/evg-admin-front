@@ -1,7 +1,9 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { messageFromError } from '../../../../core/http/http-error.util';
 import { formatDateFr } from '../../../../shared/util/date.util';
+import { mediaMatches } from '../../../../shared/util/media.util';
 import {
   CLOSED_TICKET_STATUSES,
   personName,
@@ -20,16 +22,13 @@ import {
   type TicketPriority,
 } from '../../project.models';
 import { TicketService } from '../../ticket.service';
+import { TicketCompactList, type TicketGroup } from '../ticket-compact-list/ticket-compact-list';
 
 type SortKey = 'key' | 'type' | 'status' | 'priority' | 'assignee' | 'due' | 'phase';
 type SortDir = 'asc' | 'desc';
 
 /** A block of rows; a single unnamed group when grouping is off. */
-interface Group {
-  id: string;
-  label: string | null;
-  tickets: Ticket[];
-}
+type Group = TicketGroup;
 
 const NONE = '__none__';
 
@@ -38,15 +37,17 @@ function normalize(value: string): string {
 }
 
 /**
- * The tickets table. Status, priority, assignee, phase and due date are edited
- * in place (the full row is resent, see `TicketRequest`); the rest opens the
- * ticket panel through {@link open}. Filtering, sorting and grouping by phase
- * happen in memory over {@link tickets}.
+ * The project's tickets. On a wide screen, a table whose status, priority,
+ * assignee, phase and due date are edited in place (the full row is resent,
+ * see `TicketRequest`); on a phone, a condensed list. Either way a ticket's
+ * title leads to its detail page, and « Nouveau ticket » to the creation page.
+ * Filtering, sorting and grouping by phase happen in memory over {@link tickets}.
  *
  * Assignee and phase options come from {@link project}.
  */
 @Component({
   selector: 'app-ticket-table',
+  imports: [RouterLink, TicketCompactList],
   templateUrl: './ticket-table.html',
   styleUrl: './ticket-table.scss',
 })
@@ -58,9 +59,9 @@ export class TicketTable {
   readonly project = input.required<Project>();
 
   readonly updated = output<Ticket>();
-  readonly open = output<Ticket>();
-  /** "Nouveau ticket" in the toolbar; the parent opens the ticket modal. */
-  readonly create = output<void>();
+
+  /** Narrow screen: condensed list, no inline editing. */
+  protected readonly compact = mediaMatches();
 
   // ---- Options ----
   /** Without phases the column (and grouping) would be noise. */

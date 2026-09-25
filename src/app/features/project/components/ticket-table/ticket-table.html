@@ -13,10 +13,10 @@
     }
   </button>
   @if (!readOnly()) {
-    <button type="button" class="btn btn--primary tt-new" (click)="create.emit()">
+    <a class="btn btn--primary tt-new" [routerLink]="['/projets', project().uuid, 'tickets', 'nouveau']">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
       <span class="tt-new__label">Nouveau ticket</span>
-    </button>
+    </a>
   }
 </div>
 
@@ -89,6 +89,25 @@
   </p>
 }
 
+@if (compact()) {
+<!-- Phones: one tappable line per ticket, leading to its detail page. -->
+<div class="tl-region">
+  <app-ticket-compact-list [projectUuid]="project().uuid" [groups]="groups()" />
+  @if (filtered().length === 0) {
+    <div class="state">
+      <div class="state__title">Aucun ticket</div>
+      <div class="state__hint">
+        @if (tickets().length === 0) {
+          Rien pour l’instant : créez le premier avec « Nouveau ticket ».
+        } @else {
+          Aucun ticket ne correspond aux filtres.
+        }
+      </div>
+    </div>
+  }
+  <p class="tt-foot">{{ filtered().length }} ticket{{ filtered().length > 1 ? 's' : '' }} affiché{{ filtered().length > 1 ? 's' : '' }} sur {{ tickets().length }}</p>
+</div>
+} @else {
 <!-- Own markup (tt-*) instead of the global table shell: that one forces fixed
      columns and turns rows into cards on phones — this table just scrolls. -->
 <div class="tt-region">
@@ -121,7 +140,7 @@
           @for (t of g.tickets; track t.uuid) {
             <tr class="tt-row" [class.tt-row--pending]="isPending(t)">
               <td class="tt-sticky tt-col-ticket">
-                <button type="button" class="tt-open" (click)="open.emit(t)">
+                <a class="tt-open" [routerLink]="['/projets', project().uuid, 'tickets', t.uuid]">
                   <span class="tt-key">{{ t.key }}</span>
                   <span class="tt-text">
                     <span class="tt-title">{{ t.title }}</span>
@@ -143,7 +162,7 @@
                       <span class="sr-only">pièce(s) jointe(s)</span>
                     </span>
                   }
-                </button>
+                </a>
               </td>
               <td>
                 <select class="pill-select pill--{{ t.type?.color ?? 'grey' }}" [class.pill-select--empty]="!t.type"
@@ -220,3 +239,4 @@
   </div>
   <p class="tt-foot">{{ filtered().length }} ticket{{ filtered().length > 1 ? 's' : '' }} affiché{{ filtered().length > 1 ? 's' : '' }} sur {{ tickets().length }}</p>
 </div>
+}

@@ -130,8 +130,11 @@
 }
 .table-error__close { border: none; background: none; font-size: 18px; color: inherit; cursor: pointer; }
 
+a.tt-open { text-decoration: none; }
+
+/* Phones: the condensed list (own component) instead of the table. */
+.tl-region { padding: 0 16px 24px; }
+
 @media (max-width: 720px) {
   .table-error { margin: 0 16px 12px; }
-  /* Narrower sticky column so the scrolling cells stay in view. */
-  .tt-col-ticket { min-width: 190px; width: 190px; }
 }
