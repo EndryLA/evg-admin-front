@@ -38,7 +38,10 @@ export const ATTENDANCE_REASON_LABELS: Record<AttendanceReason, string> = {
   OTHER: 'Autre',
 };
 
-/** French labels for {@link AttendanceReason}, in the order offered in the form. */
+/**
+ * Reasons offered in the form, in order. Bloc and Secteur are no longer
+ * offered but stay displayable on older rows.
+ */
 export const ATTENDANCE_REASON_OPTIONS: readonly {
   value: AttendanceReason;
   label: string;
@@ -46,8 +49,6 @@ export const ATTENDANCE_REASON_OPTIONS: readonly {
   { value: 'INVITATION', label: ATTENDANCE_REASON_LABELS.INVITATION },
   { value: 'INFO_GROUP', label: ATTENDANCE_REASON_LABELS.INFO_GROUP },
   { value: 'INSTAGRAM', label: ATTENDANCE_REASON_LABELS.INSTAGRAM },
-  { value: 'BLOC', label: ATTENDANCE_REASON_LABELS.BLOC },
-  { value: 'SECTOR', label: ATTENDANCE_REASON_LABELS.SECTOR },
   { value: 'OTHER', label: ATTENDANCE_REASON_LABELS.OTHER },
 ];
 

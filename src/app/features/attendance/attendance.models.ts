@@ -16,24 +16,27 @@ export type AttendanceReason =
   | 'SECTOR'
   | 'OTHER';
 
-/** French labels for {@link AttendanceReason}, in the order shown to guests. */
+/** French labels for {@link AttendanceReason}, keyed for display of a stored value. */
+export const ATTENDANCE_REASON_LABELS: Record<AttendanceReason, string> = {
+  INVITATION: 'Invitation',
+  INFO_GROUP: "Groupe d'info",
+  INSTAGRAM: 'Instagram',
+  BLOC: 'Bloc',
+  SECTOR: 'Secteur',
+  OTHER: 'Autre',
+};
+
+/**
+ * Reasons offered to guests, in order. Bloc and Secteur are no longer offered
+ * (their leaders have their own choice) but stay displayable on older rows.
+ */
 export const ATTENDANCE_REASON_OPTIONS: readonly {
   value: AttendanceReason;
   label: string;
-}[] = [
-  { value: 'INVITATION', label: 'Invitation' },
-  { value: 'INFO_GROUP', label: "Groupe d'info" },
-  { value: 'INSTAGRAM', label: 'Instagram' },
-  { value: 'BLOC', label: 'Bloc' },
-  { value: 'SECTOR', label: 'Secteur' },
-  { value: 'OTHER', label: 'Autre' },
-];
-
-/** French labels for {@link AttendanceReason}, keyed for display of a stored value. */
-export const ATTENDANCE_REASON_LABELS: Record<AttendanceReason, string> =
-  Object.fromEntries(
-    ATTENDANCE_REASON_OPTIONS.map((o) => [o.value, o.label]),
-  ) as Record<AttendanceReason, string>;
+}[] = (['INVITATION', 'INFO_GROUP', 'INSTAGRAM', 'OTHER'] as const).map((value) => ({
+  value,
+  label: ATTENDANCE_REASON_LABELS[value],
+}));
 
 /** Badge tone (see global `.pill--*`) per attendance type. */
 export const ATTENDANCE_TYPE_TONES: Record<AttendanceType, string> = {

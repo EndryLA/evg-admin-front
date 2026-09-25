@@ -10,7 +10,10 @@ export type PreAttendanceReason =
   | 'SECTOR'
   | 'OTHER';
 
-/** French labels for {@link PreAttendanceReason}, in the order shown to guests. */
+/**
+ * French labels for {@link PreAttendanceReason}, in the order shown to guests.
+ * Bloc and Secteur are no longer offered (still valid on older rows).
+ */
 export const PRE_ATTENDANCE_REASON_OPTIONS: readonly {
   value: PreAttendanceReason;
   label: string;
@@ -18,8 +21,6 @@ export const PRE_ATTENDANCE_REASON_OPTIONS: readonly {
   { value: 'INVITATION', label: 'Invitation' },
   { value: 'INFO_GROUP', label: "Groupe d'info" },
   { value: 'INSTAGRAM', label: 'Instagram' },
-  { value: 'BLOC', label: 'Bloc' },
-  { value: 'SECTOR', label: 'Secteur' },
   { value: 'OTHER', label: 'Autre' },
 ];
 

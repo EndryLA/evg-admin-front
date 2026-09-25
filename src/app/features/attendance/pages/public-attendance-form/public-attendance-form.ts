@@ -20,7 +20,7 @@ import { AttendanceService } from '../../attendance.service';
 import { ATTENDANCE_REASON_OPTIONS, type AttendanceReason } from '../../attendance.models';
 
 /**
- * How the visitor takes part: department member, guest, or block leader — the
+ * How the visitor takes part: department member, guest, or Bloc / Secteur leader — the
  * last one records nothing here.
  */
 type Branch = 'MEMBER' | 'GUEST' | 'LEADER';
