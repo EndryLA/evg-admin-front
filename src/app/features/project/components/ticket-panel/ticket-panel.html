@@ -1,16 +1,19 @@
 <div class="modal-overlay" (click)="close.emit()">
   <div class="modal" role="dialog" aria-modal="true"
-    [attr.aria-label]="isNew() ? 'Nouveau ticket' : ticket()!.key + ' ' + ticket()!.title"
+    [attr.aria-label]="isNew() ? 'Nouveau ticket' : current()!.key + ' ' + current()!.title"
     (click)="$event.stopPropagation()">
     <header class="modal__head">
       <div class="head-row">
-        <span class="eyebrow">{{ isNew() ? 'Nouveau ticket' : ticket()!.key }}</span>
+        <span class="eyebrow">
+          {{ isNew() ? 'Nouveau ticket' : current()!.key }}
+          @if (readOnly()) { <span class="readonly-badge">Lecture seule</span> }
+        </span>
         <button type="button" class="close" (click)="close.emit()" aria-label="Fermer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
       @if (!isNew()) {
-        <p class="subtitle">Créé par {{ personName(ticket()!.createdBy) }} le {{ formatDate(ticket()!.createdAt) }}</p>
+        <p class="subtitle">Créé par {{ personName(current()!.createdBy) }} le {{ formatDate(current()!.createdAt) }}</p>
       }
     </header>
 
@@ -58,7 +61,7 @@
           <span class="field__label">Assigné à</span>
           <select class="field__control" formControlName="assigneeUuid">
             <option value="">Non assigné</option>
-            @for (m of project().members; track m.person.uuid) {
+            @for (m of assignable(); track m.person.uuid) {
               <option [value]="m.person.uuid">{{ personName(m.person) }}</option>
             }
           </select>
@@ -81,7 +84,13 @@
             placeholder="Ex. Accueil, Mobile… puis Entrée" />
         </div>
 
-        @if (ticket()?.suggestions; as links) {
+        <app-ticket-attachments class="field--span"
+          [ticket]="current()"
+          [canEdit]="!readOnly()"
+          (changed)="onAttachmentsChanged($event)"
+          (pendingChange)="onPendingFiles($event)" />
+
+        @if (current()?.suggestions; as links) {
           <section class="links field--span">
             <div class="links__head">
               <h3 class="links__title">Suggestions prises en compte</h3>
@@ -90,7 +99,7 @@
               }
             </div>
             @if (linking()) {
-              <app-suggestion-picker [ticket]="ticket()!" (saved)="onLinked($event)" (cancel)="linking.set(false)" />
+              <app-suggestion-picker [ticket]="current()!" (saved)="onLinked($event)" (cancel)="linking.set(false)" />
             } @else if (links.length) {
               <ul class="links__list">
                 @for (s of links; track s.uuid) {
@@ -112,15 +121,19 @@
       </div>
 
       <footer class="modal__foot">
-        @if (canDelete()) {
-          <button type="button" class="btn btn--danger" (click)="confirmDelete.set(true)" [disabled]="busy()">Supprimer</button>
+        @if (readOnly()) {
+          <button type="button" class="btn modal__cancel" (click)="close.emit()">Fermer</button>
+        } @else {
+          @if (canDelete()) {
+            <button type="button" class="btn btn--danger" (click)="confirmDelete.set(true)" [disabled]="busy()">Supprimer</button>
+          }
+          <button type="button" class="btn modal__cancel" (click)="close.emit()" [disabled]="busy()">
+            {{ isNew() || form.dirty ? 'Annuler' : 'Fermer' }}
+          </button>
+          <button type="submit" class="btn btn--primary" [disabled]="busy() || (!isNew() && form.pristine)">
+            {{ busy() ? 'Enregistrement…' : (isNew() ? 'Créer le ticket' : 'Enregistrer') }}
+          </button>
         }
-        <button type="button" class="btn modal__cancel" (click)="close.emit()" [disabled]="busy()">
-          {{ isNew() || form.dirty ? 'Annuler' : 'Fermer' }}
-        </button>
-        <button type="submit" class="btn btn--primary" [disabled]="busy() || (!isNew() && form.pristine)">
-          {{ busy() ? 'Enregistrement…' : (isNew() ? 'Créer le ticket' : 'Enregistrer') }}
-        </button>
       </footer>
     </form>
   </div>
@@ -129,6 +142,6 @@
 @if (confirmDelete()) {
   <app-confirm-dialog title="Supprimer le ticket ?" [busy]="busy()"
     (confirm)="onDelete()" (cancel)="confirmDelete.set(false)">
-    {{ ticket()!.key }} « {{ ticket()!.title }} » sera supprimé. Les suggestions liées seront libérées.
+    {{ current()!.key }} « {{ current()!.title }} » sera supprimé. Les suggestions liées seront libérées.
   </app-confirm-dialog>
 }

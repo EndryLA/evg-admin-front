@@ -16,6 +16,7 @@ import type {
   PhaseInput,
   Project,
   ProjectInput,
+  ProjectRole,
   TicketTypeInput,
 } from './project.models';
 
@@ -45,9 +46,15 @@ export class ProjectService {
     return this.http.post<RawProject>(BASE, toRawProjectRequest(input)).pipe(map(toProject));
   }
 
-  addMember(uuid: string, profileUuid: string): Observable<Project> {
+  addMember(uuid: string, profileUuid: string, role: ProjectRole): Observable<Project> {
     return this.http
-      .post<RawProject>(`${BASE}/${uuid}/members`, { profileUuid })
+      .post<RawProject>(`${BASE}/${uuid}/members`, { profileUuid, role })
+      .pipe(map(toProject));
+  }
+
+  setMemberRole(uuid: string, profileUuid: string, role: ProjectRole): Observable<Project> {
+    return this.http
+      .put<RawProject>(`${BASE}/${uuid}/members/${profileUuid}/role`, { role })
       .pipe(map(toProject));
   }
 

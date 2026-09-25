@@ -12,6 +12,8 @@ import { ProjectService } from '../../project.service';
 import {
   progress,
   PROJECT_STATUS_LABELS,
+  PROJECT_ROLE_HINTS,
+  PROJECT_ROLE_LABELS,
   PROJECT_STATUS_TONES,
   type Project,
   type Ticket,
@@ -49,6 +51,8 @@ export class ProjectDetail implements OnInit {
 
   protected readonly statusLabels = PROJECT_STATUS_LABELS;
   protected readonly statusTones = PROJECT_STATUS_TONES;
+  protected readonly roleLabels = PROJECT_ROLE_LABELS;
+  protected readonly roleHints = PROJECT_ROLE_HINTS;
   protected readonly formatDate = formatDateFr;
 
   protected readonly percent = computed(() => {

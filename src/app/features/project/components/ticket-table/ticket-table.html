@@ -12,10 +12,12 @@
       <span class="filters-btn__badge">{{ activeFilterCount() }}<span class="sr-only"> actif(s)</span></span>
     }
   </button>
-  <button type="button" class="btn btn--primary tt-new" (click)="create.emit()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-    <span class="tt-new__label">Nouveau ticket</span>
-  </button>
+  @if (!readOnly()) {
+    <button type="button" class="btn btn--primary tt-new" (click)="create.emit()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="tt-new__label">Nouveau ticket</span>
+    </button>
+  }
 </div>
 
 @if (filtersOpen()) {
@@ -91,7 +93,7 @@
      columns and turns rows into cards on phones — this table just scrolls. -->
 <div class="tt-region">
   <div class="tt-scroll" tabindex="0" role="region" aria-label="Tickets (défilement horizontal)">
-    <table class="tt tt--wide">
+    <table class="tt tt--wide" [class.tt--readonly]="readOnly()">
       <thead>
         <tr>
           <th class="tt-sticky tt-col-ticket" [attr.aria-sort]="ariaSort('key')">
@@ -135,11 +137,17 @@
                       <span class="sr-only">suggestion(s)</span>
                     </span>
                   }
+                  @if (t.attachments.length) {
+                    <span class="tt-sugg" [title]="t.attachments.length + ' pièce(s) jointe(s)'">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>{{ t.attachments.length }}
+                      <span class="sr-only">pièce(s) jointe(s)</span>
+                    </span>
+                  }
                 </button>
               </td>
               <td>
                 <select class="pill-select pill--{{ t.type?.color ?? 'grey' }}" [class.pill-select--empty]="!t.type"
-                  [disabled]="isPending(t)" [attr.aria-label]="'Type de ' + t.key" (change)="onCellChange(t, 'typeUuid', $event)">
+                  [disabled]="isPending(t) || readOnly()" [attr.aria-label]="'Type de ' + t.key" (change)="onCellChange(t, 'typeUuid', $event)">
                   <option value="" [selected]="!t.type">Sans type</option>
                   @for (ty of types(); track ty.uuid) {
                     <option [value]="ty.uuid" [selected]="ty.uuid === t.type?.uuid">{{ ty.name }}</option>
@@ -147,7 +155,7 @@
                 </select>
               </td>
               <td>
-                <select class="pill-select pill--{{ statusTones[t.status] }}" [disabled]="isPending(t)"
+                <select class="pill-select pill--{{ statusTones[t.status] }}" [disabled]="isPending(t) || readOnly()"
                   [attr.aria-label]="'Statut de ' + t.key" (change)="onCellChange(t, 'status', $event)">
                   @for (s of statuses; track s) {
                     <option [value]="s" [selected]="s === t.status">{{ statusLabels[s] }}</option>
@@ -155,7 +163,7 @@
                 </select>
               </td>
               <td>
-                <select class="pill-select pill--{{ priorityTones[t.priority] }}" [disabled]="isPending(t)"
+                <select class="pill-select pill--{{ priorityTones[t.priority] }}" [disabled]="isPending(t) || readOnly()"
                   [attr.aria-label]="'Priorité de ' + t.key" (change)="onCellChange(t, 'priority', $event)">
                   @for (p of priorities; track p) {
                     <option [value]="p" [selected]="p === t.priority">{{ priorityLabels[p] }}</option>
@@ -163,17 +171,21 @@
                 </select>
               </td>
               <td>
-                <select class="cell-select" [class.cell-select--empty]="!t.assignee" [disabled]="isPending(t)"
+                <select class="cell-select" [class.cell-select--empty]="!t.assignee" [disabled]="isPending(t) || readOnly()"
                   [attr.aria-label]="'Personne assignée à ' + t.key" (change)="onCellChange(t, 'assigneeUuid', $event)">
                   <option value="" [selected]="!t.assignee">Non assigné</option>
-                  @for (m of members(); track m.uuid) {
+                  @for (m of assignable(); track m.uuid) {
                     <option [value]="m.uuid" [selected]="m.uuid === t.assignee?.uuid">{{ personName(m) }}</option>
+                  }
+                  @if (t.assignee && !isAssignable(t.assignee.uuid)) {
+                    <!-- Assigned before becoming a viewer: shown, not offered to others. -->
+                    <option [value]="t.assignee.uuid" selected disabled>{{ personName(t.assignee) }}</option>
                   }
                 </select>
               </td>
               @if (hasPhases()) {
                 <td>
-                  <select class="cell-select" [class.cell-select--empty]="!t.phase" [disabled]="isPending(t)"
+                  <select class="cell-select" [class.cell-select--empty]="!t.phase" [disabled]="isPending(t) || readOnly()"
                     [attr.aria-label]="'Phase de ' + t.key" (change)="onCellChange(t, 'phaseUuid', $event)">
                     <option value="" [selected]="!t.phase">Sans phase</option>
                     @for (ph of phases(); track ph.uuid) {
@@ -184,7 +196,7 @@
               }
               <td>
                 <input type="date" class="cell-date" [class.cell-date--overdue]="isOverdue(t)"
-                  [class.cell-select--empty]="!t.dueDate" [value]="t.dueDate" [disabled]="isPending(t)"
+                  [class.cell-select--empty]="!t.dueDate" [value]="t.dueDate" [disabled]="isPending(t) || readOnly()"
                   [attr.aria-label]="'Échéance de ' + t.key" (change)="onCellChange(t, 'dueDate', $event)" />
               </td>
             </tr>

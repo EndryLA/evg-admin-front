@@ -1,4 +1,5 @@
 import type {
+  AttachmentKind,
   LinkableSuggestion,
   LinkedSuggestionStatus,
   PersonRef,
@@ -8,8 +9,10 @@ import type {
   Project,
   ProjectCategory,
   ProjectInput,
+  ProjectRole,
   ProjectStatus,
   Ticket,
+  TicketAttachment,
   TicketInput,
   TicketPriority,
   TicketStatus,
@@ -30,9 +33,22 @@ interface RawPerson {
 
 interface RawMember {
   profile?: RawPerson | null;
+  role?: string | null;
   creator?: boolean | null;
   addedAt?: string | null;
 }
+
+interface RawAttachment {
+  uuid?: string;
+  kind?: string | null;
+  fileName?: string | null;
+  contentType?: string | null;
+  size?: number | null;
+  addedBy?: RawPerson | null;
+  addedAt?: string | null;
+}
+
+const ROLES: readonly ProjectRole[] = ['MANAGER', 'CONTRIBUTOR', 'VIEWER'];
 
 export interface RawPhase {
   uuid?: string;
@@ -70,6 +86,8 @@ export interface RawProject {
   ticketCount?: number | null;
   doneTicketCount?: number | null;
   canManage?: boolean | null;
+  canWork?: boolean | null;
+  myRole?: string | null;
 }
 
 export interface RawTicket {
@@ -87,6 +105,7 @@ export interface RawTicket {
   createdBy?: RawPerson | null;
   dueDate?: string | null;
   tags?: string[] | null;
+  attachments?: RawAttachment[] | null;
   suggestions?: { uuid?: string; title?: string | null; status?: string | null }[] | null;
   createdAt?: string | null;
 }
@@ -146,7 +165,13 @@ export function toProject(raw: RawProject): Project {
     targetDate: raw.targetDate ?? '',
     createdBy: toPerson(raw.createdBy),
     members: (raw.members ?? [])
-      .map((m) => ({ person: toPerson(m.profile), creator: !!m.creator, addedAt: m.addedAt ?? '' }))
+      .map((m) => ({
+        person: toPerson(m.profile),
+        // Unknown values fall back to the most restrictive role.
+        role: oneOf<ProjectRole>(m.role, ROLES, 'VIEWER'),
+        creator: !!m.creator,
+        addedAt: m.addedAt ?? '',
+      }))
       .filter((m): m is Project['members'][number] => m.person !== null),
     phases: (raw.phases ?? []).map(toPhase).sort((a, b) => a.position - b.position),
     ticketTypes: (raw.ticketTypes ?? [])
@@ -156,6 +181,20 @@ export function toProject(raw: RawProject): Project {
     ticketCount: raw.ticketCount ?? 0,
     doneTicketCount: raw.doneTicketCount ?? 0,
     canManage: !!raw.canManage,
+    canWork: !!raw.canWork,
+    myRole: raw.myRole ? oneOf<ProjectRole>(raw.myRole, ROLES, 'VIEWER') : null,
+  };
+}
+
+function toAttachment(raw: RawAttachment): TicketAttachment {
+  return {
+    uuid: raw.uuid ?? '',
+    kind: oneOf<AttachmentKind>(raw.kind, ['IMAGE', 'VIDEO', 'DOCUMENT'], 'DOCUMENT'),
+    fileName: raw.fileName ?? '',
+    contentType: raw.contentType ?? '',
+    size: raw.size ?? 0,
+    addedBy: toPerson(raw.addedBy),
+    addedAt: raw.addedAt ?? '',
   };
 }
 
@@ -183,6 +222,7 @@ export function toTicket(raw: RawTicket): Ticket {
     createdBy: toPerson(raw.createdBy),
     dueDate: raw.dueDate ?? '',
     tags: raw.tags ?? [],
+    attachments: (raw.attachments ?? []).map(toAttachment),
     suggestions:
       raw.suggestions == null
         ? null

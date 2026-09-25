@@ -21,6 +21,9 @@
         <span class="pill pill--{{ statusTones[p.status] }}">{{ statusLabels[p.status] }}</span>
         <span>{{ p.doneTicketCount }}/{{ p.ticketCount }} tickets terminés ({{ percent() }} %)</span>
         @if (p.targetDate) { <span>· échéance {{ formatDate(p.targetDate) }}</span> }
+        @if (p.myRole; as role) {
+          <span class="my-role" [title]="roleHints[role]">· Votre rôle : <strong>{{ roleLabels[role] }}</strong></span>
+        }
       </p>
       @if (p.description) {
         <p class="description">{{ p.description }}</p>

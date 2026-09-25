@@ -24,14 +24,16 @@ import {
 import { TicketService } from '../../ticket.service';
 import { SuggestionPicker } from '../suggestion-picker/suggestion-picker';
 import { TagInput } from '../tag-input/tag-input';
+import { TicketAttachments } from '../ticket-attachments/ticket-attachments';
 
 /**
- * Modal for one ticket: every field, plus the suggestions it takes into
- * account. With no {@link ticket} it creates one in {@link project}.
+ * Modal for one ticket: every field, its attachments and the suggestions it
+ * takes into account. With no {@link ticket} it creates one in {@link project}
+ * (files picked meanwhile are uploaded right after). Read-only for viewers.
  */
 @Component({
   selector: 'app-ticket-panel',
-  imports: [ReactiveFormsModule, RouterLink, ConfirmDialog, SuggestionPicker, TagInput],
+  imports: [ReactiveFormsModule, RouterLink, ConfirmDialog, SuggestionPicker, TagInput, TicketAttachments],
   host: { class: 'modal-form', '(keydown.escape)': 'close.emit()' },
   templateUrl: './ticket-panel.html',
   styleUrl: './ticket-panel.scss',
@@ -51,7 +53,23 @@ export class TicketPanel implements OnInit {
   readonly deleted = output<Ticket>();
   readonly close = output<void>();
 
-  protected readonly isNew = computed(() => this.ticket() === null);
+  /**
+   * Ticket created by this modal whose file upload then failed: the modal stays
+   * open on it (instead of the create form) so it can't be created twice.
+   */
+  private readonly created = signal<Ticket | null>(null);
+  protected readonly current = computed(() => this.ticket() ?? this.created());
+  protected readonly isNew = computed(() => this.current() === null);
+  /** Viewers see everything but change nothing. */
+  protected readonly readOnly = computed(() => !this.project().canWork);
+  /** Files picked before the ticket exists. */
+  private readonly pendingFiles = signal<File[]>([]);
+  /** Viewers can't be assigned; a current assignee stays listed whatever their role. */
+  protected readonly assignable = computed(() =>
+    this.project().members.filter(
+      (m) => m.role !== 'VIEWER' || m.person.uuid === this.current()?.assignee?.uuid,
+    ),
+  );
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly confirmDelete = signal(false);
@@ -79,20 +97,23 @@ export class TicketPanel implements OnInit {
   });
 
   protected readonly canLink = computed(
-    () => !this.isNew() && this.auth.hasAnyRole(ACCESS.suggestionReview),
+    () => !this.isNew() && !this.readOnly() && this.auth.hasAnyRole(ACCESS.suggestionReview),
   );
-  /** Mirrors the backend: the ticket's author or whoever manages the project. */
+  /** Mirrors the backend: managers delete any ticket, contributors their own. */
   protected readonly canDelete = computed(() => {
-    const t = this.ticket();
+    const t = this.current();
     if (!t) {
       return false;
     }
     const me = this.auth.currentUser()?.profileUuid;
-    return this.project().canManage || (!!me && t.createdBy?.uuid === me);
+    return this.project().canManage || (this.project().canWork && !!me && t.createdBy?.uuid === me);
   });
 
   ngOnInit(): void {
     const t = this.ticket();
+    if (this.readOnly()) {
+      this.form.disable();
+    }
     this.form.patchValue({
       title: t?.title ?? '',
       description: t?.description ?? '',
@@ -123,7 +144,7 @@ export class TicketPanel implements OnInit {
       dueDate: v.dueDate || null,
       tags: v.tags,
     };
-    const t = this.ticket();
+    const t = this.current();
     const request = t
       ? this.service.update(t.uuid, input)
       : this.service.create(this.project().uuid, input);
@@ -131,8 +152,12 @@ export class TicketPanel implements OnInit {
     this.error.set(null);
     request.subscribe({
       next: (result) => {
-        this.busy.set(false);
         this.form.markAsPristine();
+        if (!t && this.pendingFiles().length) {
+          this.uploadAfterCreate(result);
+          return;
+        }
+        this.busy.set(false);
         this.saved.emit(result);
         if (!t) {
           this.close.emit();
@@ -145,8 +170,42 @@ export class TicketPanel implements OnInit {
     });
   }
 
+  protected onPendingFiles(files: File[]): void {
+    this.pendingFiles.set(files);
+  }
+
+  /** Attachment added/removed on an existing ticket: the parent refreshes its row. */
+  protected onAttachmentsChanged(ticket: Ticket): void {
+    if (this.created()) {
+      this.created.set(ticket);
+    }
+    this.saved.emit(ticket);
+  }
+
+  /** New ticket saved: send the files picked meanwhile, then close. */
+  private uploadAfterCreate(ticket: Ticket): void {
+    this.service.addAttachments(ticket.uuid, this.pendingFiles()).subscribe({
+      next: (withFiles) => {
+        this.busy.set(false);
+        this.saved.emit(withFiles);
+        this.close.emit();
+      },
+      error: (err) => {
+        // The ticket exists: stay on it so the files can be sent again.
+        this.busy.set(false);
+        this.pendingFiles.set([]);
+        this.created.set(ticket);
+        this.saved.emit(ticket);
+        this.error.set(
+          `Ticket ${ticket.key} créé, mais les fichiers n'ont pas pu être envoyés : ` +
+            messageFromError(err, 'erreur inconnue.'),
+        );
+      },
+    });
+  }
+
   protected onDelete(): void {
-    const t = this.ticket();
+    const t = this.current();
     if (!t) {
       return;
     }

@@ -19,6 +19,16 @@
 .close svg { width: 16px; height: 16px; }
 .close:hover { background: var(--border-input); }
 .subtitle { margin: 6px 0 0; font-size: 13px; color: var(--text-muted); }
+.readonly-badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+/* Disabled fields stay readable for viewers. */
+.field__control:disabled { opacity: 1; color: var(--text-secondary); cursor: default; }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field__control--title { font-size: 16px; font-weight: 600; }

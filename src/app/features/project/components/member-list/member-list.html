@@ -40,9 +40,20 @@
               </div>
             </td>
             <td>
-              <span class="pill" [class.pill--red]="m.creator" [class.pill--grey]="!m.creator">
-                {{ m.creator ? 'Créateur' : 'Membre' }}
-              </span>
+              @if (project().canManage && !m.creator) {
+                <select class="role-select pill--{{ roleTones[m.role] }}" [disabled]="busy()"
+                  [attr.aria-label]="'Rôle de ' + personName(m.person)" [title]="roleHints[m.role]"
+                  (change)="onRoleChange(m, $event)">
+                  @for (r of roles; track r) {
+                    <option [value]="r" [selected]="r === m.role">{{ roleLabels[r] }}</option>
+                  }
+                </select>
+              } @else {
+                <span class="pill pill--{{ roleTones[m.role] }}" [title]="roleHints[m.role]">{{ roleLabels[m.role] }}</span>
+              }
+              @if (m.creator) {
+                <span class="creator-tag">Créateur</span>
+              }
             </td>
             <td>{{ openTickets().get(m.person.uuid) ?? 0 }}</td>
             <td class="tt-muted">{{ formatDate(m.addedAt) }}</td>
@@ -67,7 +78,10 @@
       <div class="state"><div class="state__title">Aucun membre ne correspond</div></div>
     }
   </div>
-  <p class="tt-foot">{{ project().members.length }} membre{{ project().members.length > 1 ? 's' : '' }}</p>
+  <p class="tt-foot">
+    {{ project().members.length }} membre{{ project().members.length > 1 ? 's' : '' }} ·
+    Gestionnaire : gère tout le projet · Contributeur : tickets et pièces jointes · Lecteur : consultation seule
+  </p>
 </div>
 
 @if (adding()) {

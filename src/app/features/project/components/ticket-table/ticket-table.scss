@@ -115,6 +115,12 @@
 .pill-select:disabled,
 .cell-select:disabled,
 .cell-date:disabled { cursor: progress; }
+/* Viewers: plain values, no dropdown affordance. */
+.tt--readonly .pill-select,
+.tt--readonly .cell-select,
+.tt--readonly .cell-date { cursor: default; opacity: 1; border-color: transparent; }
+.tt--readonly .pill-select { background-image: none; padding-right: 11px; }
+.tt--readonly .cell-select { appearance: none; }
 
 .table-error {
   display: flex;

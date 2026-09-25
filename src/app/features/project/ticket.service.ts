@@ -51,6 +51,26 @@ export class TicketService {
     return this.http.delete(`${BASE}/${uuid}`).pipe(map(() => undefined));
   }
 
+  /** Uploads files to a ticket (managers and contributors); answers with the updated ticket. */
+  addAttachments(uuid: string, files: File[]): Observable<Ticket> {
+    const body = new FormData();
+    files.forEach((file) => body.append('files', file, file.name));
+    return this.http.post<RawTicket>(`${BASE}/${uuid}/attachments`, body).pipe(map(toTicket));
+  }
+
+  removeAttachment(uuid: string, attachmentUuid: string): Observable<Ticket> {
+    return this.http
+      .delete<RawTicket>(`${BASE}/${uuid}/attachments/${attachmentUuid}`)
+      .pipe(map(toTicket));
+  }
+
+  /** File bytes through the API, since `<img>`/links can't send the bearer token. */
+  attachmentBlob(uuid: string, attachmentUuid: string): Observable<Blob> {
+    return this.http.get(`${BASE}/${uuid}/attachments/${attachmentUuid}/content`, {
+      responseType: 'blob',
+    });
+  }
+
   /** Replaces the ticket's linked suggestions (super admins only). */
   setSuggestions(uuid: string, suggestionUuids: string[]): Observable<Ticket> {
     return this.http

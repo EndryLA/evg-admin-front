@@ -79,11 +79,26 @@ export class TicketTable {
     }
     return [...seen.values()].sort((a, b) => a.localeCompare(b, 'fr'));
   });
+  /** Everyone in the project, for the assignee filter. */
   protected readonly members = computed<PersonRef[]>(() =>
     this.project()
       .members.map((m) => m.person)
       .sort((a, b) => personName(a).localeCompare(personName(b), 'fr')),
   );
+  /** Who a ticket can be given to: managers and contributors (viewers can't act on it). */
+  protected readonly assignable = computed<PersonRef[]>(() =>
+    this.project()
+      .members.filter((m) => m.role !== 'VIEWER')
+      .map((m) => m.person)
+      .sort((a, b) => personName(a).localeCompare(personName(b), 'fr')),
+  );
+  private readonly assignableUuids = computed(() => new Set(this.assignable().map((p) => p.uuid)));
+  /** Viewers read the table; its cells can't be edited. */
+  protected readonly readOnly = computed(() => !this.project().canWork);
+
+  protected isAssignable(profileUuid: string): boolean {
+    return this.assignableUuids().has(profileUuid);
+  }
 
   // ---- Filters / view state ----
   protected readonly query = signal('');

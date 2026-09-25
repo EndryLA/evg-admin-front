@@ -1,0 +1,68 @@
+<div class="att">
+  <div class="att__head">
+    <h3 class="att__title">Pièces jointes <span class="att__count">{{ count() }}</span></h3>
+    @if (canEdit() && count() < maxFiles) {
+      <label class="att__add" [class.att__add--busy]="busy()">
+        <input type="file" multiple [accept]="accept" [disabled]="busy()" (change)="onPick($any($event.target))" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+        {{ busy() ? 'Envoi…' : 'Joindre des fichiers' }}
+      </label>
+    }
+  </div>
+
+  @if (count() === 0) {
+    <p class="att__empty">
+      Aucun fichier.
+      @if (canEdit()) { Images, vidéos, PDF, Word, Excel ou PowerPoint ({{ maxFiles }} max.). }
+    </p>
+  } @else {
+    <ul class="att__list">
+      @for (a of ticket()?.attachments ?? []; track a.uuid) {
+        <li class="file">
+          <button type="button" class="file__open" (click)="open(a)"
+            [attr.aria-label]="(a.kind === 'DOCUMENT' && a.contentType !== 'application/pdf' ? 'Télécharger ' : 'Ouvrir ') + a.fileName">
+            @if (a.kind === 'IMAGE' && thumbs().get(a.uuid); as url) {
+              <img class="file__thumb" [src]="url" alt="" />
+            } @else {
+              <span class="file__icon file__icon--{{ a.kind.toLowerCase() }}" aria-hidden="true">
+                @if (a.kind === 'VIDEO') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                } @else {
+                  {{ extension(a.fileName) }}
+                }
+              </span>
+            }
+            <span class="file__text">
+              <span class="file__name">{{ a.fileName }}</span>
+              <span class="file__meta">{{ formatSize(a.size) }} · {{ personName(a.addedBy) }} · {{ formatDate(a.addedAt) }}</span>
+            </span>
+          </button>
+          @if (canEdit()) {
+            <button type="button" class="file__remove" (click)="remove(a)" [disabled]="busy()"
+              [attr.aria-label]="'Retirer ' + a.fileName" title="Retirer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          }
+        </li>
+      }
+      @for (f of pending(); track f) {
+        <li class="file file--pending">
+          <span class="file__open">
+            <span class="file__icon" aria-hidden="true">{{ extension(f.name) }}</span>
+            <span class="file__text">
+              <span class="file__name">{{ f.name }}</span>
+              <span class="file__meta">{{ formatSize(f.size) }} · envoyé à la création du ticket</span>
+            </span>
+          </span>
+          <button type="button" class="file__remove" (click)="removePending(f)" [attr.aria-label]="'Retirer ' + f.name" title="Retirer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (error(); as err) {
+    <p class="att__error" role="alert">{{ err }}</p>
+  }
+</div>

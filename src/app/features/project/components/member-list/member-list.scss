@@ -24,6 +24,27 @@
 }
 .person__name { font-weight: 600; color: var(--text-primary); }
 
+/* Role: an editable pill for managers, a plain pill otherwise. */
+.role-select {
+  appearance: none;
+  padding: 4px 24px 4px 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--pill-grey-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center / 11px;
+  color: var(--pill-grey-text);
+}
+.role-select.pill--red { background-color: var(--pill-red-bg); color: var(--pill-red-text); }
+.role-select.pill--blue { background-color: var(--pill-blue-bg); color: var(--pill-blue-text); }
+.role-select:hover { border-color: var(--border-input); }
+.role-select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.role-select:disabled { cursor: progress; }
+.creator-tag { margin-left: 8px; font-size: 12px; color: var(--text-faint); }
+.tt-foot { white-space: normal; }
+
 @media (max-width: 720px) {
   .list-error { margin: 0 16px 12px; }
   .col-name { min-width: 170px; }

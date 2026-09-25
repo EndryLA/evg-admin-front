@@ -138,11 +138,95 @@ export const LINKED_SUGGESTION_TONES: Record<LinkedSuggestionStatus, string> = {
   IMPLEMENTED: 'green',
 };
 
+/** A member's role in a project — mirrors the backend `ProjectRole`. */
+export type ProjectRole = 'MANAGER' | 'CONTRIBUTOR' | 'VIEWER';
+export const PROJECT_ROLES: readonly ProjectRole[] = ['MANAGER', 'CONTRIBUTOR', 'VIEWER'];
+export const PROJECT_ROLE_LABELS: Record<ProjectRole, string> = {
+  MANAGER: 'Gestionnaire',
+  CONTRIBUTOR: 'Contributeur',
+  VIEWER: 'Lecteur',
+};
+export const PROJECT_ROLE_HINTS: Record<ProjectRole, string> = {
+  MANAGER: 'Gère le projet : phases, types, membres et rôles, tous les tickets.',
+  CONTRIBUTOR: 'Crée, modifie et assigne les tickets, ajoute des pièces jointes.',
+  VIEWER: 'Consulte le projet sans rien modifier ; ne peut pas être assigné.',
+};
+export const PROJECT_ROLE_TONES: Record<ProjectRole, string> = {
+  MANAGER: 'red',
+  CONTRIBUTOR: 'blue',
+  VIEWER: 'grey',
+};
+
+export type AttachmentKind = 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+
+/** Upload rules for ticket attachments, mirroring the backend `UploadType` (checked again there). */
+export const TICKET_ATTACHMENT_RULES = {
+  maxFiles: 10,
+  maxBytes: { IMAGE: 10, VIDEO: 100, DOCUMENT: 20 } as Record<AttachmentKind, number>,
+  types: {
+    'image/jpeg': 'IMAGE',
+    'image/png': 'IMAGE',
+    'image/webp': 'IMAGE',
+    'video/mp4': 'VIDEO',
+    'video/quicktime': 'VIDEO',
+    'video/webm': 'VIDEO',
+    'application/pdf': 'DOCUMENT',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCUMENT',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'DOCUMENT',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'DOCUMENT',
+  } as Record<string, AttachmentKind>,
+  extensions: {
+    jpg: 'IMAGE', jpeg: 'IMAGE', png: 'IMAGE', webp: 'IMAGE',
+    mp4: 'VIDEO', mov: 'VIDEO', webm: 'VIDEO',
+    pdf: 'DOCUMENT', docx: 'DOCUMENT', xlsx: 'DOCUMENT', pptx: 'DOCUMENT',
+  } as Record<string, AttachmentKind>,
+};
+
+/** `accept` attribute for the ticket file picker. */
+export const TICKET_ATTACHMENT_ACCEPT = [
+  ...Object.keys(TICKET_ATTACHMENT_RULES.types),
+  ...Object.keys(TICKET_ATTACHMENT_RULES.extensions).map((e) => `.${e}`),
+].join(',');
+
+/** Why `file` would be refused for a ticket, or `null` when acceptable. */
+export function ticketAttachmentProblem(file: File): string | null {
+  const ext = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : '';
+  const kind = TICKET_ATTACHMENT_RULES.types[file.type] ?? TICKET_ATTACHMENT_RULES.extensions[ext];
+  if (!kind) {
+    return `« ${file.name} » : format non pris en charge (images, vidéos, PDF, Word, Excel, PowerPoint).`;
+  }
+  const maxMb = TICKET_ATTACHMENT_RULES.maxBytes[kind];
+  if (file.size > maxMb * 1024 * 1024) {
+    return `« ${file.name} » dépasse ${maxMb} Mo.`;
+  }
+  return null;
+}
+
+/** `2,4 Mo` / `830 Ko`. */
+export function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+  }
+  return `${Math.max(1, Math.round(bytes / 1024))} Ko`;
+}
+
 // ---- Domain models ----
 
 export interface ProjectMember {
   person: PersonRef;
+  /** The creator is always MANAGER. */
+  role: ProjectRole;
   creator: boolean;
+  addedAt: string;
+}
+
+export interface TicketAttachment {
+  uuid: string;
+  kind: AttachmentKind;
+  fileName: string;
+  contentType: string;
+  size: number;
+  addedBy: PersonRef | null;
   addedAt: string;
 }
 
@@ -195,6 +279,10 @@ export interface Project {
   doneTicketCount: number;
   /** Whether the caller may edit the project, its phases and its members. */
   canManage: boolean;
+  /** Whether the caller may create/edit tickets and attachments (managers and contributors). */
+  canWork: boolean;
+  /** The caller's role; `null` for a super admin who isn't a member. */
+  myRole: ProjectRole | null;
 }
 
 export interface SuggestionRef {
@@ -220,6 +308,7 @@ export interface Ticket {
   dueDate: string;
   /** Free labels, as typed. */
   tags: string[];
+  attachments: TicketAttachment[];
   /** `null` when the caller may not see suggestions — hide the section entirely. */
   suggestions: SuggestionRef[] | null;
   createdAt: string;
